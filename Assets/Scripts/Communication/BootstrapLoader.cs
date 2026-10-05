@@ -23,6 +23,12 @@ public class BootstrapLoader : MonoBehaviour
             yield break;
         }
 
-        SceneController.Instance.ChangeScene(firstScene);
+        string sceneToOpen = firstScene;
+#if UNITY_EDITOR
+        // Editor: Play pressed in another scene (Tools > Thermal Plant > Play From Bootstrap) -> open that one.
+        string edited = UnityEditor.SessionState.GetString("ThermalPlant.StartScene", string.Empty);
+        if (!string.IsNullOrEmpty(edited)) sceneToOpen = edited;
+#endif
+        SceneController.Instance.ChangeScene(sceneToOpen);
     }
 }

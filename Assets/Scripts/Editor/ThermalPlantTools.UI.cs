@@ -17,6 +17,7 @@ using UnityEngine.UI;
 ///   6. Setup MiniMap In All Scenes  – one MiniMapArea (picture + position) per scene, no camera
 ///   7. Setup Object Info Card       – Main_Scene: card beside a clicked object (overview camera)
 ///   8. Reimport glTF Models         – after pulling: textures first, then the .glb models that use them
+///   9. Remove Old Minimap Leftovers – old MiniMapCamera / MiniMap-Icon objects and files
 ///   Build Mode                      – Simple Test Build (for the React team) / Addressables Build
 /// Every step can be run again safely: what exists is kept and reported.
 /// </summary>
@@ -609,6 +610,121 @@ public static partial class ThermalPlantTools
         log.AppendLine($"+ {textures.Count} model textures re-imported");
         log.AppendLine($"+ {models.Count} glTF models re-imported");
         Report("Reimport glTF models", log, "If a model still looks untextured, check the Console for glTFast errors and send them to Claude.");
+    }
+
+    // ===================================================================================== 9. Old minimap leftovers
+
+    private static readonly string[] OldMiniMapAssets =
+    {
+        "Assets/Prefabs/MiniMap/MiniMapCamera.prefab",
+        "Assets/Prefabs/MiniMap/MiniMap-Icon.prefab",
+        "Assets/Texture/MiniMap/Minimap.renderTexture",
+        "Assets/Texture/MiniMap/Plantminmap.png",
+        "Assets/Texture/MiniMap/New Material.mat",
+    };
+
+    /// <summary>
+    /// The minimap no longer uses a camera: removes the old MiniMapCamera / MiniMap-Icon objects from the
+    /// Worker and other prefabs and from the scenes, then deletes the old minimap files.
+    /// </summary>
+    [MenuItem(MenuRoot + "9. Remove Old Minimap Leftovers", priority = 9)]
+    private static void RemoveOldMiniMapLeftovers()
+    {
+        if (!EditorUtility.DisplayDialog("Remove old minimap leftovers",
+                "Removes the old camera minimap pieces (no longer used):\n\n" +
+                "- MiniMapCamera and MiniMap-Icon objects in the Worker / other prefabs and in the 4 scenes\n" +
+                "- the files MiniMapCamera.prefab, MiniMap-Icon.prefab, Minimap.renderTexture, Plantminmap.png\n\n" +
+                "Prefabs and scenes are saved. Continue?", "Remove", "Cancel"))
+            return;
+
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+
+        var log = new StringBuilder();
+        var oldPrefabs = new HashSet<string>(OldMiniMapAssets);
+
+        // 1. Prefabs (Worker.prefab etc.)
+        foreach (string guid in AssetDatabase.FindAssets("t:Prefab", new[] { "Assets" }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            if (oldPrefabs.Contains(path)) continue;
+
+            GameObject root = PrefabUtility.LoadPrefabContents(path);
+            int removed = RemoveOldMiniMapObjects(root, oldPrefabs);
+            if (removed > 0)
+            {
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+                log.AppendLine($"- {path}: removed {removed} old minimap object(s)");
+            }
+            PrefabUtility.UnloadPrefabContents(root);
+        }
+
+        // 2. Scenes
+        foreach (string sceneName in DownloadableScenes)
+        {
+            string path = FindScenePath(sceneName);
+            if (path == null) continue;
+
+            Scene scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+            int removed = 0;
+            foreach (GameObject root in scene.GetRootGameObjects()) removed += RemoveOldMiniMapObjects(root, oldPrefabs);
+            if (removed > 0)
+            {
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+                log.AppendLine($"- {sceneName}: removed {removed} old minimap object(s)");
+            }
+        }
+
+        // 3. Files (also out of the Addressables groups)
+        AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+        foreach (string path in OldMiniMapAssets)
+        {
+            if (AssetDatabase.LoadMainAssetAtPath(path) == null) continue;
+            if (settings != null) settings.RemoveAssetEntry(AssetDatabase.AssetPathToGUID(path));
+            if (AssetDatabase.DeleteAsset(path)) log.AppendLine("- deleted " + path);
+        }
+
+        AssetDatabase.SaveAssets();
+        if (log.Length == 0) log.AppendLine("= nothing left to remove");
+        Report("Remove old minimap leftovers", log, "MiniMap.cs (the old camera script) can be deleted once nothing shows 'Missing script'.");
+    }
+
+    /// <summary>Removes (in a scene or opened prefab) every instance of the old minimap prefabs and every
+    /// object carrying the old MiniMap camera script. Returns how many were removed.</summary>
+    private static int RemoveOldMiniMapObjects(GameObject root, HashSet<string> oldPrefabPaths)
+    {
+        int removed = 0;
+        var doomed = new List<GameObject>();
+
+        foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+        {
+            GameObject go = t.gameObject;
+            bool isOld = go.GetComponent<MiniMap>() != null;
+
+            if (!isOld && PrefabUtility.IsAnyPrefabInstanceRoot(go))
+            {
+                string source = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(go);
+                isOld = oldPrefabPaths.Contains(source);
+            }
+
+            if (isOld) doomed.Add(go);
+        }
+
+        foreach (GameObject go in doomed)
+        {
+            if (go == null) continue; // child of something already removed
+
+            // Inside another prefab's instance it can't be removed here: step 1 removes it in that prefab.
+            bool lockedByOuterPrefab = PrefabUtility.IsPartOfPrefabInstance(go)
+                                       && PrefabUtility.GetOutermostPrefabInstanceRoot(go) != go
+                                       && !PrefabUtility.IsAddedGameObjectOverride(go);
+            if (lockedByOuterPrefab) continue;
+
+            Object.DestroyImmediate(go);
+            removed++;
+        }
+
+        return removed;
     }
 
     // ===================================================================================== Build mode
