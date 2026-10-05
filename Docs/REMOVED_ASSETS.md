@@ -1,0 +1,87 @@
+# Removed unused assets
+
+Nothing in the build scenes (Bootstrap, Main_Scene, BoilerRoom, TurbineRoom, Control_Room) or in any kept prefab/material referenced these files. Restore any of them with `git checkout <commit>~1 -- "<path>"`.
+
+- Assets/Material/Weathered Gray Concrete Texture.png
+- Assets/Model/Bilder Room Stuff/BoilerRoom/Lightmap-0_comp_dir.png
+- Assets/Model/Bilder Room Stuff/BoilerRoom/Lightmap-0_comp_light.exr
+- Assets/Model/Bilder Room Stuff/BoilerRoom/Lightmap-1_comp_dir.png
+- Assets/Model/Bilder Room Stuff/BoilerRoom/Lightmap-1_comp_light.exr
+- Assets/Model/Bilder Room Stuff/BoilerRoom/Lightmap-2_comp_dir.png
+- Assets/Model/Bilder Room Stuff/BoilerRoom/Lightmap-2_comp_light.exr
+- Assets/Model/Bilder Room Stuff/BoilerRoom/Lightmap-3_comp_dir.png
+- Assets/Model/Bilder Room Stuff/BoilerRoom/Lightmap-3_comp_light.exr
+- Assets/Model/Bilder Room Stuff/BoilerRoom/Lightmap-4_comp_dir.png
+- Assets/Model/Bilder Room Stuff/BoilerRoom/Lightmap-4_comp_light.exr
+- Assets/Model/Bilder Room Stuff/BoilerRoom/Lightmap-5_comp_dir.png
+- Assets/Model/Bilder Room Stuff/BoilerRoom/Lightmap-5_comp_light.exr
+- Assets/Model/Bilder Room Stuff/BoilerRoom/ReflectionProbe-0.exr
+- Assets/Model/Bilder Room Stuff/BoilerRoom/ReflectionProbe-1.exr
+- Assets/Model/BoilerRoom/fired-boiler/source/fire Boiler1 GL1.glb
+- Assets/Model/BoilerRoom/fired-boiler/textures/Ice002_1K-JPG_Color.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/Ice002_1K-JPG_NormalGL.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/Ice002_1K-JPG_Roughness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/Metal012_1K-JPG_Color.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/Metal012_1K-JPG_Metalness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/Metal012_1K-JPG_NormalGL.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/Metal012_1K-JPG_Roughness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/Metal041B_1K-JPG_Color.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/Metal041B_1K-JPG_Metalness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/Metal041B_1K-JPG_NormalGL.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/Metal041B_1K-JPG_Roughness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/MetalPlates001_1K-JPG_Color.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/MetalPlates001_1K-JPG_Metalness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/MetalPlates001_1K-JPG_NormalGL.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/MetalPlates001_1K-JPG_Roughness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/MetalPlates014_1K-JPG_Color.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/MetalPlates014_1K-JPG_Displacement.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/MetalPlates014_1K-JPG_Metalness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/MetalPlates014_1K-JPG_NormalGL.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/MetalPlates014_1K-JPG_Roughness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/PaintedMetal004_1K-JPG_Color.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/PaintedMetal004_1K-JPG_Metalness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/PaintedMetal004_1K-JPG_NormalGL.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/PaintedMetal004_1K-JPG_Roughness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/PaintedMetal007_1K-JPG_Color.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/PaintedMetal007_1K-JPG_Metalness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/PaintedMetal007_1K-JPG_NormalGL.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/PaintedMetal007_1K-JPG_Roughness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/PaintedMetal008_1K-JPG_Color.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/PaintedMetal008_1K-JPG_Metalness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/PaintedMetal008_1K-JPG_Roughness.jpg
+- Assets/Model/BoilerRoom/fired-boiler/textures/gltf_embedded_0.png
+- Assets/Model/BoilerRoom/fired-boiler/textures/gltf_embedded_12.png
+- Assets/Model/BoilerRoom/fired-boiler/textures/gltf_embedded_13.png
+- Assets/Model/BoilerRoom/fired-boiler/textures/gltf_embedded_14.png
+- Assets/Model/BoilerRoom/fired-boiler/textures/gltf_embedded_2.png
+- Assets/Model/BoilerRoom/fired-boiler/textures/gltf_embedded_4.png
+- Assets/Model/BoilerRoom/fired-boiler/textures/gltf_embedded_6.png
+- Assets/Model/BoilerRoom/fired-boiler/textures/gltf_embedded_7.png
+- Assets/Model/BoilerRoom/fired-boiler/textures/gltf_embedded_9.png
+- Assets/Model/BoilerRoom/fired-boiler/textures/internal_ground_ao_texture.jpeg
+- Assets/Model/TurbineRoom/ChatGPT Image Oct 1, 2026, 06_57_23 PM.png
+- Assets/Model/TurbineRoom/tERRAIN.glb
+- Assets/Scenes/BoilerAnimation.unity
+- Assets/Scenes/Terrain.unity
+- Assets/Scenes/Test.unity
+- Assets/Skybox & Shaders/Fantasy Skybox FREE/Scenes/Textures (Lightmaps)/Lightmap-0_comp_dir.png
+- Assets/Skybox & Shaders/Fantasy Skybox FREE/Scenes/Textures (Lightmaps)/Lightmap-0_comp_light.exr
+- Assets/Skybox & Shaders/Fantasy Skybox FREE/Scenes/Textures (Lightmaps)/ReflectionProbe-0.exr
+- Assets/Skybox & Shaders/Fantasy Skybox FREE/Scenes/Textures (Terrain)/Brush_Flower.png
+- Assets/Skybox & Shaders/Fantasy Skybox FREE/Scenes/Textures (Terrain)/Brush_Grass_01.png
+- Assets/Skybox & Shaders/Fantasy Skybox FREE/Scenes/Textures (Terrain)/Brush_Grass_02.png
+- Assets/Skybox & Shaders/NamuFX/StylizedWaterEffects/Textures/PSD/Tex_Particles_01_PSD.psd
+- Assets/Skybox & Shaders/NamuFX/_SharedAssets/Images/Noise/Noise06.tga
+- Assets/Texture/11.jpg
+- Assets/Texture/12.jpeg
+- Assets/Texture/14.png
+- Assets/Texture/15.webp
+- Assets/Texture/17.webp
+- Assets/Texture/18.webp
+- Assets/Texture/Info Icon.png
+- Assets/Texture/MiniMap/dry-clean (1).png
+- Assets/Texture/MiniMap/new-moon.png
+- Assets/Texture/MiniMap/oval.png
+- Assets/Texture/Texture_Dirt_Normal.png
+- Assets/Texture/Texture_Grass_Diffuse.png
+- Assets/Texture/Texture_Rock_Diffuse.png
