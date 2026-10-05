@@ -75,11 +75,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 561e148377a913a4cb79f28560e3696e
-    m_Address: Assets/Texture/MiniMap/Minimap.renderTexture
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5b960df480f27b342ae64341c67d84c5
     m_Address: Assets/Charachter/Main Character/Animations/Worker.controller
     m_ReadOnly: 0
