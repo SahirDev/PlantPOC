@@ -67,8 +67,6 @@ public class PlantIsometricCameraController : SingletonMono<PlantIsometricCamera
     [Header("Performance (WebGL)")]
     [Tooltip("While the mouse and camera are both still, the UI check + physics raycast under the cursor is only repeated at this interval (seconds) instead of every frame. 0 = every frame (old behaviour).")]
     [SerializeField, Min(0f)] private float idlePointerRefreshInterval = 0.1f;
-    [Tooltip("Worker's minimap camera. Auto-found under the worker if empty. It is switched off while in plant overview, where the minimap is hidden anyway.")]
-    [SerializeField] private MiniMap workerMiniMap;
 
     [Header("Events")]
     public UnityEvent<GameObject> onObjectSelected = new UnityEvent<GameObject>();
@@ -195,12 +193,10 @@ public class PlantIsometricCameraController : SingletonMono<PlantIsometricCamera
     private void SetIsometricMode(bool overview, Vector3? workerTeleportPosition)
     {
         ResolveLiveWorker();
-        if (workerMiniMap == null && workerPlayer != null) workerMiniMap = workerPlayer.GetComponentInChildren<MiniMap>(true);
 
         if (overview)
         {
-            // Worker off. MiniMap first so its camera is captured as "off" by the worker suspension.
-            if (workerMiniMap != null) workerMiniMap.enabled = false;
+            // Worker off (the minimap panel hides by itself while the worker is suspended).
             if (workerPlayer != null) workerPlayer.EnterPlantOverview();
             if (workerCamera != null) workerCamera.enabled = false;
 
@@ -213,7 +209,6 @@ public class PlantIsometricCameraController : SingletonMono<PlantIsometricCamera
             if (workerPlayer != null && !workerPlayer.ExitPlantOverview(workerTeleportPosition)) return;
 
             if (workerCamera != null) workerCamera.enabled = true;
-            if (workerMiniMap != null) workerMiniMap.enabled = true;
 
             // Overview camera off.
             SetIsometricCameraActive(false);
@@ -251,7 +246,6 @@ public class PlantIsometricCameraController : SingletonMono<PlantIsometricCamera
         workerPlayer = livePlayer;
         if (livePlayer.CameraController != null && livePlayer.CameraController.PlayerCamera != null)
             workerCamera = livePlayer.CameraController.PlayerCamera;
-        workerMiniMap = null; // re-found under the live worker
     }
 
     private void SetIsometricCameraActive(bool active)
@@ -469,9 +463,12 @@ public class PlantIsometricCameraController : SingletonMono<PlantIsometricCamera
         onObjectSelected.Invoke(box.gameObject);
 
         Vector3 size = box.bounds.size;
+        ObjectInfo info = ObjectInfo.For(box);
         CommunicationManager.HandleOverviewObjectSelected_Extern(new OverviewSelectionPayload
         {
-            name = box.gameObject.name,
+            name = info != null ? info.DisplayName : box.gameObject.name,
+            objectName = box.gameObject.name,
+            description = info != null ? info.Description : string.Empty,
             sizeX = Mathf.Abs(size.x),
             sizeY = Mathf.Abs(size.y),
             sizeZ = Mathf.Abs(size.z)

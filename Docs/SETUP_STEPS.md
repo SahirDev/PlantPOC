@@ -70,3 +70,14 @@ For Main_Scene, BoilerRoom, TurbineRoom, Control_Room:
 ## Step 10 – For the React team
 - [ ] Give them `Docs/ReactBridge_API.md` and `Docs/unityBridge.ts`.
 - [ ] Tell them where `StreamingAssets` is hosted – they must set `streamingAssetsUrl` in `useUnityContext`.
+
+## Step 11 – Info card, minimap, simple build (menu **Tools → Thermal Plant**)
+- [ ] **7. Setup Object Info Card (Main_Scene)** – builds the card that opens beside a clicked object (old card is switched off, not deleted).
+- [ ] Add **ObjectInfo** to every box collider tagged `Highlight` → type Display Name + Description (Side = Auto is fine).
+- [ ] Put the 4 minimap pictures in `Assets/Texture/MiniMap` with a scene word in the file name: `main`/`plant`, `boiler`, `turbine`, `control` (e.g. `Minimap_Main.png`, `Minimap_Boiler.png`). Best: width and height multiples of 4.
+- [ ] **5. Create MiniMap Panel (Bootstrap)** – answer **Rebuild** if asked. Minimap UI bottom-right + worker icon + the one EventSystem.
+- [ ] **6. Setup MiniMap In All Scenes** – adds/updates a `MiniMap` object per scene, picks its picture, imports it as Sprite, switches the old minimap camera / sprite / UI off.
+- [ ] Line up each scene: open it → select `MiniMap` → Scene view from the top (click the Y of the gizmo) → move / rotate (Y only) / scale (same X and Z) until the see-through picture sits on the real walls. Set its Y to the floor.
+- [ ] Delete `MiniMapCamera` from the Worker prefab, the old `Plantminmap` and `MinmapParent` objects, and EventSystems in the 4 scenes.
+- [ ] Play from **Bootstrap** (the minimap panel lives there).
+- [ ] **For the React team:** Build Mode → **Simple Test Build** → Build. Give them the whole folder. Later: Build Mode → **Addressables Build**.

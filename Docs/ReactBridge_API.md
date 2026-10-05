@@ -10,6 +10,7 @@ Values are strings: `"true"`/`"false"`, numbers like `"42.5"`, names, or JSON (p
 ## Loading
 The WebGL build contains only a tiny **Bootstrap** scene. Main_Scene and every room are separate downloads from the build's `StreamingAssets` folder, cached by the browser after the first time.
 
+- **Simple test build** (no downloads, no compression, for local testing): every scene is inside the build, file names have no `.br`. Same functions and events; `handleSceneDownloadProgress` then shows loading progress with `totalMB: 0`.
 - Pass `streamingAssetsUrl` to `useUnityContext` (e.g. `"/unity/StreamingAssets"`) – **required**, otherwise scenes can't be downloaded.
 - Startup: `handleUnityReady` → `handleSceneLoading("Main_Scene")` → `handleSceneDownloadProgress`… → `handleSceneLoaded`. Show your loading screen until `handleSceneLoaded`.
 - After Main_Scene opens, Unity downloads the rooms quietly in the background (`handleSceneDownloadProgress` with `background: true`, then `handleScenePreloaded`). Don't block the UI for background progress.
@@ -25,6 +26,7 @@ The WebGL build contains only a tiny **Bootstrap** scene. Main_Scene and every r
 | `SetCursorLocked_Extern` | `"true"`/`"false"` | Unlock before showing a panel in worker mode. A lock may need one click on the canvas (browser rule). |
 | `SetWorkerTracking_Extern` | `"true"`, `"false"`, `"true/0.2"` | Streams `handleWorkerTransform` every 0.2 s (for a React minimap) |
 | `SetVolume_Extern` | `"0"`..`"1"` | Master volume |
+| `SetMiniMapVisible_Extern` | `"true"`/`"false"` | Show/hide the Unity minimap (bottom-right). It also hides by itself in overview and explosion view. |
 
 ### Scenes
 | Function | Value | Notes |
@@ -35,6 +37,8 @@ The WebGL build contains only a tiny **Bootstrap** scene. Main_Scene and every r
 
 ### Main_Scene camera
 The scene starts in **overview** (worker hidden). Right-click on the floor teleports the worker (always third person); key **C** toggles.
+Clicking a highlighted building opens a small **Unity** info card beside it (name + description). React gets `handleOverviewObjectSelected` too (e.g. for a breadcrumb) but doesn't need to draw that card.
+The **minimap** is Unity UI (bottom-right, about 300 × 230 px at 1920 × 1080) – keep React panels out of that corner.
 | Function | Value | Notes |
 |---|---|---|
 | `SetCameraMode_Extern` | `"overview"` / `"worker"` | Answer: `handleCameraModeChanged` |
@@ -119,7 +123,7 @@ SceneDownloadProgress { name, progress (0..1), downloadedMB, totalMB, background
 SceneDownloadSize  { name, exists, cached, sizeMB }
 SceneTrigger       { targetScene, text }
 WorkerTransform    { scene, active, x, y, z, heading }
-OverviewSelection  { name, sizeX, sizeY, sizeZ }
+OverviewSelection  { name, objectName, description, sizeX, sizeY, sizeZ }   // name/description from ObjectInfo
 EquipmentInfo      { type: "Turbine"|"Boiler"|"ControlRoom", name }
 EquipmentState     { inRange, type, name, activeAction: "none"|"explode"|"explodeAll"|"operation"|"info",
                      exploded, operating, infoActive, canExplode, canExplodeAll, canOperate, canInfo }

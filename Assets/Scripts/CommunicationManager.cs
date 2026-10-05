@@ -222,6 +222,15 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         if (TryParseFloat(volume, out float value, nameof(SetVolume_Extern))) AudioListener.volume = Mathf.Clamp01(value);
     }
 
+    /// <summary>"true" / "false". Shows / hides the Unity minimap panel (it also hides by itself in
+    /// overview and explosion view, when there is no worker).</summary>
+    public void SetMiniMapVisible_Extern(string visible)
+    {
+        LogIncoming(nameof(SetMiniMapVisible_Extern), visible);
+        if (!Available<MiniMapPanel>(nameof(SetMiniMapVisible_Extern), "Minimap panel")) return;
+        MiniMapPanel.Instance.SetVisible(ParseBool(visible));
+    }
+
     #endregion
 
     #region React -> Unity : Scenes

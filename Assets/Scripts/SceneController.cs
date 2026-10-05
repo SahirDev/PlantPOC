@@ -10,7 +10,9 @@ using UnityEngine.SceneManagement;
 /// Loads scenes. Persistent singleton (one for the whole session).
 ///
 /// Scenes marked Addressable (Main_Scene and the rooms) are downloaded on demand, then cached by the
-/// browser. Scenes in Build Settings (Bootstrap) load normally. Callers don't need to know which is which:
+/// browser. Scenes in Build Settings load normally and win over Addressables, so the simple test build
+/// (Tools > Thermal Plant > 5: every scene in Build Settings) never touches Addressables at all.
+/// Callers don't need to know which is which:
 ///     SceneController.Instance.ChangeScene("BoilerRoom");
 ///
 /// Sends to React (through CommunicationManager): handleSceneLoading, handleSceneDownloadProgress,
@@ -87,10 +89,14 @@ public class SceneController : SingletonMono<SceneController>
         CommunicationManager.HandleSceneLoading_Extern(sceneName);
 
         string error = null;
-        yield return EnsureAddressablesReady();
-
+        bool inBuild = Application.CanStreamedLevelBeLoaded(sceneName);
         bool isAddressable = false;
-        yield return IsAddressableScene(sceneName, result => isAddressable = result);
+
+        if (!inBuild)
+        {
+            yield return EnsureAddressablesReady();
+            yield return IsAddressableScene(sceneName, result => isAddressable = result);
+        }
 
         if (isAddressable)
         {
@@ -116,10 +122,24 @@ public class SceneController : SingletonMono<SceneController>
                 }
             }
         }
-        else if (Application.CanStreamedLevelBeLoaded(sceneName))
+        else if (inBuild)
         {
+            // Simple build: no download, only loading. React still gets progress (background = false).
             AsyncOperation load = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
-            yield return load;
+            float nextReport = 0f;
+
+            while (!load.isDone)
+            {
+                if (Time.unscaledTime >= nextReport)
+                {
+                    nextReport = Time.unscaledTime + progressInterval;
+                    EmitLoadProgress(sceneName, load.progress);
+                }
+
+                yield return null;
+            }
+
+            EmitLoadProgress(sceneName, 1f);
 
             if (currentSceneHandle.IsValid()) Addressables.Release(currentSceneHandle);
             currentSceneHandle = default;
@@ -195,6 +215,19 @@ public class SceneController : SingletonMono<SceneController>
         });
     }
 
+    // Built-in scene: progress of loading (0..0.9 while loading, then 1). No MB values.
+    private static void EmitLoadProgress(string sceneName, float progress)
+    {
+        CommunicationManager.HandleSceneDownloadProgress_Extern(new SceneDownloadProgressPayload
+        {
+            name = sceneName,
+            progress = Mathf.Clamp01(progress / 0.9f),
+            downloadedMB = 0f,
+            totalMB = 0f,
+            background = false
+        });
+    }
+
     private static void EmitProgress(string sceneName, AsyncOperationHandle download, long totalBytes, bool background)
     {
         DownloadStatus status = download.GetDownloadStatus();
@@ -215,6 +248,12 @@ public class SceneController : SingletonMono<SceneController>
 
     private IEnumerator GetDownloadSizeRoutine(string sceneName)
     {
+        if (!string.IsNullOrEmpty(sceneName) && Application.CanStreamedLevelBeLoaded(sceneName))
+        {
+            CommunicationManager.HandleSceneDownloadSize_Extern(new SceneDownloadSizePayload { name = sceneName, exists = true, cached = true, sizeMB = 0f });
+            yield break;
+        }
+
         yield return EnsureAddressablesReady();
 
         bool isAddressable = false;
@@ -237,6 +276,13 @@ public class SceneController : SingletonMono<SceneController>
 
     private IEnumerator PreloadRoutine(string sceneName, bool reportErrors)
     {
+        // Part of the build already: nothing to download.
+        if (!string.IsNullOrEmpty(sceneName) && Application.CanStreamedLevelBeLoaded(sceneName))
+        {
+            if (reportErrors) CommunicationManager.HandleScenePreloaded_Extern(sceneName);
+            yield break;
+        }
+
         yield return EnsureAddressablesReady();
 
         bool isAddressable = false;

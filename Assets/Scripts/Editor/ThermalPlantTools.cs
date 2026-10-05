@@ -17,9 +17,14 @@ using UnityEngine.SceneManagement;
 ///   2. Apply WebGL Player Settings      – Brotli, code stripping, caching
 ///   3. Apply WebGL Texture Settings     – WebGL-only max size + crunch (PC keeps full quality)
 ///   4. Apply WebGL Model Settings       – optional: mesh compression, Read/Write off
+///   5. Create MiniMap Panel             – persistent minimap UI (+ EventSystem) in Bootstrap
+///   6. Setup MiniMap In All Scenes      – MiniMapArea + minimap camera per scene
+///   7. Setup Object Info Card           – Main_Scene: the card that opens beside a clicked object
+///   Build Mode > Simple Test Build      – every scene in the build, no compression, no Addressables (for React testing)
+///   Build Mode > Addressables Build     – back to Bootstrap only + downloads + Brotli
 /// Every step can be run again safely.
 /// </summary>
-public static class ThermalPlantTools
+public static partial class ThermalPlantTools
 {
     private const string MenuRoot = "Tools/Thermal Plant/";
     private const string ScenesFolder = "Assets/Scenes";
@@ -46,7 +51,6 @@ public static class ThermalPlantTools
                 "- delete objects that only hold a UI Document (old UI Toolkit screens)\n" +
                 "- remove the UI Document component from objects that also hold game logic\n" +
                 "- remove 'Missing script' components (e.g. the deleted MainSceneUIController)\n" +
-                "- delete the PlantCameraUI canvas (React replaces it)\n" +
                 "- report anything that needs a manual decision (extra workers, cameras)\n\n" +
                 "Each scene is saved. Make a backup first. Continue?", "Clean up", "Cancel"))
             return;
@@ -109,13 +113,7 @@ public static class ThermalPlantTools
             }
         }
 
-        // 3. uGUI canvas replaced by React
-        foreach (PlantCameraUI cameraUI in Object.FindObjectsByType<PlantCameraUI>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-        {
-            if (cameraUI == null || cameraUI.gameObject.scene != scene) continue;
-            log.AppendLine($"  - deleted '{GetPath(cameraUI.gameObject)}' (PlantCameraUI)");
-            Object.DestroyImmediate(cameraUI.gameObject);
-        }
+        // 3. (The PlantCameraUI canvas stays: it shows the object info card. Step 7 sets it up.)
 
         // 4. Report what needs a decision
         var workers = new List<string>();

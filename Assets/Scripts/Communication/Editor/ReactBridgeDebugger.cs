@@ -24,6 +24,7 @@ public class ReactBridgeDebugger : EditorWindow
         { "SetKeyboardCapture_Extern", "false" },
         { "SetWorkerTracking_Extern", "true/0.5" },
         { "SetVolume_Extern", "1" },
+        { "SetMiniMapVisible_Extern", "false" },
         { "GetTurbineData_Extern", "1" },
         { "SetBurnerPower_Extern", "80" },
         { "SetValveOpening_Extern", "30" },

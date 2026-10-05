@@ -57,7 +57,9 @@ public class WorkerTransformPayload
 [Serializable]
 public class OverviewSelectionPayload
 {
-    public string name;
+    public string name;        // ObjectInfo display name (GameObject name if none)
+    public string objectName;  // GameObject name
+    public string description; // ObjectInfo description ("" if none)
     public float sizeX, sizeY, sizeZ; // metres
 }
 

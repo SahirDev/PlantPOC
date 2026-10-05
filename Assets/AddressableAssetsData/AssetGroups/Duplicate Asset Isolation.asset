@@ -1,0 +1,254 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Duplicate Asset Isolation
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Duplicate Asset Isolation
+  m_GUID: 0db7dc3f32e938149aa2ecc4c82ff62c
+  m_SerializeEntries:
+  - m_GUID: 0406db5a14f94604a8c57ccfbc9f3b46
+    m_Address: Packages/com.unity.render-pipelines.universal/Shaders/Particles/ParticlesUnlit.shader
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 13c02b14c4d048fa9653293d54f6e0e1
+    m_Address: Packages/com.unity.render-pipelines.universal/Shaders/2D/Sprite-Unlit-Default.shader
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1817cfe344c5f6f4c949b2a89c5d62ad
+    m_Address: Assets/Material/Controll Room materials/8575-v7.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 206aaba02f6f94e4e98f4f17f980bf47
+    m_Address: Assets/Charachter/Main Character/Animations/LadderTop.anim
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 24af51b71ca5c7540b4dff4424e39dbd
+    m_Address: Assets/UI Toolkit/Icons/engineer.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 25059a9df112faa40886f45a18d3a07b
+    m_Address: Assets/Charachter/Main Character/Mat/workerDiffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2e46c326a69f3d3419c343891e4b4a82
+    m_Address: Assets/Charachter/Main Character/Mat/Ch17_1002_Diffuse.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 308dc841933b69d46a81519ca214e2cf
+    m_Address: Assets/Scripts/ReusableCharacterController/CharacterInput.inputactions
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 31321ba15b8f8eb4c954353edc038b1d
+    m_Address: Packages/com.unity.render-pipelines.universal/Runtime/Materials/Lit.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 36e335017ad71d54fbb10842863188ae
+    m_Address: Packages/com.unity.render-pipelines.core/Runtime/RenderPipelineResources/FallbackShader.shader
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 39b9f94c9bac55b47b34e0e435ae4013
+    m_Address: Assets/Charachter/Main Character/Mat/Ch17_hair.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 439972c2ed20db74e8031dcc2ec539ed
+    m_Address: Assets/Model/10kv_high-voltage_power_distribution_room.glb
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 561e148377a913a4cb79f28560e3696e
+    m_Address: Assets/Texture/MiniMap/Minimap.renderTexture
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5b960df480f27b342ae64341c67d84c5
+    m_Address: Assets/Charachter/Main Character/Animations/Worker.controller
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5ec06d09cdd614243b97b1fb19fd2381
+    m_Address: Assets/Charachter/Main Character/Animations/Standard Walk.anim
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6295883be9f24c048ba1bcc5b66e2455
+    m_Address: Assets/Charachter/Main Character/Animations/Standard Run.anim
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 660ccd4df0f16f14f9a05ce3dd6f071d
+    m_Address: Assets/Scripts/ReusableCharacterController/Examples/PlayerReference.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 67053b701b333b14faefa5cbd0020f07
+    m_Address: Assets/Material/Controll Room materials/Room walls.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7aecb867bf2508b489431f8e9cdbb08c
+    m_Address: Assets/Model/Steam Turbine Scene/Steam Turbine Scene.glb
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8471801dd5db00945966f4c37c2138db
+    m_Address: Assets/Charachter/Main Character/Mat/Ch17_body.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 930fa8c2133e0664189af8ba2397ec77
+    m_Address: Assets/Settings/WebGL_LightingSettings.lighting
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 933532a4fcc9baf4fa0491de14d08ed7
+    m_Address: Packages/com.unity.render-pipelines.universal/Shaders/Lit.shader
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9950c6772e8f75d4098bd63d6b46685b
+    m_Address: Assets/Scenes/Turbine/ProBuilder Meshes/pb_Mesh-226304.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 99967b8a32570884ca4ad0287dddd045
+    m_Address: Assets/Skybox & Shaders/Farming_game_FX/Materials/Farming/Textures/smoke2.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9dfc825aed78fcd4ba02077103263b40
+    m_Address: Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Unlit-Default.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9ec4316547e963345b2fc6e656a324d4
+    m_Address: Assets/Skybox & Shaders/Farming_game_FX/Materials/Farming/smoke2.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b5620f11f5d98214d8a27ab5ca5efe39
+    m_Address: Assets/Material/Skybox.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b875678334242674fbfd67003297a4ee
+    m_Address: Assets/Charachter/Main Character/Mat/Ch17_1001_Normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b9d29dfa1474148e792ac720cbd45122
+    m_Address: Packages/com.unity.cloud.gltfast/Runtime/Shader/glTF-pbrMetallicRoughness.shadergraph
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c0125a5ca4a4510488790b38742aafbb
+    m_Address: Assets/Texture/Base/Wall2.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c645ff3b3245ec842810316a33d831e2
+    m_Address: Assets/Material/Door Glass Mat.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c91fafecfb4d1f843b1398c7bf4e4b84
+    m_Address: Assets/Material/Controll Room materials/Door Handel Mat.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ca9f5fa95ffab41fb9a615ab714db018
+    m_Address: Packages/com.unity.inputsystem/InputSystem/Runtime/Plugins/PlayerInput/DefaultInputActions.inputactions
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d26048c0d1ec8ba44b850ad6541c1f81
+    m_Address: Assets/Charachter/Main Character/Mat/Ch17_1002_Normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d9cfcb5f09e1d614cbdca50822731064
+    m_Address: Assets/Charachter/Main Character/Animations/Ladder Climb.anim
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dae5ad151206dce409525687b0efcd6d
+    m_Address: Assets/Texture/Normal Maps/Normla map.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ddf7d04cbefe3424098125ced3b44bd5
+    m_Address: Assets/Sounds/Alaram sound.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e171a98c992c0964b9063fc4979afd2e
+    m_Address: Assets/Material/Controll Room materials/Top.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e3265ab4bf004d28a9537516768c1c75
+    m_Address: Assets/TextMesh Pro/Fonts/LiberationSans.ttf
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e38cd5df58201644eaf7b7bf28c80ba3
+    m_Address: Assets/Charachter/Main Character/Animations/Standing Idle.anim
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e6e9a19c3678ded42a3bc431ebef7dbd
+    m_Address: Packages/com.unity.render-pipelines.universal/Shaders/Utils/FallbackError.shader
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eab344a04d85e5341bbcdf09152f93cb
+    m_Address: Assets/UI Toolkit/Icons/turbine-minimap.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ec6a0213463b8ee4e84af88b32bdd7d5
+    m_Address: Assets/Charachter/Main Character/Standard Walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fb56293111f356540b3dc9450da9e278
+    m_Address: Assets/Model/fired-boiler/Cylinder.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fcd9e1562e8e00b45bcd9504b29ac33d
+    m_Address: Assets/Scripts/ReusableCharacterController/Examples/Default Player
+      Settings.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fe393ace9b354375a9cb14cdbbc28be4
+    m_Address: Assets/TextMesh Pro/Shaders/TMP_SDF-Mobile.shader
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: bc452ff8b184df34087b72498c622414, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 5ff0be4b510c73d4f9ac651104f84cc5, type: 2}
+    - {fileID: 11400000, guid: 46ac679b5fec4c94d8fd4981bd5ccee4, type: 2}

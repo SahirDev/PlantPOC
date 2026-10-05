@@ -18,7 +18,7 @@ export interface SceneDownloadProgress { name: SceneName; progress: number; down
 export interface SceneDownloadSize { name: SceneName; exists: boolean; cached: boolean; sizeMB: number; }
 export interface SceneTrigger { targetScene: SceneName; text: string; }
 export interface WorkerTransform { scene: string; active: boolean; x: number; y: number; z: number; heading: number; }
-export interface OverviewSelection { name: string; sizeX: number; sizeY: number; sizeZ: number; }
+export interface OverviewSelection { name: string; objectName: string; description: string; sizeX: number; sizeY: number; sizeZ: number; }
 export interface EquipmentInfo { type: "Turbine" | "Boiler" | "ControlRoom"; name: string; }
 export interface EquipmentState {
   inRange: boolean; type: "None" | "Turbine" | "Boiler" | "ControlRoom"; name: string;
@@ -86,6 +86,7 @@ export interface UnityFunctions {
   SetCursorLocked_Extern: string;
   SetWorkerTracking_Extern: string;
   SetVolume_Extern: string;
+  SetMiniMapVisible_Extern: string;
   ChangeScene_Extern: string;
   GetSceneDownloadSize_Extern: string;
   PreloadScene_Extern: string;
@@ -159,6 +160,10 @@ const { unityProvider, sendMessage, addEventListener, removeEventListener, isLoa
   codeUrl: "/unity/Build/ThermalPlant.wasm.br",
   streamingAssetsUrl: "/unity/StreamingAssets",          // REQUIRED: scenes download from here
 });
+
+// SIMPLE TEST BUILD (Tools > Thermal Plant > Build Mode > Simple Test Build): no compression,
+// so the file names have NO ".br": Build/ThermalPlant.data, Build/ThermalPlant.framework.js, Build/ThermalPlant.wasm.
+// Scenes are inside the build; handleSceneDownloadProgress then reports loading progress with totalMB = 0.
 
 // Loading screen
 useUnityEvent(addEventListener, removeEventListener, "handleSceneDownloadProgress", (p) => {
