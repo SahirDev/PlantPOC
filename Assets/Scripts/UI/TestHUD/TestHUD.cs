@@ -1,4 +1,4 @@
-#if TEST_HUD
+#if !DISABLE_TEST_HUD
 using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
@@ -8,7 +8,8 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 /// <summary>
-/// TEST UI for the "Project-With-UI-" branch (only compiled with the TEST_HUD scripting define).
+/// TEST UI for the "Project-With-UI-" branch. Always on in this branch; to switch it off add the
+/// scripting define DISABLE_TEST_HUD (or delete the UI/TestHUD folder) - do that before merging into main.
 /// A stand-in for the React UI, so features and performance can be tested in the editor and in a
 /// plain WebGL build. It talks to Unity exactly like React does:
 ///   - calls CommunicationManager.Instance.Xxx_Extern(...)
