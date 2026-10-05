@@ -96,6 +96,7 @@ public class TestHUD : MonoBehaviour
     // ------------------------------------------------------------------ state from Unity events
 
     private string scene = "";
+    private string loadingScene; // scene being loaded right now (null = none)
     private string viewMode = "";
     private bool overview;
     private bool cursorLocked;
@@ -184,16 +185,19 @@ public class TestHUD : MonoBehaviour
         switch (function)
         {
             case "handleSceneLoading":
+                loadingScene = data;
                 ShowLoading(data, 0f);
                 break;
             case "handleSceneDownloadProgress":
+                // Only while a scene change is running (ignore background downloads and late 100 % messages).
                 var progress = JsonUtility.FromJson<SceneDownloadProgressPayload>(data);
-                if (!progress.background) ShowLoading(progress.name, progress.progress);
+                if (!progress.background && progress.name == loadingScene) ShowLoading(progress.name, progress.progress);
                 break;
             case "handleSceneLoaded":
                 OnSceneLoaded(JsonUtility.FromJson<SceneInfoPayload>(data).name);
                 break;
             case "handleSceneLoadFailed":
+                loadingScene = null;
                 loading.SetActive(false);
                 ShowToast("Scene failed: " + JsonUtility.FromJson<BridgeErrorPayload>(data).message);
                 break;
@@ -282,6 +286,7 @@ public class TestHUD : MonoBehaviour
     private void OnSceneLoaded(string name)
     {
         scene = name;
+        loadingScene = null;
         loading.SetActive(false);
 
         equipment = new EquipmentStatePayload();
