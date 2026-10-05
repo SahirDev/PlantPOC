@@ -16,6 +16,7 @@ using UnityEngine.UI;
 ///   5. Create MiniMap Panel        – the persistent minimap UI (+ the one EventSystem) in Bootstrap
 ///   6. Setup MiniMap In All Scenes  – one MiniMapArea (picture + position) per scene, no camera
 ///   7. Setup Object Info Card       – Main_Scene: card beside a clicked object (overview camera)
+///   8. Reimport glTF Models         – after pulling: textures first, then the .glb models that use them
 ///   Build Mode                      – Simple Test Build (for the React team) / Addressables Build
 /// Every step can be run again safely: what exists is kept and reported.
 /// </summary>
@@ -562,6 +563,52 @@ public static partial class ThermalPlantTools
         uiSO.FindProperty("selectionBoundsText").objectReferenceValue = size;
         uiSO.FindProperty("selectionBoundsTMPText").objectReferenceValue = null;
         uiSO.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    // ===================================================================================== 8. glTF models
+
+    /// <summary>
+    /// The .glb models no longer carry their textures inside: the pictures sit next to them in "<model>_Textures"
+    /// folders, so Unity compresses them (DXT/crunch, WebGL max 1024) instead of storing them uncompressed.
+    /// Unity may import a .glb before its textures on the first pull; this re-imports textures first, then models.
+    /// </summary>
+    [MenuItem(MenuRoot + "8. Reimport glTF Models (after pulling)", priority = 8)]
+    private static void ReimportGltfModels()
+    {
+        var textures = new List<string>();
+        var models = new List<string>();
+
+        foreach (string path in AssetDatabase.GetAllAssetPaths())
+        {
+            if (!path.StartsWith("Assets/")) continue;
+            string lower = path.ToLowerInvariant();
+            if (lower.EndsWith(".glb") || lower.EndsWith(".gltf")) models.Add(path);
+            else if (path.Contains("_Textures/") && (lower.EndsWith(".png") || lower.EndsWith(".jpg") || lower.EndsWith(".jpeg"))) textures.Add(path);
+        }
+
+        try
+        {
+            for (int i = 0; i < textures.Count; i++)
+            {
+                EditorUtility.DisplayProgressBar("Reimport glTF", textures[i], 0.5f * i / Mathf.Max(1, textures.Count));
+                AssetDatabase.ImportAsset(textures[i], ImportAssetOptions.ForceUpdate);
+            }
+
+            for (int i = 0; i < models.Count; i++)
+            {
+                EditorUtility.DisplayProgressBar("Reimport glTF", models[i], 0.5f + 0.5f * i / Mathf.Max(1, models.Count));
+                AssetDatabase.ImportAsset(models[i], ImportAssetOptions.ForceUpdate);
+            }
+        }
+        finally
+        {
+            EditorUtility.ClearProgressBar();
+        }
+
+        var log = new StringBuilder();
+        log.AppendLine($"+ {textures.Count} model textures re-imported");
+        log.AppendLine($"+ {models.Count} glTF models re-imported");
+        Report("Reimport glTF models", log, "If a model still looks untextured, check the Console for glTFast errors and send them to Claude.");
     }
 
     // ===================================================================================== Build mode
