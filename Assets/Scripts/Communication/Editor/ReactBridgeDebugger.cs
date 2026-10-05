@@ -25,6 +25,8 @@ public class ReactBridgeDebugger : EditorWindow
         { "SetWorkerTracking_Extern", "true/0.5" },
         { "SetVolume_Extern", "1" },
         { "SetMiniMapVisible_Extern", "false" },
+        { "SetViewMode_Extern", "fpp" },
+        { "SetSteamPressure_Extern", "70" },
         { "GetTurbineData_Extern", "1" },
         { "SetBurnerPower_Extern", "80" },
         { "SetValveOpening_Extern", "30" },

@@ -58,6 +58,7 @@ export interface UnityEvents {
   handleSceneTriggerEntered: SceneTrigger;
   handleSceneTriggerExited: SceneTrigger;
   handleCameraModeChanged: string;
+  handleViewModeChanged: "fpp" | "tpp" | "fly" | "focus";
   handleOverviewObjectSelected: OverviewSelection;
   handleOverviewObjectDeselected: void;
   handleEquipmentInRange: EquipmentInfo;
@@ -87,6 +88,9 @@ export interface UnityFunctions {
   SetWorkerTracking_Extern: string;
   SetVolume_Extern: string;
   SetMiniMapVisible_Extern: string;
+  SetViewMode_Extern: "fpp" | "tpp" | "fly";
+  GetViewMode_Extern: void;
+  SetSteamPressure_Extern: string;
   ChangeScene_Extern: string;
   GetSceneDownloadSize_Extern: string;
   PreloadScene_Extern: string;

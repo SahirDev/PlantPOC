@@ -42,6 +42,9 @@ public class TurbineData : MonoBehaviour
     private static readonly System.Globalization.CultureInfo Invariant = System.Globalization.CultureInfo.InvariantCulture;
     private static readonly List<TurbineData> activeTurbines = new List<TurbineData>();
 
+    /// <summary>Steam pressure setpoint 0..1 for all turbines (-1 = free random values, the old behaviour).</summary>
+    private static float steamPressureSetpoint = -1f;
+
     private SpinObjects cachedSpinObject;
     private bool workerInRange;
     private bool operating;
@@ -99,18 +102,39 @@ public class TurbineData : MonoBehaviour
     {
         if (data == null) return;
 
-        float temp = Random.Range(TemperatureRange.x, TemperatureRange.y);
+        float temp = Sample(TemperatureRange);
         data.Temperature = temp.ToString("F2", Invariant);
         data.TemperatureF = (temp * 1.8f + 32f).ToString("F2", Invariant);
 
-        data.SteamPressure = Random.Range(PressureRange.x, PressureRange.y).ToString("F2", Invariant);
-        data.RPM = Random.Range(RPMRange.x, RPMRange.y).ToString("F2", Invariant);
-        data.SteamMassFlowRate = Random.Range(FlowRateRange.x, FlowRateRange.y).ToString("F2", Invariant);
-        data.Vibration = Random.Range(VibrationRange.x, VibrationRange.y).ToString("F2", Invariant);
+        data.SteamPressure = Sample(PressureRange).ToString("F2", Invariant);
+        data.RPM = Sample(RPMRange).ToString("F2", Invariant);
+        data.SteamMassFlowRate = Sample(FlowRateRange).ToString("F2", Invariant);
+        data.Vibration = Sample(VibrationRange).ToString("F2", Invariant);
 
         // Only stream while someone can see it; React can always ask with "turbine.get(All)".
         if (workerInRange || operating) SendData();
     }
+
+    // Random value in the range, or - with a steam pressure setpoint - the setpoint's point of the range
+    // with a little noise (pressure drives RPM, flow, temperature and vibration).
+    private static float Sample(Vector2 range)
+    {
+        if (steamPressureSetpoint < 0f) return Random.Range(range.x, range.y);
+
+        float noise = (range.y - range.x) * 0.02f;
+        return Mathf.Lerp(range.x, range.y, steamPressureSetpoint) + Random.Range(-noise, noise);
+    }
+
+    /// <summary>Steam pressure slider 0..100 (React: SetSteamPressure_Extern). Applies to every turbine and
+    /// updates their values right away.</summary>
+    public static void SetSteamPressurePercent(float percent)
+    {
+        steamPressureSetpoint = Mathf.Clamp01(percent / 100f);
+        foreach (TurbineData turbine in activeTurbines) turbine.SimulateData();
+    }
+
+    /// <summary>Current steam pressure setpoint 0..100, or -1 when not set.</summary>
+    public static float SteamPressurePercent => steamPressureSetpoint < 0f ? -1f : steamPressureSetpoint * 100f;
 
     public void StartOperation()
     {

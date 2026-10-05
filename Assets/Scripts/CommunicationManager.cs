@@ -69,6 +69,7 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     [DllImport("__Internal")] private static extern void handleSceneTriggerEntered(string data);
     [DllImport("__Internal")] private static extern void handleSceneTriggerExited(string data);
     [DllImport("__Internal")] private static extern void handleCameraModeChanged(string data);
+    [DllImport("__Internal")] private static extern void handleViewModeChanged(string data);
     [DllImport("__Internal")] private static extern void handleOverviewObjectSelected(string data);
     [DllImport("__Internal")] private static extern void handleOverviewObjectDeselected();
     [DllImport("__Internal")] private static extern void handleEquipmentInRange(string data);
@@ -313,6 +314,61 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
 
     #endregion
 
+    #region React -> Unity : Worker view (every scene)
+
+    /// <summary>"fpp" | "tpp" | "fly". Worker camera: first person, third person or free fly camera.
+    /// In Main_Scene overview the worker is switched on first. Answer: handleViewModeChanged.</summary>
+    public void SetViewMode_Extern(string mode)
+    {
+        LogIncoming(nameof(SetViewMode_Extern), mode);
+
+        string value = (mode ?? "").Trim().ToLowerInvariant();
+        CharacterViewStateMachine.ViewMode target;
+        if (value == "fpp") target = CharacterViewStateMachine.ViewMode.FPP;
+        else if (value == "tpp") target = CharacterViewStateMachine.ViewMode.TPP;
+        else if (value == "fly") target = CharacterViewStateMachine.ViewMode.FlyCam;
+        else
+        {
+            HandleError_Extern(nameof(SetViewMode_Extern), $"Unknown mode '{mode}'. Use \"fpp\", \"tpp\" or \"fly\".");
+            return;
+        }
+
+        if (GetViewStateMachine() == null)
+        {
+            HandleError_Extern(nameof(SetViewMode_Extern), "No worker in this scene.");
+            return;
+        }
+
+        StartCoroutine(SwitchViewMode(target));
+    }
+
+    private System.Collections.IEnumerator SwitchViewMode(CharacterViewStateMachine.ViewMode target)
+    {
+        // Main_Scene overview: switch the worker on first; it ignores input for the frame it resumes.
+        if (PlantIsometricCameraController.HasInstance && PlantIsometricCameraController.Instance.IsInIsometricMode)
+        {
+            PlantIsometricCameraController.Instance.EnableWorkerMode();
+            yield return null;
+            yield return null;
+        }
+
+        CharacterViewStateMachine view = GetViewStateMachine();
+        if (view == null) yield break;
+
+        view.SwitchToMode(target);
+        HandleViewModeChanged_Extern(ViewModeName(view.CurrentMode));
+    }
+
+    /// <summary>Answer: handleViewModeChanged with the current worker view.</summary>
+    public void GetViewMode_Extern()
+    {
+        LogIncoming(nameof(GetViewMode_Extern), null);
+        CharacterViewStateMachine view = GetViewStateMachine();
+        if (view != null) HandleViewModeChanged_Extern(ViewModeName(view.CurrentMode));
+    }
+
+    #endregion
+
     #region React -> Unity : Equipment (turbine / boiler / control room)
 
     /// <summary>Answer: handleEquipmentState.</summary>
@@ -389,6 +445,14 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         TurbineDataPayload data = TurbineData.GetPayload(id);
         if (data != null) HandleTurbineData_Extern(data);
         else HandleError_Extern(nameof(GetTurbineData_Extern), $"No turbine with id '{id}' in this scene.");
+    }
+
+    /// <summary>"0".."100": steam pressure setpoint for every turbine in the scene (pressure, RPM, flow and
+    /// temperature follow it). Answer: handleTurbineData for turbines the worker is at or that operate.</summary>
+    public void SetSteamPressure_Extern(string percent)
+    {
+        LogIncoming(nameof(SetSteamPressure_Extern), percent);
+        if (TryParseFloat(percent, out float value, nameof(SetSteamPressure_Extern))) TurbineData.SetSteamPressurePercent(value);
     }
 
     #endregion
@@ -591,6 +655,16 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         Log(nameof(handleCameraModeChanged), data);
 #if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
         handleCameraModeChanged(data);
+#endif
+    }
+
+    /// <summary>"fpp" | "tpp" | "fly" | "focus" – the worker camera view changed (1/2/3 keys or SetViewMode_Extern). → React: <c>handleViewModeChanged</c></summary>
+    public static void HandleViewModeChanged_Extern(string data)
+    {
+        data ??= string.Empty;
+        Log(nameof(handleViewModeChanged), data);
+#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
+        handleViewModeChanged(data);
 #endif
     }
 
@@ -846,7 +920,36 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     // Each scene has its own worker; cached once per scene (it may be switched off later).
     private void FindWorker()
     {
+        if (viewStateMachine != null) viewStateMachine.OnViewModeChanged -= OnWorkerViewModeChanged;
+
         worker = FindAnyObjectByType<Player>(FindObjectsInactive.Include);
+        viewStateMachine = worker != null ? worker.GetComponent<CharacterViewStateMachine>() : null;
+
+        if (viewStateMachine != null) viewStateMachine.OnViewModeChanged += OnWorkerViewModeChanged;
+    }
+
+    private CharacterViewStateMachine viewStateMachine;
+
+    private CharacterViewStateMachine GetViewStateMachine()
+    {
+        if (viewStateMachine == null) FindWorker();
+        return viewStateMachine;
+    }
+
+    private static void OnWorkerViewModeChanged(CharacterViewStateMachine.ViewMode mode)
+    {
+        HandleViewModeChanged_Extern(ViewModeName(mode));
+    }
+
+    private static string ViewModeName(CharacterViewStateMachine.ViewMode mode)
+    {
+        switch (mode)
+        {
+            case CharacterViewStateMachine.ViewMode.FPP: return "fpp";
+            case CharacterViewStateMachine.ViewMode.TPP: return "tpp";
+            case CharacterViewStateMachine.ViewMode.FlyCam: return "fly";
+            default: return "focus";
+        }
     }
 
     private Player GetWorker()

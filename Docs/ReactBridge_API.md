@@ -26,6 +26,8 @@ The WebGL build contains only a tiny **Bootstrap** scene. Main_Scene and every r
 | `SetCursorLocked_Extern` | `"true"`/`"false"` | Unlock before showing a panel in worker mode. A lock may need one click on the canvas (browser rule). |
 | `SetWorkerTracking_Extern` | `"true"`, `"false"`, `"true/0.2"` | Streams `handleWorkerTransform` every 0.2 s (for a React minimap) |
 | `SetVolume_Extern` | `"0"`..`"1"` | Master volume |
+| `SetViewMode_Extern` | `"fpp"` / `"tpp"` / `"fly"` | Worker camera: first person, third person, free fly camera (Main_Scene overview switches to the worker first). Answer: `handleViewModeChanged` |
+| `GetViewMode_Extern` | – | Answer: `handleViewModeChanged` |
 | `SetMiniMapVisible_Extern` | `"true"`/`"false"` | Show/hide the Unity minimap (bottom-right). It also hides by itself in overview and explosion view. |
 
 ### Scenes
@@ -64,6 +66,7 @@ Walking up to equipment sends `handleEquipmentInRange` + `handleEquipmentState`.
 |---|---|---|
 | `GetAllTurbineData_Extern` | – | Answer: `handleTurbineList` |
 | `GetTurbineData_Extern` | turbine id, e.g. `"1"` | Answer: `handleTurbineData` |
+| `SetSteamPressure_Extern` | `"0"`..`"100"` | Steam pressure setpoint for all turbines (pressure, RPM, flow, temperature follow it) |
 
 ### Boiler dashboard (open after `StartBoilerInfo_Extern`)
 | Function | Value |
@@ -96,6 +99,7 @@ Walking up to equipment sends `handleEquipmentInRange` + `handleEquipmentState`.
 | `handleSceneTriggerEntered` | JSON `SceneTrigger` | Worker stands at a door to another room: show "Go to …" (button calls ChangeScene_Extern). |
 | `handleSceneTriggerExited` | JSON `SceneTrigger` | Worker left the door. |
 | `handleCameraModeChanged` | string | "overview" or "worker". |
+| `handleViewModeChanged` | string | "fpp", "tpp", "fly" or "focus" – worker camera view (keys 1/2/3 or SetViewMode_Extern). |
 | `handleOverviewObjectSelected` | JSON `OverviewSelection` | Building clicked in plant overview. |
 | `handleOverviewObjectDeselected` | – | Overview selection cleared. |
 | `handleEquipmentInRange` | JSON `EquipmentInfo` | Worker reached a turbine / boiler / control room. |
