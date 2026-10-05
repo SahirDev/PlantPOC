@@ -1,0 +1,139 @@
+# Thermal Plant – Unity ⇄ React functions
+
+Same pattern as our other projects (react-unity-webgl):
+
+- **React → Unity:** `sendMessage("CommunicationManager", "<Function>_Extern", "<value>")`
+- **Unity → React:** `addEventListener("handle<Event>", (data) => ...)`
+
+Values are strings: `"true"`/`"false"`, numbers like `"42.5"`, names, or JSON (parse with `JSON.parse`).
+
+## Loading
+The WebGL build contains only a tiny **Bootstrap** scene. Main_Scene and every room are separate downloads from the build's `StreamingAssets` folder, cached by the browser after the first time.
+
+- Pass `streamingAssetsUrl` to `useUnityContext` (e.g. `"/unity/StreamingAssets"`) – **required**, otherwise scenes can't be downloaded.
+- Startup: `handleUnityReady` → `handleSceneLoading("Main_Scene")` → `handleSceneDownloadProgress`… → `handleSceneLoaded`. Show your loading screen until `handleSceneLoaded`.
+- After Main_Scene opens, Unity downloads the rooms quietly in the background (`handleSceneDownloadProgress` with `background: true`, then `handleScenePreloaded`). Don't block the UI for background progress.
+
+## React → Unity (`sendMessage("CommunicationManager", name, value)`)
+
+### App / input
+| Function | Value | Notes |
+|---|---|---|
+| `Ping_Extern` | – | Answer: `handleUnityReady` |
+| `SetPointerOverUI_Extern` | `"true"`/`"false"` | **Send on mouseenter / mouseleave of every React panel over the canvas.** Unity ignores clicks, scroll and hover under the panel. |
+| `SetKeyboardCapture_Extern` | `"true"`/`"false"` | Default false, so React text fields get the keyboard |
+| `SetCursorLocked_Extern` | `"true"`/`"false"` | Unlock before showing a panel in worker mode. A lock may need one click on the canvas (browser rule). |
+| `SetWorkerTracking_Extern` | `"true"`, `"false"`, `"true/0.2"` | Streams `handleWorkerTransform` every 0.2 s (for a React minimap) |
+| `SetVolume_Extern` | `"0"`..`"1"` | Master volume |
+
+### Scenes
+| Function | Value | Notes |
+|---|---|---|
+| `ChangeScene_Extern` | `"Main_Scene"`, `"BoilerRoom"`, `"TurbineRoom"`, `"Control_Room"` | → `handleSceneLoading`, `handleSceneDownloadProgress`…, `handleSceneLoaded` or `handleSceneLoadFailed` |
+| `GetSceneDownloadSize_Extern` | scene name | Answer: `handleSceneDownloadSize` `{ name, exists, cached, sizeMB }` |
+| `PreloadScene_Extern` | scene name | Download without opening. Done: `handleScenePreloaded` |
+
+### Main_Scene camera
+The scene starts in **overview** (worker hidden). Right-click on the floor teleports the worker (always third person); key **C** toggles.
+| Function | Value | Notes |
+|---|---|---|
+| `SetCameraMode_Extern` | `"overview"` / `"worker"` | Answer: `handleCameraModeChanged` |
+| `ToggleCameraMode_Extern` | – | |
+| `GetCameraMode_Extern` | – | Answer: `handleCameraModeChanged` |
+| `ResetOverviewView_Extern` | – | Overview only |
+
+### Equipment (turbine / boiler / control room)
+Walking up to equipment sends `handleEquipmentInRange` + `handleEquipmentState`. **Enable/disable buttons only from the `can*` flags of `handleEquipmentState`.**
+| Function | Value | Notes |
+|---|---|---|
+| `GetEquipmentState_Extern` | – | Answer: `handleEquipmentState` |
+| `ToggleExplode_Extern` | – | Explosion view on/off |
+| `ToggleExplodeAll_Extern` | – | Explode all on/off |
+| `ToggleOperation_Extern` | – | Turbine: animated + exploded. Boiler: fluid process |
+| `StartBoilerInfo_Extern` | – | Boiler only; opens the boiler dashboard |
+| `CollapseEquipment_Extern` | – | Leave any explosion view / turbine operation |
+| `TogglePartExplode_Extern` | – | Part from the last `handlePartSelected` |
+| `ClearPartSelection_Extern` | – | Close the part menu |
+
+### Turbines
+| Function | Value | Notes |
+|---|---|---|
+| `GetAllTurbineData_Extern` | – | Answer: `handleTurbineList` |
+| `GetTurbineData_Extern` | turbine id, e.g. `"1"` | Answer: `handleTurbineData` |
+
+### Boiler dashboard (open after `StartBoilerInfo_Extern`)
+| Function | Value |
+|---|---|
+| `SetBurnerPower_Extern` | `"0"`..`"100"` |
+| `SetValveOpening_Extern` | `"0"`..`"100"` |
+| `RestartBoiler_Extern` | – (after `completed: true`) |
+| `CloseBoilerDashboard_Extern` | – (also ends the info sequence) |
+| `GetBoilerDashboard_Extern` | – Answer: `handleBoilerDashboard` |
+
+### Electrical panel (Control_Room)
+| Function | Value |
+|---|---|
+| `SetGeneratorValue_Extern` | `"0"`..`"100"` – only while the worker is at the panel |
+
+## Unity → React (`addEventListener(name, (data) => ...)`)
+
+| Event (addEventListener) | Data | When |
+|---|---|---|
+| `handleError` | JSON `BridgeError` | Something React asked for could not be done: { command, message }. |
+| `handleSceneLoadFailed` | JSON `BridgeError` | Scene could not be downloaded/loaded: { command = scene name, message }. |
+| `handleUnityReady` | JSON `UnityStatus` | Unity started (sent once). Also the answer to Ping_Extern. |
+| `handleCursorLockChanged` | `"true"`/`"false"` | "true"/"false" – cursor locked (worker look mode) or free. Also fires when the user presses Esc. |
+| `handleWorkerTransform` | JSON `WorkerTransform` | Worker position/heading, while tracking is on (SetWorkerTracking_Extern). For a React minimap. |
+| `handleSceneLoading` | string | Scene name – a scene change started. |
+| `handleSceneDownloadProgress` | JSON `SceneDownloadProgress` | Download progress of a scene that is not cached yet. |
+| `handleSceneLoaded` | JSON `SceneInfo` | A scene finished loading. |
+| `handleScenePreloaded` | string | Scene name – finished downloading in the background. |
+| `handleSceneDownloadSize` | JSON `SceneDownloadSize` | Answer to GetSceneDownloadSize_Extern. |
+| `handleSceneTriggerEntered` | JSON `SceneTrigger` | Worker stands at a door to another room: show "Go to …" (button calls ChangeScene_Extern). |
+| `handleSceneTriggerExited` | JSON `SceneTrigger` | Worker left the door. |
+| `handleCameraModeChanged` | string | "overview" or "worker". |
+| `handleOverviewObjectSelected` | JSON `OverviewSelection` | Building clicked in plant overview. |
+| `handleOverviewObjectDeselected` | – | Overview selection cleared. |
+| `handleEquipmentInRange` | JSON `EquipmentInfo` | Worker reached a turbine / boiler / control room. |
+| `handleEquipmentOutOfRange` | JSON `EquipmentInfo` | Worker walked away. |
+| `handleEquipmentState` | JSON `EquipmentState` | Full button state. Enable/disable React buttons from the can* flags. |
+| `handlePartHover` | string | Part name under the mouse (explosion view). |
+| `handlePartHoverEnd` | – | Mouse left the part. |
+| `handlePartSelected` | JSON `PartSelected` | Part clicked: show its menu at x/y (0..1 of canvas, top-left). |
+| `handlePartDeselected` | – | Close the part menu. |
+| `handleTurbineData` | JSON `TurbineData` | Live values of one turbine (every few seconds while the worker is there or it operates). |
+| `handleTurbineList` | JSON `TurbineList` | Answer to GetAllTurbineData_Extern. |
+| `handleBoilerDashboardOpened` | JSON `BoilerDashboard` | Boiler dashboard opened (after StartBoilerInfo_Extern). |
+| `handleBoilerDashboard` | JSON `BoilerDashboard` | Live boiler values (max 5x per second, only on change). |
+| `handleBoilerDashboardClosed` | – | Boiler dashboard closed. |
+| `handleElectricalPanelOpened` | number as string | Worker at the electrical panel; value = current generator slider value (0-100). |
+| `handleElectricalValues` | JSON `ElectricalValues` | Panel values after every change. |
+| `handleElectricalPanelClosed` | – | Worker left the panel. |
+
+### JSON shapes
+```ts
+UnityStatus        { scene, buildIndex, unityVersion, appVersion, platform }
+BridgeError        { command, message }
+SceneInfo          { name, buildIndex }
+SceneDownloadProgress { name, progress (0..1), downloadedMB, totalMB, background }
+SceneDownloadSize  { name, exists, cached, sizeMB }
+SceneTrigger       { targetScene, text }
+WorkerTransform    { scene, active, x, y, z, heading }
+OverviewSelection  { name, sizeX, sizeY, sizeZ }
+EquipmentInfo      { type: "Turbine"|"Boiler"|"ControlRoom", name }
+EquipmentState     { inRange, type, name, activeAction: "none"|"explode"|"explodeAll"|"operation"|"info",
+                     exploded, operating, infoActive, canExplode, canExplodeAll, canOperate, canInfo }
+PartSelected       { name, description, exploded, x, y }   // x,y = 0..1 of canvas from top-left
+TurbineData        { id, name, type, steamPressure, temperature, temperatureF, vibration, rpm, steamMassFlowRate, operating }
+TurbineList        { turbines: TurbineData[] }
+BoilerDashboard    { temperature, maxTemperature, waterLevel, steamPressure, maxPressure, burnerPower, valveOpening,
+                     status: "RUNNING"|"STOPPED"|"COMPLETED", message, lowWater, completed }
+ElectricalValues   { generatorValue, generatorKV, gridKV, loading, oilTemp, windingTemp, coolingFan,
+                     alarmLevel: "normal"|"high"|"warning" }
+```
+While `EquipmentState.exploded` is true the worker is off and an orbit camera is active: hide worker-only UI (minimap).
+
+## Adding a function (Unity side)
+- **React → Unity:** add a public method `MyThing_Extern(string value)` to `CommunicationManager.cs` that calls the right singleton, e.g. `PumpController.Instance.Start(value)`.
+- **Unity → React:** add `handleMyThing` to `Assets/Plugins/WebGL/React.jslib`, a matching `[DllImport("__Internal")] private static extern void handleMyThing(string data);` and a `public static void HandleMyThing_Extern(...)` wrapper with the `#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD` guard (copy an existing one).
+- Then add it to this document.

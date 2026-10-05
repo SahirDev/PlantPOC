@@ -1,0 +1,6 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI%20Toolkit/StyleSheet.uss?fileID=7433441132597879392&amp;guid=624cfa51d369bbd40bad22026cc26b3e&amp;type=3#StyleSheet"/>
+    <ui:VisualElement style="flex-grow: 1; width: 201px; height: 30px;">
+        <ui:Label text="Label" name="TextContent" style="align-self: stretch; justify-content: flex-start; align-content: flex-start; flex-direction: column; flex-wrap: wrap; flex-grow: 0; width: 563px;"/>
+    </ui:VisualElement>
+</ui:UXML>

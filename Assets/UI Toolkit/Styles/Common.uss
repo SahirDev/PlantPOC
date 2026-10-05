@@ -1,0 +1,123 @@
+/*
+2026-09-27 AI-Tag
+This was created with the help of Assistant, a Unity Artificial Intelligence product.
+*/
+:root {
+}
+
+.text-extra-small {
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    align-content: center;
+    color: rgb(255, 255, 255);
+    font-size: 32px;
+}
+
+.text-small {
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    align-content: center;
+    color: rgb(255, 255, 255);
+    font-size: 40px;
+}
+
+.small-icon-button {
+    width: 75px;
+    height: 75px;
+    background-color: rgba(188, 188, 188, 0);
+    align-self: center;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in-out;
+    aspect-ratio: 1;
+}
+
+.small-icon-button:hover {
+    border-top-width: 3px;
+    border-right-width: 3px;
+    border-bottom-width: 3px;
+    border-left-width: 3px;
+    border-left-color: rgb(158, 255, 239);
+    border-right-color: rgb(158, 255, 239);
+    border-top-color: rgb(158, 255, 239);
+    border-bottom-color: rgb(158, 255, 239);
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in-out;
+    width: 65px;
+    height: 65px;
+}
+
+.settings-entry-text {
+    color: rgb(255, 255, 255);
+    width: 200px;
+    -unity-text-align: middle-left;
+}
+
+.dropdown-entry {
+    flex-grow: 0;
+    height: 50px;
+    background-color: rgb(1, 4, 23);
+    width: 250px;
+    align-self: center;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px;
+    border-bottom-left-radius: 15px;
+    justify-content: center;
+    flex-direction: row;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-out;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.dropdown-entry:hover {
+    background-color: rgb(36, 36, 36);
+    width: 275px;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-out;
+}
+
+.dropdown-entry:disabled {
+    opacity: 0.35;
+    background-color: rgba(1, 4, 23, 0.4);
+}
+
+.dropdown-entry:disabled:hover {
+    background-color: rgba(1, 4, 23, 0.4);
+    width: 250px;
+}
+
+.dropdown-entry > .unity-label {
+    align-self: center;
+    color: rgb(255, 255, 255);
+    margin-right: 10px;
+    margin-left: 10px;
+    width: 100px;
+    -unity-text-align: middle-center;
+    transition-duration: 0.2s;
+}
+
+.dropdown-entry:disabled > .unity-label {
+    color: rgb(130, 130, 130);
+}
+
+.dropdown-entry > .unity-image {
+    width: 25px;
+    align-self: center;
+    transition-duration: 0.2s;
+}
+
+.dropdown-entry:disabled > .unity-image {
+    opacity: 0.5;
+}
+
+.ui-blocker {
+}

@@ -1,0 +1,126 @@
+
+.root {
+    flex-grow: 1;
+    justify-content: center;
+    align-items: center;
+    padding: 12px;
+}
+
+.panel {
+    width: 520px;
+    max-width: 100%;
+    padding: 20px;
+    background-color: rgb(29, 36, 50);
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.eyebrow {
+    color: rgb(0, 255, 230);
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+.main-title {
+    color: rgb(245, 247, 250);
+    font-size: 28px;
+    -unity-font-style: bold;
+    margin-bottom: 12px;
+}
+
+.status-label {
+    color: rgb(145, 155, 170);
+    font-size: 14px;
+    margin-bottom: 18px;
+}
+
+.header-divider {
+    height: 1px;
+    background-color: rgb(61, 76, 96);
+    margin-bottom: 12px;
+}
+
+.cards-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.metric-card {
+    width: 48%;
+    height: 130px;
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: rgb(29, 45, 65);
+    border-top-left-radius: 9px;
+    border-top-right-radius: 9px;
+    border-bottom-left-radius: 9px;
+    border-bottom-right-radius: 9px;
+}
+
+.metric-label {
+    color: rgb(180, 198, 215);
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+.metric-value {
+    font-size: 28px;
+    -unity-font-style: bold;
+    margin-bottom: 10px;
+}
+
+.temperature-value { color: rgb(255, 103, 82); }
+.water-value { color: rgb(67, 190, 255); }
+.pressure-value { color: rgb(61, 220, 155); }
+.burner-value { color: rgb(255, 184, 61); }
+
+.wide-card {
+    height: 134px;
+    padding: 15px;
+    margin-top: 10px;
+    background-color: rgb(29, 45, 65);
+    border-top-left-radius: 9px;
+    border-top-right-radius: 9px;
+    border-bottom-left-radius: 9px;
+    border-bottom-right-radius: 9px;
+}
+
+.wide-value {
+    color: white;
+    font-size: 28px;
+    -unity-font-style: bold;
+    margin-bottom: 12px;
+}
+
+.button-row {
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+.control-button {
+    width: 32%;
+    height: 43px;
+    color: white;
+    font-size: 14px;
+    -unity-font-style: bold;
+    border-width: 1px;
+    border-color: rgb(105, 125, 145);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+.start-button { background-color: rgb(25, 126, 88); }
+.stop-button { background-color: rgb(173, 52, 57); }
+.reset-button { background-color: rgb(56, 83, 119); }
+
+.footer-status {
+    color: rgb(0, 255, 230);
+    font-size: 12px;
+    margin-top: 18px;
+}

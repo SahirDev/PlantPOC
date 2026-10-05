@@ -1,0 +1,127 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI%20Toolkit/Styles/Common.uss?fileID=7433441132597879392&amp;guid=fc72cee4f75ce9a42a4ee38bf3807672&amp;type=3#Common"/>
+    <ui:VisualElement name="container" style="height: 100%; width: 100%; transition-duration: 0.2s;">
+        <ui:VisualElement name="top-bar" class="ui-blocker" style="flex-grow: 0; height: 100px; background-color: rgb(1, 4, 23); flex-direction: row; align-items: center;">
+            <ui:Image source="project://database/Assets/UI%20Toolkit/Icons/heliosLogo.png?fileID=2800000&amp;guid=4a5d5aeca36a0c345bb7e1a6d451cd8b&amp;type=3#heliosLogo" style="width: 400px; aspect-ratio: auto;"/>
+            <ui:VisualElement style="flex-grow: 1;"/>
+            <ui:VisualElement style="flex-grow: 0; margin-right: 25px; margin-top: 0; margin-bottom: 0; margin-left: 25px; flex-direction: row-reverse;">
+                <ui:Button name="settings-button" icon-image="project://database/Assets/UI%20Toolkit/Icons/settings.png?fileID=2800000&amp;guid=66fd27d8f9e297a45842eb59b5cc9982&amp;type=3#settings" class="small-icon-button"/>
+                <ui:Button name="object-settings-button" icon-image="project://database/Assets/UI%20Toolkit/Icons/Object-settings.png?fileID=2800000&amp;guid=08da121041d1ec543b18826896b57289&amp;type=3#Object-settings" class="small-icon-button" style="display: flex;"/>
+                <ui:Button name="boiler-object-settings-button" icon-image="project://database/Assets/UI%20Toolkit/Icons/Object-settings.png?fileID=2800000&amp;guid=08da121041d1ec543b18826896b57289&amp;type=3#Object-settings" class="small-icon-button" style="display: flex;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="windows-container" style="align-items: center; justify-content: flex-start; border-top-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-bottom-left-radius: 0; flex-grow: 1;">
+            <ui:VisualElement name="object-settings-window" class="ui-blocker" style="flex-grow: 0; align-self: flex-end; width: 300px; height: 200px; background-color: rgb(22, 46, 125); border-bottom-right-radius: 25px; border-bottom-left-radius: 25px; top: 0; right: 85px; display: none;">
+                <ui:VisualElement name="explosion-view-button" class="dropdown-entry">
+                    <ui:Image source="project://database/Assets/UI%20Toolkit/Icons/explode.png?fileID=2800000&amp;guid=0060c8479abeeb541a91e2c50a0bc6db&amp;type=3#explode"/>
+                    <ui:Label text="Explosion VIew"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="explode-all-button" class="dropdown-entry">
+                    <ui:Image source="project://database/Assets/UI%20Toolkit/Icons/explode-all.png?fileID=2800000&amp;guid=af33f44d57e281149b4fe341828afed8&amp;type=3#explode-all"/>
+                    <ui:Label text="Explode All"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="operation-button" class="dropdown-entry">
+                    <ui:Image source="project://database/Assets/UI%20Toolkit/Icons/operation.png?fileID=2800000&amp;guid=af076d665f0e0f04eafe749c8bf04941&amp;type=3#operation"/>
+                    <ui:Label text="Operation"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="boiler-object-settings-window" class="ui-blocker" style="flex-grow: 0; align-self: flex-end; width: 300px; height: 275px; background-color: rgb(22, 46, 125); border-bottom-right-radius: 25px; border-bottom-left-radius: 25px; top: 0; right: 85px; justify-content: center;">
+                <ui:VisualElement name="boiler-explode-button" class="dropdown-entry">
+                    <ui:Image source="project://database/Assets/UI%20Toolkit/Icons/explode.png?fileID=2800000&amp;guid=0060c8479abeeb541a91e2c50a0bc6db&amp;type=3#explode"/>
+                    <ui:Label text="Explosion VIew"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="boiler-explode-all-button" class="dropdown-entry">
+                    <ui:Image source="project://database/Assets/UI%20Toolkit/Icons/explode-all.png?fileID=2800000&amp;guid=af33f44d57e281149b4fe341828afed8&amp;type=3#explode-all"/>
+                    <ui:Label text="Explode All"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="boiler-operation-button" class="dropdown-entry">
+                    <ui:Image source="project://database/Assets/UI%20Toolkit/Icons/operation.png?fileID=2800000&amp;guid=af076d665f0e0f04eafe749c8bf04941&amp;type=3#operation"/>
+                    <ui:Label text="Operation"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="boiler-info_button" class="dropdown-entry">
+                    <ui:Image source="project://database/Assets/UI%20Toolkit/Icons/operation.png?fileID=2800000&amp;guid=af076d665f0e0f04eafe749c8bf04941&amp;type=3#operation"/>
+                    <ui:Label text="Info" parse-escape-sequences="false"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="settings-window" class="ui-blocker" style="background-color: rgba(1, 4, 23, 0.784); height: 600px; width: 600px; align-items: center; border-top-left-radius: 25px; border-top-right-radius: 25px; border-bottom-right-radius: 25px; border-bottom-left-radius: 25px; padding-top: 0; padding-right: 25px; padding-bottom: 25px; padding-left: 25px; position: absolute; top: 20%;">
+                <ui:VisualElement name="settings-title" style="flex-grow: 0; width: 300px; background-color: rgb(22, 46, 125); border-top-left-radius: 0; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; height: 50px; flex-direction: row;">
+                    <ui:Label text="Settings" style="color: rgb(255, 255, 255); -unity-text-align: middle-center; height: 100%; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; flex-grow: 1;"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="" style="flex-grow: 1; height: 100%; width: 100%;">
+                    <ui:VisualElement name="audio-settings" style="flex-grow: 0; flex-direction: row; margin-top: 25px;">
+                        <ui:Label text="Audio Volume" class="settings-entry-text"/>
+                        <ui:Slider label="" value="50" high-value="100" style="flex-grow: 1;"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="animation-settings" style="flex-grow: 0; flex-direction: row; margin-top: 25px;">
+                        <ui:Label text="Animation Duration" class="settings-entry-text" style="color: rgb(255, 255, 255);"/>
+                        <ui:FloatField label="" value="3" name="animation-float-field" style="width: 100px;"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-grow: 0; flex-direction: column; flex-wrap: wrap; margin-top: 25px; margin-bottom: 25px; width: 300px; align-self: center; height: 300px;">
+                        <ui:VisualElement name="plant-scene-button" class="dropdown-entry">
+                            <ui:Label text="Power Plant"/>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="turbine-scene-button" class="dropdown-entry">
+                            <ui:Label text="Turbine Room"/>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="boiler-scene-button" class="dropdown-entry">
+                            <ui:Label text="Boiler Room"/>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="control-scene-button" class="dropdown-entry">
+                            <ui:Label text="Control Room"/>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="part-name-container" class="ui-blocker" style="flex-grow: 1; position: absolute; height: 75px; background-color: rgb(22, 46, 125); border-top-left-radius: 25px; border-top-right-radius: 25px; border-bottom-right-radius: 25px; border-bottom-left-radius: 25px; margin-top: 25px; align-items: center; justify-content: center; align-self: center; align-content: center; -unity-text-align: middle-center; transition-duration: 0.2s;">
+                <ui:Label text="Part Name" name="part-name" class="text-extra-small" style="color: rgb(255, 255, 255); margin-left: 25px; margin-right: 25px; font-size: 24px;"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="electrical-panel-window" class="ui-blocker" style="background-color: rgba(1, 4, 23, 0.784); height: 600px; width: 600px; align-items: center; border-top-left-radius: 25px; border-top-right-radius: 25px; border-bottom-right-radius: 25px; border-bottom-left-radius: 25px; padding-top: 0; padding-right: 25px; padding-bottom: 25px; padding-left: 25px; position: absolute; top: 20%; right: 0;">
+                <ui:VisualElement name="settings-title" style="flex-grow: 0; width: 300px; background-color: rgb(22, 46, 125); border-top-left-radius: 0; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; height: 50px; flex-direction: row;">
+                    <ui:Label text="Electrical Panel Info" style="color: rgb(255, 255, 255); -unity-text-align: middle-center; height: 100%; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; flex-grow: 1;"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="" style="flex-grow: 1; height: 100%; width: 100%;">
+                    <ui:Label text="Purpose: Increase generator voltage for transmission" style="-unity-text-align: upper-center; color: rgb(166, 166, 166);"/>
+                    <ui:VisualElement name="" style="flex-grow: 1; flex-direction: row; -unity-text-align: middle-center; align-items: center; align-self: center;">
+                        <ui:Label text="Generator Side:" name="" style="-unity-text-align: upper-center; color: rgb(166, 166, 166);"/>
+                        <ui:Label text="0" name="generator-value" style="-unity-text-align: upper-center; color: rgb(166, 166, 166);"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-grow: 1; flex-direction: row; -unity-text-align: middle-center; justify-content: center; align-items: center; align-self: center;">
+                        <ui:Label text="Grid Side:" name="" style="-unity-text-align: upper-center; color: rgb(166, 166, 166);"/>
+                        <ui:Label text="0" name="grid-value" style="-unity-text-align: upper-center; color: rgb(166, 166, 166);"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-grow: 1; flex-direction: row; -unity-text-align: middle-center; justify-content: center; align-items: center; align-self: center;">
+                        <ui:Label text="Loading:" name="" style="-unity-text-align: upper-center; color: rgb(166, 166, 166);"/>
+                        <ui:Label text="0" name="loading-value" style="-unity-text-align: upper-center; color: rgb(166, 166, 166);"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-grow: 1; flex-direction: row; -unity-text-align: middle-center; justify-content: center; align-items: center; align-self: center;">
+                        <ui:Label text="Oil Temperature: " name="" style="-unity-text-align: upper-center; color: rgb(166, 166, 166);"/>
+                        <ui:Label text="0" name="oil-temp-value" style="-unity-text-align: upper-center; color: rgb(166, 166, 166);"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-grow: 1; flex-direction: row; -unity-text-align: middle-center; justify-content: center; align-items: center; align-self: center;">
+                        <ui:Label text="Winding Temperature:" name="" style="-unity-text-align: upper-center; color: rgb(166, 166, 166);"/>
+                        <ui:Label text="0" name="winding-temp-value" style="-unity-text-align: upper-center; color: rgb(166, 166, 166);"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-grow: 1; flex-direction: row; -unity-text-align: middle-center; justify-content: center;">
+                        <ui:Slider label="Voltage" value="20" high-value="100" name="voltage-value" style="color: rgb(255, 255, 255); width: 100%;"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="click-context-container" class="ui-blocker" style="flex-grow: 0; width: 300px; background-color: rgb(22, 46, 125); border-bottom-right-radius: 25px; border-bottom-left-radius: 25px; display: flex; border-top-left-radius: 25px; border-top-right-radius: 25px; position: absolute; top: 0; left: 0;">
+        <ui:VisualElement name="explode-button" class="dropdown-entry" style="margin-top: 10px;">
+            <ui:Image source="project://database/Assets/UI%20Toolkit/Icons/explode.png?fileID=2800000&amp;guid=0060c8479abeeb541a91e2c50a0bc6db&amp;type=3#explode"/>
+            <ui:Label text="Explode Part"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="description-button" class="dropdown-entry">
+            <ui:Image source="project://database/Assets/UI%20Toolkit/Icons/document.png?fileID=2800000&amp;guid=d24371f88a0b0394a9908a77c0cb6f36&amp;type=3#document"/>
+            <ui:Label text="Description"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="part-description" class="ui-blocker" style="flex-grow: 0; position: absolute; right: 0; bottom: 0; width: 400px;">
+        <ui:Label text="Description" style="-unity-text-align: lower-center; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; background-color: rgb(22, 46, 125); color: rgb(255, 255, 255); font-size: 18px; -unity-font-definition: url(&quot;project://database/Assets/UI%20Toolkit/Fonts/Inter_28pt-Bold.ttf?fileID=12800000&amp;guid=f275221dbb887044eb474c8e7c198557&amp;type=3#Inter_28pt-Bold&quot;); width: 175px; align-self: center; border-top-left-radius: 10px; border-top-right-radius: 10px;"/>
+        <ui:ScrollView mode="Vertical" horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="Hidden" style="background-color: rgb(68, 68, 68); border-top-left-radius: 15px; border-top-right-radius: 15px;">
+            <ui:Label text="This is a gearbox" name="description-text" style="height: 100%; width: 100%; text-overflow: clip; white-space: pre-wrap; margin-bottom: 0; margin-top: 0; margin-right: 0; margin-left: 0; color: rgb(0, 0, 0); -unity-text-align: middle-center; padding-top: 15px; padding-right: 15px; padding-bottom: 15px; padding-left: 15px; background-color: rgba(201, 214, 255, 0.522); border-top-left-radius: 15px; border-top-right-radius: 15px;"/>
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>

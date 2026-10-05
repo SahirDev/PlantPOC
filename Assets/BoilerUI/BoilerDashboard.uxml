@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+
+    <ui:Style src="BoilerDashboard.uss" />
+
+    <ui:VisualElement name="dashboard-root" class="root">
+
+        <ui:VisualElement name="dashboard-panel" class="panel">
+
+            <ui:Label text="FURNACE ROOM / UNIT 01"
+                      class="eyebrow" />
+
+            <ui:Label text="BOILER CONTROL"
+                      class="main-title" />
+
+            <ui:Label name="status-label"
+                      text="STOPPED"
+                      class="status-label" />
+
+            <ui:VisualElement class="header-divider" />
+
+            <ui:VisualElement class="cards-grid">
+
+                <ui:VisualElement class="metric-card">
+                    <ui:Label text="TEMPERATURE"
+                              class="metric-label" />
+                    <ui:Label name="temperature-value"
+                              text="25.0 °C"
+                              class="metric-value temperature-value" />
+                    <ui:Slider name="temperature-slider"
+                               low-value="0"
+                               high-value="100"
+                               value="25"
+                               class="metric-slider" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="metric-card">
+                    <ui:Label text="WATER LEVEL"
+                              class="metric-label" />
+                    <ui:Label name="water-value"
+                              text="70.0 %"
+                              class="metric-value water-value" />
+                    <ui:Slider name="water-slider"
+                               low-value="0"
+                               high-value="100"
+                               value="70"
+                               class="metric-slider" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="metric-card">
+                    <ui:Label text="STEAM PRESSURE"
+                              class="metric-label" />
+                    <ui:Label name="pressure-value"
+                              text="0.00 bar"
+                              class="metric-value pressure-value" />
+                    <ui:Slider name="pressure-slider"
+                               low-value="0"
+                               high-value="15"
+                               value="0"
+                               class="metric-slider" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="metric-card">
+                    <ui:Label text="BURNER OUTPUT"
+                              class="metric-label" />
+                    <ui:Label name="burner-output-value"
+                              text="45 %"
+                              class="metric-value burner-value" />
+                    <ui:Slider name="burner-output-slider"
+                               low-value="0"
+                               high-value="100"
+                               value="45"
+                               class="metric-slider" />
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+
+            <ui:VisualElement class="wide-card">
+                <ui:Label text="STEAM VALVE"
+                          class="metric-label" />
+                <ui:Label name="steam-valve-value"
+                          text="0 %"
+                          class="wide-value" />
+                <ui:Slider name="steam-valve-slider"
+                           low-value="0"
+                           high-value="100"
+                           value="0"
+                           class="wide-slider" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="wide-card">
+                <ui:Label text="BURNER POWER"
+                          class="metric-label" />
+                <ui:Slider name="burner-power-slider"
+                           low-value="0"
+                           high-value="100"
+                           value="0"
+                           class="wide-slider" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="button-row">
+                <ui:Button name="start-button"
+                           text="START"
+                           class="control-button start-button" />
+                <ui:Button name="stop-button"
+                           text="STOP"
+                           class="control-button stop-button" />
+                <ui:Button name="reset-button"
+                           text="RESET"
+                           class="control-button reset-button" />
+            </ui:VisualElement>
+
+            <ui:Label name="footer-status"
+                      text="SYSTEM READY"
+                      class="footer-status" />
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

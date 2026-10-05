@@ -1,0 +1,27 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI%20Toolkit/Styles/Common.uss?fileID=7433441132597879392&amp;guid=fc72cee4f75ce9a42a4ee38bf3807672&amp;type=3#Common"/>
+    <ui:VisualElement name="container" style="height: 100%; width: 100%;">
+        <ui:VisualElement name="top-bar" style="flex-grow: 0; height: 100px; background-color: rgb(1, 4, 23); flex-direction: row; align-items: center;">
+            <ui:Image source="project://database/Assets/UI%20Toolkit/Icons/heliosLogo.png?fileID=2800000&amp;guid=4a5d5aeca36a0c345bb7e1a6d451cd8b&amp;type=3#heliosLogo" style="width: 400px; aspect-ratio: auto;"/>
+            <ui:VisualElement style="flex-grow: 1;"/>
+            <ui:VisualElement style="flex-grow: 0; margin-right: 25px; margin-top: 0; margin-bottom: 0; margin-left: 25px; flex-direction: row-reverse;">
+                <ui:Button name="settings-button" icon-image="project://database/Assets/UI%20Toolkit/Icons/settings.png?fileID=2800000&amp;guid=66fd27d8f9e297a45842eb59b5cc9982&amp;type=3#settings" class="small-icon-button"/>
+                <ui:Button icon-image="project://database/Assets/UI%20Toolkit/Icons/document.png?fileID=2800000&amp;guid=d24371f88a0b0394a9908a77c0cb6f36&amp;type=3#document" name="info-button" class="small-icon-button"/>
+                <ui:Button name="scenes-button" icon-image="project://database/Assets/UI%20Toolkit/Icons/Object-settings.png?fileID=2800000&amp;guid=08da121041d1ec543b18826896b57289&amp;type=3#Object-settings" class="small-icon-button"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="windows-container" style="align-items: center; justify-content: flex-start; border-top-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-bottom-left-radius: 0; flex-grow: 1;">
+            <ui:VisualElement name="scenes-window" style="flex-grow: 0; align-self: flex-end; width: 300px; height: 200px; background-color: rgb(22, 46, 125); border-bottom-right-radius: 25px; border-bottom-left-radius: 25px; top: 0; right: 85px;">
+                <ui:VisualElement name="Boiler-button" data-source="" class="dropdown-entry">
+                    <ui:Label text="Boiler Room"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="Turbine-button" class="dropdown-entry">
+                    <ui:Label text="Turbine Room"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="Control-button" class="dropdown-entry">
+                    <ui:Label text="Control Room"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

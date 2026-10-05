@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4733611d6c758a04f8a7576135a34be4, type: 3}
+  m_Name: TurbineData-4
+  m_EditorClassIdentifier: Assembly-CSharp::TurbineScriptableObject
+  TurbineID: 4
+  TurbineDisplayName: Turbine-4
+  SteamPressure: 58.81
+  Temperature: 100.05
+  TemperatureF: 212.09
+  Vibration: 187.11
+  RPM: 5610.20
+  SteamMassFlowRate: 50.89
+  TurbineType: Steam

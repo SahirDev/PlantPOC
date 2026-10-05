@@ -1,0 +1,151 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI%20Toolkit/Styles/TurbineMonitor.uss?fileID=7433441132597879392&amp;guid=90d505e200fc9134b96cf2a16a9dda26&amp;type=3#TurbineMonitor"/>
+    <Style src="project://database/Assets/UI%20Toolkit/Styles/Common.uss?fileID=7433441132597879392&amp;guid=fc72cee4f75ce9a42a4ee38bf3807672&amp;type=3#Common"/>
+    <ui:VisualElement name="container" data-source-type="TurbineScriptableObject, Assembly-CSharp" style="flex-grow: 1;">
+        <ui:VisualElement style="flex-grow: 1; background-color: rgb(38, 38, 38); align-items: center; justify-content: flex-start; align-self: stretch; align-content: center;">
+            <ui:VisualElement class="grid-box bar" style="flex-grow: 0; width: 100%; height: 150px; flex-direction: row; padding-top: 25px; padding-right: 25px; padding-bottom: 25px; padding-left: 25px; background-color: rgb(1, 4, 23); border-top-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-bottom-left-radius: 0;">
+                <ui:VisualElement style="flex-grow: 1;"/>
+                <ui:Image source="project://database/Assets/UI%20Toolkit/Icons/heliosLogo.png?fileID=2800000&amp;guid=4a5d5aeca36a0c345bb7e1a6d451cd8b&amp;type=3#heliosLogo" style="width: 500px;"/>
+                <ui:VisualElement style="flex-grow: 1;"/>
+                <ui:VisualElement style="flex-grow: 0; flex-direction: row; padding-right: 25px;">
+                    <ui:Label text="ID:" class="text-extra-small"/>
+                    <ui:Label text="" name="turbine-id-label" class="text-extra-small">
+                        <Bindings>
+                            <ui:DataBinding property="text" data-source-path="TurbineID" binding-mode="ToTarget"/>
+                        </Bindings>
+                    </ui:Label>
+                </ui:VisualElement>
+                <ui:Label text="" name="turbine-name-label" class="text-extra-small">
+                    <Bindings>
+                        <ui:DataBinding property="text" data-source-path="TurbineDisplayName" binding-mode="ToTarget"/>
+                    </Bindings>
+                </ui:Label>
+            </ui:VisualElement>
+            <ui:VisualElement name="bottom-container" style="flex-grow: 1; width: 100%; padding-top: 25px; padding-right: 25px; padding-bottom: 25px; padding-left: 25px; flex-direction: row; flex-wrap: wrap; background-color: rgb(1, 4, 23);">
+                <ui:VisualElement name="temperature-container" class="grid-box">
+                    <ui:VisualElement style="flex-grow: 0; align-self: center; width: 300px; height: 50px;">
+                        <ui:Label text="Temperature" class="grid-box-title"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-grow: 1;"/>
+                    <ui:VisualElement style="flex-grow: 1; flex-direction: row; width: 100%; padding-top: 25px; padding-right: 25px; padding-bottom: 25px; padding-left: 25px;">
+                        <ui:VisualElement style="flex-grow: 1; -unity-text-align: middle-center; justify-content: center; align-items: center;">
+                            <ui:VisualElement style="flex-grow: 0; flex-direction: row;">
+                                <ui:Label text="" name="celcius" class="text-small">
+                                    <Bindings>
+                                        <ui:DataBinding property="text" data-source-path="Temperature" binding-mode="ToTarget"/>
+                                    </Bindings>
+                                </ui:Label>
+                                <ui:Label text="C" class="text-extra-small"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement style="flex-grow: 0; flex-direction: row;">
+                                <ui:Label text="" name="farenheit" class="text-small">
+                                    <Bindings>
+                                        <ui:DataBinding property="text" data-source-path="TemperatureF" binding-mode="ToTarget"/>
+                                    </Bindings>
+                                </ui:Label>
+                                <ui:Label text="F" name="" class="text-extra-small"/>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="icon" class="grid-box-icon"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="pressure-container" class="grid-box">
+                    <ui:VisualElement style="flex-grow: 0; align-self: center; width: 300px; height: 50px;">
+                        <ui:Label text="Pressure" class="grid-box-title"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-grow: 1;"/>
+                    <ui:VisualElement style="flex-grow: 1; flex-direction: row; width: 100%; padding-top: 25px; padding-right: 25px; padding-bottom: 25px; padding-left: 25px;">
+                        <ui:VisualElement style="flex-grow: 1; align-items: center; justify-content: center;">
+                            <ui:VisualElement style="flex-grow: 0; flex-direction: row;">
+                                <ui:Label text="" name="" style="font-size: 40px; color: rgb(255, 255, 255); -unity-text-align: upper-left;">
+                                    <Bindings>
+                                        <ui:DataBinding property="text" data-source-path="SteamPressure" binding-mode="ToTarget"/>
+                                    </Bindings>
+                                </ui:Label>
+                                <ui:Label text="Pa" name="" style="font-size: 40px; color: rgb(255, 255, 255); -unity-text-align: upper-left;"/>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="icon" class="grid-box-icon" style="background-image: url(&quot;project://database/Assets/UI%20Toolkit/Icons/pressure.png?fileID=2800000&amp;guid=790f93134e9be324da5dcbee2a6dce30&amp;type=3#pressure&quot;);"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="rpm-container" class="grid-box">
+                    <ui:VisualElement style="flex-grow: 0; align-self: center; width: 300px; height: 50px;">
+                        <ui:Label text="RPM" class="grid-box-title"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-grow: 1;"/>
+                    <ui:VisualElement style="flex-grow: 1; flex-direction: row; width: 100%; padding-top: 25px; padding-right: 25px; padding-bottom: 25px; padding-left: 25px;">
+                        <ui:VisualElement style="flex-grow: 1; align-items: center; justify-content: center;">
+                            <ui:VisualElement style="flex-grow: 0; flex-direction: row;">
+                                <ui:Label text="" name="" style="font-size: 40px; color: rgb(255, 255, 255); -unity-text-align: upper-left;">
+                                    <Bindings>
+                                        <ui:DataBinding property="text" data-source-path="RPM" binding-mode="ToTarget"/>
+                                    </Bindings>
+                                </ui:Label>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="icon" class="grid-box-icon" style="background-image: url(&quot;project://database/Assets/UI%20Toolkit/Icons/RPM.png?fileID=2800000&amp;guid=15170997abf10ac48a4c5f58157d3ba9&amp;type=3#RPM&quot;);"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="flow-rate-container" class="grid-box">
+                    <ui:VisualElement style="flex-grow: 0; align-self: center; width: 400px; height: 70px;">
+                        <ui:Label text="Steam Flow Rate" class="grid-box-title"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-grow: 1;"/>
+                    <ui:VisualElement style="flex-grow: 1; flex-direction: row; width: 100%; padding-top: 25px; padding-right: 25px; padding-bottom: 25px; padding-left: 25px;">
+                        <ui:VisualElement style="flex-grow: 1; align-items: center; justify-content: center;">
+                            <ui:VisualElement style="flex-grow: 0; flex-direction: row;">
+                                <ui:Label text="" name="" style="font-size: 40px; color: rgb(255, 255, 255); -unity-text-align: upper-left;">
+                                    <Bindings>
+                                        <ui:DataBinding property="text" data-source-path="SteamMassFlowRate" binding-mode="ToTarget"/>
+                                    </Bindings>
+                                </ui:Label>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="icon" class="grid-box-icon" style="background-image: url(&quot;project://database/Assets/UI%20Toolkit/Icons/SteamFlowRate.png?fileID=2800000&amp;guid=37c1ad62c9e21d74880f030eb312901b&amp;type=3#SteamFlowRate&quot;);"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="vibration-container" class="grid-box">
+                    <ui:VisualElement style="flex-grow: 0; align-self: center; width: 300px; height: 70px;">
+                        <ui:Label text="Vibration" class="grid-box-title"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-grow: 1;"/>
+                    <ui:VisualElement style="flex-grow: 1; flex-direction: row; width: 100%; padding-top: 25px; padding-right: 25px; padding-bottom: 25px; padding-left: 25px;">
+                        <ui:VisualElement style="flex-grow: 1; align-items: center; justify-content: center;">
+                            <ui:VisualElement style="flex-grow: 0; flex-direction: row;">
+                                <ui:Label text="" name="" style="font-size: 40px; color: rgb(255, 255, 255); -unity-text-align: upper-left;">
+                                    <Bindings>
+                                        <ui:DataBinding property="text" data-source-path="SteamMassFlowRate" binding-mode="ToTarget"/>
+                                    </Bindings>
+                                </ui:Label>
+                                <ui:Label text="Hz" name="" style="font-size: 40px; color: rgb(255, 255, 255); -unity-text-align: upper-left;"/>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="icon" class="grid-box-icon" style="background-image: url(&quot;project://database/Assets/UI%20Toolkit/Icons/vibration.png?fileID=2800000&amp;guid=60dc47057cff1674cab34dde6113cf3b&amp;type=3#vibration&quot;);"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="turbine-type-container" class="grid-box">
+                    <ui:VisualElement style="flex-grow: 0; align-self: center; width: 300px; height: 50px;">
+                        <ui:Label text="Turbine Type" class="grid-box-title"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-grow: 1;"/>
+                    <ui:VisualElement style="flex-grow: 1; flex-direction: row; width: 100%; padding-top: 25px; padding-right: 25px; padding-bottom: 25px; padding-left: 25px;">
+                        <ui:VisualElement style="flex-grow: 1; align-items: center; justify-content: center;">
+                            <ui:VisualElement style="flex-grow: 0; flex-direction: row;">
+                                <ui:Label text="" name="" style="font-size: 40px; color: rgb(255, 255, 255); -unity-text-align: upper-left;">
+                                    <Bindings>
+                                        <ui:DataBinding property="text" data-source-path="TurbineType" binding-mode="ToTarget"/>
+                                    </Bindings>
+                                </ui:Label>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="icon" class="grid-box-icon" style="background-image: url(&quot;project://database/Assets/UI%20Toolkit/Icons/turbine.png?fileID=2800000&amp;guid=4ae9803e887bdb249a3fa7d0c8b65be4&amp;type=3#turbine&quot;);"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="bottom-bar" class="grid-box bar" style="align-items: center; justify-content: center; flex-direction: row; border-top-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-bottom-left-radius: 0;">
+                <ui:Button text="Explode" name="explode-button" style="width: 300px; height: 65px; border-top-left-radius: 25px; border-top-right-radius: 25px; border-bottom-right-radius: 25px; border-bottom-left-radius: 25px; font-size: 28px; color: rgb(255, 255, 255); background-color: rgb(37, 37, 37); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; margin-right: 25px; margin-left: 25px;"/>
+                <ui:Button text="Operation" name="operation-button" style="width: 300px; height: 65px; border-top-left-radius: 25px; border-top-right-radius: 25px; border-bottom-right-radius: 25px; border-bottom-left-radius: 25px; font-size: 28px; color: rgb(255, 255, 255); background-color: rgb(37, 37, 37); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; margin-right: 25px; margin-left: 25px;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
