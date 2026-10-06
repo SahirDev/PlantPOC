@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class CharacterCameraController : MonoBehaviour
@@ -10,6 +11,16 @@ public class CharacterCameraController : MonoBehaviour
     {
         Toggle, HoldToShow
 
+    }
+
+    /// <summary>
+    /// DragToLook (default, best for web + React UI): the cursor is always visible and free, WASD always
+    /// moves, hold the right mouse button and drag to look around, left click selects.
+    /// LockedCursor (old behaviour): right click toggles a locked cursor; move/look only while locked.
+    /// </summary>
+    public enum LookMode
+    {
+        DragToLook, LockedCursor
     }
 
     [Header("Required References")]
@@ -64,6 +75,12 @@ public class CharacterCameraController : MonoBehaviour
     private float transitionDuration = 0.25f;
 
     [Header("Cursor")]
+    [Tooltip("Drag To Look: cursor always visible, hold right mouse button + drag to look, WASD always moves.\n" +
+             "Locked Cursor: the old mode - right click toggles a locked cursor, move/look only while locked.")]
+    [SerializeField]
+    private LookMode lookMode = LookMode.DragToLook;
+
+    [Tooltip("Locked Cursor mode only: the action that toggles / holds the cursor.")]
     [SerializeField]
     private InputActionReference cursorAction;
 
@@ -92,6 +109,9 @@ public class CharacterCameraController : MonoBehaviour
     private bool enabledCursorActionHere;
 
     private bool isCursorLocked;
+    private bool lookDragging;
+    private float crouchDrop;
+    private CharacterMovementController movementController;
     private float yaw;
     private float pitch;
 
@@ -103,6 +123,11 @@ public class CharacterCameraController : MonoBehaviour
     public Camera PlayerCamera => playerCamera;
     public Transform CharacterRoot => characterRoot;
     public bool IsCursorLocked => isCursorLocked;
+    public bool IsDragToLook => lookMode == LookMode.DragToLook;
+    /// <summary>True while WASD may move the worker: always in Drag To Look, only when locked otherwise.</summary>
+    public bool MovementAllowed => lookMode == LookMode.DragToLook || isCursorLocked;
+    /// <summary>True while the right mouse button drag is turning the camera.</summary>
+    public bool IsLookDragging => lookDragging;
 
     public float CameraCollisionRadius => cameraCollisionRadius;
     public Transform FlyCameraPosition => fppPosition;
@@ -121,6 +146,7 @@ public class CharacterCameraController : MonoBehaviour
 
         if (playerCamera == null) playerCamera = GetComponentInChildren<Camera>(true);
         focusController = GetComponent<CharacterFocusController>();
+        movementController = GetComponent<CharacterMovementController>();
     }
 
     private void OnEnable()
@@ -145,10 +171,23 @@ public class CharacterCameraController : MonoBehaviour
 
     private void Update()
     {
-        if (ControlBlocked) return;
+        if (ControlBlocked)
+        {
+            lookDragging = false;
+            return;
+        }
         // Inspection keeps the pointer visible for orbit dragging and exit UI.
         if (viewStateMachine != null && viewStateMachine.CurrentMode == CharacterViewStateMachine.ViewMode.FocusCam)
+        {
+            lookDragging = false;
             return;
+        }
+
+        if (lookMode == LookMode.DragToLook)
+        {
+            UpdateDragToLook();
+            return;
+        }
 
         if (!Application.isFocused || activeCursorAction == null || !activeCursorAction.enabled)
         {
@@ -173,11 +212,35 @@ public class CharacterCameraController : MonoBehaviour
         }
     }
 
+    /// <summary>Cursor stays free and visible; a right button press that starts on the 3D view (not on a
+    /// React panel or Unity UI) turns the camera until the button is released.</summary>
+    private void UpdateDragToLook()
+    {
+        if (isCursorLocked || Cursor.lockState != CursorLockMode.None || !Cursor.visible) SetCursorLocked(false);
+
+        Mouse mouse = Mouse.current;
+        if (mouse == null || !Application.isFocused)
+        {
+            lookDragging = false;
+            return;
+        }
+
+        if (mouse.rightButton.wasPressedThisFrame && !IsPointerOverUI()) lookDragging = true;
+        if (!mouse.rightButton.isPressed) lookDragging = false;
+    }
+
+    private static bool IsPointerOverUI()
+    {
+        if (ExternalUIState.PointerOverUI) return true; // React panel (SetPointerOverUI_Extern)
+        EventSystem eventSystem = EventSystem.current;
+        return eventSystem != null && eventSystem.IsPointerOverGameObject(); // Unity UI, e.g. the minimap
+    }
+
     private void Start()
     {
         if (viewStateMachine == null || viewStateMachine.CurrentMode != CharacterViewStateMachine.ViewMode.FocusCam)
         {
-            SetCursorLocked(cursorInputMode == CursorInputMode.HoldToShow || lockCursorOnStart);
+            SetCursorLocked(lookMode == LookMode.LockedCursor && (cursorInputMode == CursorInputMode.HoldToShow || lockCursorOnStart));
         }
 
         if (viewStateMachine == null || characterRoot == null || playerCamera == null)
@@ -226,8 +289,14 @@ public class CharacterCameraController : MonoBehaviour
             BeginTransition();
         }
 
-        if (isCursorLocked && inputReader != null) HandleLookInput();
+        bool looking = lookMode == LookMode.DragToLook ? lookDragging : isCursorLocked;
+        if (looking && inputReader != null) HandleLookInput();
         else ResetLookSmoothing();
+
+        // Crouching (C) lowers the camera smoothly; fly camera never crouches.
+        float targetDrop = movementController != null && viewStateMachine.CurrentMode != CharacterViewStateMachine.ViewMode.FlyCam
+            ? movementController.CrouchCameraDrop : 0f;
+        crouchDrop = Mathf.MoveTowards(crouchDrop, targetDrop, Time.deltaTime * 3f);
 
         UpdateCameraPosition();
     }
@@ -456,7 +525,7 @@ public class CharacterCameraController : MonoBehaviour
 
             Quaternion yawRotation = Quaternion.Euler(0f, yaw, 0f);
 
-            Vector3 desiredPosition = characterRoot.position + yawRotation * tppOrbitOffset;
+            Vector3 desiredPosition = characterRoot.position + yawRotation * tppOrbitOffset + Vector3.down * crouchDrop;
 
             targetPosition = ResolveTPPCameraCollision(desiredPosition);
             targetRotation = yawRotation * tppRotationOffset * Quaternion.Euler(pitch, 0f, 0f);
@@ -467,7 +536,7 @@ public class CharacterCameraController : MonoBehaviour
         if (fppPosition == null)
             return false;
 
-        targetPosition = fppPosition.position;
+        targetPosition = fppPosition.position + Vector3.down * crouchDrop;
         targetRotation = fppPosition.rotation * Quaternion.Euler(pitch, 0f, 0f);
 
         return true;
@@ -494,6 +563,8 @@ public class CharacterCameraController : MonoBehaviour
         yaw = heading;
         pitch = 0f;
         isTransitioning = false;
+        lookDragging = false;
+        crouchDrop = 0f;
         previousMode = viewStateMachine.CurrentMode;
         ResetLookSmoothing();
         ClampPitchForCurrentMode();
@@ -512,6 +583,14 @@ public class CharacterCameraController : MonoBehaviour
 
     internal void RestoreCursorState(bool locked, CursorLockMode lockState, bool visible)
     {
+        if (lookMode == LookMode.DragToLook)
+        {
+            // The cursor is never locked or hidden in Drag To Look.
+            locked = false;
+            lockState = CursorLockMode.None;
+            visible = true;
+        }
+
         isCursorLocked = locked;
         Cursor.lockState = lockState;
         Cursor.visible = visible;
@@ -535,6 +614,7 @@ public class CharacterCameraController : MonoBehaviour
     private void SetCursorLocked(bool locked)
     {
         if (ControlBlocked) return;
+        if (lookMode == LookMode.DragToLook) locked = false; // cursor always visible
         isCursorLocked = locked;
 
         Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;

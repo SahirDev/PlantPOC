@@ -29,6 +29,14 @@ public class CharacterMovementController : MonoBehaviour
     [Tooltip("How quickly ground movement slows down, in units per second squared.")]
     [SerializeField, Min(0.01f)] private float deceleration = 10f;
 
+    [Header("Jump / Crouch (walking)")]
+    [Tooltip("Jump height in metres (Space). 0 = no jumping.")]
+    [SerializeField, Min(0f)] private float jumpHeight = 1f;
+    [Tooltip("Capsule height while crouching (hold C), as a part of the standing height.")]
+    [SerializeField, Range(0.3f, 1f)] private float crouchHeightFactor = 0.6f;
+    [Tooltip("Speed while crouching, as a part of the walking speed.")]
+    [SerializeField, Range(0.1f, 1f)] private float crouchSpeedFactor = 0.5f;
+
     [Header("Movement Diagnostics (Runtime)")]
     [SerializeField] private float measuredHorizontalSpeed;
     [SerializeField] private string movementStatus;
@@ -70,7 +78,18 @@ public class CharacterMovementController : MonoBehaviour
     private Color boundsGizmoColor = new Color(0f, 1f, 1f, 0.8f);
 
     private CharacterCameraController cameraController;
-    private bool MovementInputAllowed => cameraController == null || cameraController.IsCursorLocked;
+    // Drag To Look: always. Locked Cursor mode: only while the cursor is locked.
+    private bool MovementInputAllowed => cameraController == null || cameraController.MovementAllowed;
+
+    private float standingHeight;
+    private Vector3 standingCenter;
+    private bool isCrouching;
+    private bool hasJumpingParameter;
+    private bool hasCrouchingParameter;
+
+    public bool IsCrouching => isCrouching;
+    /// <summary>How far the camera goes down while crouching (metres).</summary>
+    public float CrouchCameraDrop => isCrouching ? standingHeight * (1f - crouchHeightFactor) : 0f;
 
     private CharacterLadderController ladderController;
     private CharacterController characterController;
@@ -84,6 +103,9 @@ public class CharacterMovementController : MonoBehaviour
 
     private static readonly int WorkerSpeedHash = Animator.StringToHash("WorkerSpeed");
     private static readonly int IsClimbingHash = Animator.StringToHash("isClimbing");
+    // Optional: add these Bool parameters (+ jump / crouch clips) to the Worker animator and they are driven.
+    private static readonly int IsJumpingHash = Animator.StringToHash("isJumping");
+    private static readonly int IsCrouchingHash = Animator.StringToHash("isCrouching");
 
     private void Awake()
     {
@@ -106,6 +128,19 @@ public class CharacterMovementController : MonoBehaviour
 
         ladderController = GetComponent<CharacterLadderController>();
         if (ladderController != null) ladderController.Configure(this, animator);
+
+        standingHeight = characterController.height;
+        standingCenter = characterController.center;
+
+        if (animator != null && animator.runtimeAnimatorController != null)
+        {
+            foreach (AnimatorControllerParameter parameter in animator.parameters)
+            {
+                if (parameter.type != AnimatorControllerParameterType.Bool) continue;
+                if (parameter.nameHash == IsJumpingHash) hasJumpingParameter = true;
+                if (parameter.nameHash == IsCrouchingHash) hasCrouchingParameter = true;
+            }
+        }
     }
 
     private void OnEnable()
@@ -160,6 +195,7 @@ public class CharacterMovementController : MonoBehaviour
         if (viewStateMachine != null && viewStateMachine.CurrentMode == CharacterViewStateMachine.ViewMode.FlyCam)
         {
             CancelLadderClimbing();
+            SetCrouching(false); // in fly mode C means "down"
             HandleFlying();
         }
         else
@@ -169,6 +205,7 @@ public class CharacterMovementController : MonoBehaviour
                 GetFlatCameraRelativeDirection(input), MovementInputAllowed, Time.deltaTime);
             if (ladderHandled)
             {
+                SetCrouching(false);
                 horizontalVelocity = Vector3.zero;
                 verticalVelocity = 0f;
                 movementStatus = ladderController.Status;
@@ -185,6 +222,7 @@ public class CharacterMovementController : MonoBehaviour
         ResetMeasuredVelocity();
         CancelLadderClimbing();
         verticalVelocity = 0f;
+        ForceStand();
         movementBoundsCenter = boundsCenter;
         if (boundsCenter != null) movementBoundsSize = boundsSize;
         ResetAnimation();
@@ -203,7 +241,12 @@ public class CharacterMovementController : MonoBehaviour
         measureGroundMovement = true;
         Vector2 input = MovementInputAllowed ? inputReader.MoveInput : Vector2.zero;
         Vector3 direction = GetFlatCameraRelativeDirection(input);
-        float targetSpeed = inputReader.RunHeld ? runningSpeed : walkingSpeed;
+
+        // Hold C = crouch (slower, lower). Stays crouched under a low ceiling until there is room.
+        SetCrouching(MovementInputAllowed && inputReader.CrouchHeld);
+
+        float targetSpeed = isCrouching ? walkingSpeed * crouchSpeedFactor
+            : inputReader.RunHeld ? runningSpeed : walkingSpeed;
         Vector3 targetVelocity = direction * targetSpeed;
 
         // Releasing navigation control must stop motion immediately; gravity still runs.
@@ -220,8 +263,14 @@ public class CharacterMovementController : MonoBehaviour
         if (horizontalVelocity.sqrMagnitude > 0.000001f)
             RotateTowards(horizontalVelocity);
 
-        if (characterController.isGrounded && verticalVelocity < 0f)
+        bool grounded = characterController.isGrounded;
+        if (grounded && verticalVelocity < 0f)
             verticalVelocity = -2f;
+
+        // Space = jump (only from the ground, not while crouching).
+        if (MovementInputAllowed && grounded && !isCrouching && jumpHeight > 0f && gravity < 0f && inputReader.JumpPressed)
+            verticalVelocity = Mathf.Sqrt(2f * jumpHeight * -gravity);
+
         verticalVelocity += gravity * deltaTime;
         MoveWithinBounds((horizontalVelocity + Vector3.up * verticalVelocity) * deltaTime);
 
@@ -229,6 +278,42 @@ public class CharacterMovementController : MonoBehaviour
             : input.sqrMagnitude < 0.000001f ? "No move input: idle or slowing down"
             : targetSpeed <= 0f ? "Movement speed is zero in the Inspector"
             : "Movement requested";
+
+        if (hasJumpingParameter) animator.SetBool(IsJumpingHash, !characterController.isGrounded && verticalVelocity > 0f);
+    }
+
+    private void SetCrouching(bool crouch)
+    {
+        if (crouch == isCrouching) return;
+        if (!crouch && !HasRoomToStand()) return;
+
+        isCrouching = crouch;
+        ApplyCapsuleHeight(crouch ? standingHeight * crouchHeightFactor : standingHeight);
+    }
+
+    private void ForceStand()
+    {
+        isCrouching = false;
+        ApplyCapsuleHeight(standingHeight);
+    }
+
+    /// <summary>Changes the capsule height while keeping its bottom (the feet) in place.</summary>
+    private void ApplyCapsuleHeight(float height)
+    {
+        if (characterController == null || standingHeight <= 0f) return;
+        characterController.height = height;
+        characterController.center = standingCenter - Vector3.up * ((standingHeight - height) * 0.5f);
+        if (hasCrouchingParameter) animator.SetBool(IsCrouchingHash, isCrouching);
+    }
+
+    private bool HasRoomToStand()
+    {
+        float missing = standingHeight - characterController.height;
+        if (missing <= 0.001f) return true;
+
+        float radius = characterController.radius * 0.95f;
+        Vector3 top = transform.TransformPoint(characterController.center + Vector3.up * (characterController.height * 0.5f - characterController.radius));
+        return !Physics.SphereCast(top, radius, Vector3.up, out _, missing, ~0, QueryTriggerInteraction.Ignore);
     }
 
     private void LateUpdate()

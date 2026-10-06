@@ -34,6 +34,9 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     [Header("Input")]
     [Tooltip("WebGL only. False (recommended) = Unity only gets keyboard input while the canvas has focus, so React text fields work.")]
     [SerializeField] private bool captureAllKeyboardInput = false;
+    [Tooltip("WebGL only. Keeps the keys (WASD, Shift, Space, C) with Unity inside the React page: focuses the canvas " +
+             "at start and after clicks on React buttons / sliders. React text fields still get the keyboard while focused.")]
+    [SerializeField] private bool autoFocusCanvas = true;
 
     [Header("Logging")]
     [Tooltip("Log every Unity -> React call to the console (Editor and browser). Noisy with live data.")]
@@ -87,6 +90,11 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     [DllImport("__Internal")] private static extern void handleElectricalValues(string data);
     [DllImport("__Internal")] private static extern void handleElectricalPanelClosed();
 
+    // KeyboardFocus.jslib
+    [DllImport("__Internal")] private static extern void KeyboardFocus_Setup(bool autoFocus);
+    [DllImport("__Internal")] private static extern void KeyboardFocus_Focus();
+    [DllImport("__Internal")] private static extern void KeyboardFocus_SetAuto(bool autoFocus);
+
     // ===================================================================================== lifecycle
 
     // Guarantees the bridge exists whichever scene starts first.
@@ -110,6 +118,9 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         gameObject.name = GameObjectName; // sendMessage finds the object by name
         logOutgoingMessages = logOutgoing;
         ApplyKeyboardCapture(captureAllKeyboardInput);
+#if UNITY_WEBGL && !UNITY_EDITOR
+        KeyboardFocus_Setup(autoFocusCanvas);
+#endif
 
         SceneManager.sceneLoaded += HandleSceneLoaded;
         lastCursorLocked = Cursor.lockState == CursorLockMode.Locked;
@@ -169,6 +180,27 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         LogIncoming(nameof(SetKeyboardCapture_Extern), enabled);
         captureAllKeyboardInput = ParseBool(enabled);
         ApplyKeyboardCapture(captureAllKeyboardInput);
+    }
+
+    /// <summary>Give the keyboard to Unity now (e.g. after closing a React panel / text field), so WASD works
+    /// without clicking the 3D view.</summary>
+    public void FocusUnity_Extern()
+    {
+        LogIncoming(nameof(FocusUnity_Extern), null);
+#if UNITY_WEBGL && !UNITY_EDITOR
+        KeyboardFocus_Focus();
+#endif
+    }
+
+    /// <summary>"true" (default) / "false". True = after clicks on React buttons / sliders the keys go back to
+    /// Unity automatically. False = Unity only gets keys after a click on the 3D view or FocusUnity_Extern.</summary>
+    public void SetKeyboardAutoFocus_Extern(string enabled)
+    {
+        LogIncoming(nameof(SetKeyboardAutoFocus_Extern), enabled);
+        autoFocusCanvas = ParseBool(enabled);
+#if UNITY_WEBGL && !UNITY_EDITOR
+        KeyboardFocus_SetAuto(autoFocusCanvas);
+#endif
     }
 
     /// <summary>"true" on mouseenter / "false" on mouseleave of every React panel over the canvas.

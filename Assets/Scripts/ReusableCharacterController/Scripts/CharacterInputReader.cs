@@ -27,6 +27,7 @@ public class CharacterInputReader : MonoBehaviour
     public Vector2 LookInput => !ControlBlocked && look != null ? look.ReadValue<Vector2>() : Vector2.zero;
     public bool RunHeld => !ControlBlocked && run != null && run.IsPressed();
     public bool JumpHeld => !ControlBlocked && jump != null && jump.IsPressed();
+    public bool JumpPressed => !ControlBlocked && jump != null && jump.WasPressedThisFrame();
     public bool CrouchHeld => !ControlBlocked && crouch != null && crouch.IsPressed();
 
     public bool IsOrbiting => !ControlBlocked && orbitAction != null && orbitAction.action.IsPressed();
