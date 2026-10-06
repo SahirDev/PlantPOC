@@ -34,7 +34,7 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     [Header("Input")]
     [Tooltip("WebGL only. False (recommended) = Unity only gets keyboard input while the canvas has focus, so React text fields work.")]
     [SerializeField] private bool captureAllKeyboardInput = false;
-    [Tooltip("WebGL only. Keeps the keys (WASD, Shift, Space, C) with Unity inside the React page: focuses the canvas " +
+    [Tooltip("WebGL only. Keeps the keys (WASD, Shift, Space, Z) with Unity inside the React page: focuses the canvas " +
              "at start and after clicks on React buttons / sliders. React text fields still get the keyboard while focused.")]
     [SerializeField] private bool autoFocusCanvas = true;
 

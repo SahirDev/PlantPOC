@@ -293,7 +293,7 @@ public class CharacterCameraController : MonoBehaviour
         if (looking && inputReader != null) HandleLookInput();
         else ResetLookSmoothing();
 
-        // Crouching (C) lowers the camera smoothly; fly camera never crouches.
+        // Crouching (Z) lowers the camera smoothly; fly camera never crouches.
         float targetDrop = movementController != null && viewStateMachine.CurrentMode != CharacterViewStateMachine.ViewMode.FlyCam
             ? movementController.CrouchCameraDrop : 0f;
         crouchDrop = Mathf.MoveTowards(crouchDrop, targetDrop, Time.deltaTime * 3f);

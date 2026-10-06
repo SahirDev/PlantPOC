@@ -1,6 +1,6 @@
 // Keyboard focus for the Unity canvas inside a React page.
 //
-// Unity only receives keys (WASD, Shift, Space, C ...) while its <canvas> has focus. The react-unity-webgl
+// Unity only receives keys (WASD, Shift, Space, Z ...) while its <canvas> has focus. The react-unity-webgl
 // <Unity> component does not make the canvas focusable, so keys never arrived. This:
 //   - makes the canvas focusable and focuses it once at start (WASD works without a click),
 //   - focuses it whenever the 3D view is clicked,

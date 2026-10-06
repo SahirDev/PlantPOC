@@ -32,7 +32,7 @@ public class CharacterMovementController : MonoBehaviour
     [Header("Jump / Crouch (walking)")]
     [Tooltip("Jump height in metres (Space). 0 = no jumping.")]
     [SerializeField, Min(0f)] private float jumpHeight = 1f;
-    [Tooltip("Capsule height while crouching (hold C), as a part of the standing height.")]
+    [Tooltip("Capsule height while crouching (hold Z), as a part of the standing height.")]
     [SerializeField, Range(0.3f, 1f)] private float crouchHeightFactor = 0.6f;
     [Tooltip("Speed while crouching, as a part of the walking speed.")]
     [SerializeField, Range(0.1f, 1f)] private float crouchSpeedFactor = 0.5f;
@@ -195,7 +195,7 @@ public class CharacterMovementController : MonoBehaviour
         if (viewStateMachine != null && viewStateMachine.CurrentMode == CharacterViewStateMachine.ViewMode.FlyCam)
         {
             CancelLadderClimbing();
-            SetCrouching(false); // in fly mode C means "down"
+            SetCrouching(false); // in fly mode Z means "down"
             HandleFlying();
         }
         else
@@ -242,7 +242,7 @@ public class CharacterMovementController : MonoBehaviour
         Vector2 input = MovementInputAllowed ? inputReader.MoveInput : Vector2.zero;
         Vector3 direction = GetFlatCameraRelativeDirection(input);
 
-        // Hold C = crouch (slower, lower). Stays crouched under a low ceiling until there is room.
+        // Hold Z = crouch (slower, lower). Stays crouched under a low ceiling until there is room.
         SetCrouching(MovementInputAllowed && inputReader.CrouchHeld);
 
         float targetSpeed = isCrouching ? walkingSpeed * crouchSpeedFactor
