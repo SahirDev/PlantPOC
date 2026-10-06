@@ -174,114 +174,6 @@ Material:
     - _Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
---- !u!21 &80200778
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: SplineFlow_RuntimeMat
-  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 3000
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: 7e3c1d0dcde70d646a8f6bb2d4babc64, type: 3}
-        m_Scale: {x: 0.5, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0
-    - _AlphaToMask: 0
-    - _Blend: 1
-    - _BlendOp: 0
-    - _Cull: 2
-    - _Cutoff: 0.5
-    - _DstBlend: 1
-    - _DstBlendAlpha: 0
-    - _QueueOffset: 0
-    - _SampleGI: 0
-    - _SrcBlend: 5
-    - _SrcBlendAlpha: 1
-    - _Surface: 1
-    - _XRMotionVectorsPass: 1
-    - _ZWrite: 0
-    m_Colors:
-    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
---- !u!21 &88205345
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: SplineFlow_RuntimeMat
-  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 3000
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: 16a2733732a4b734095555c4fd32f0e0, type: 3}
-        m_Scale: {x: 0.5, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0
-    - _AlphaToMask: 0
-    - _Blend: 1
-    - _BlendOp: 0
-    - _Cull: 2
-    - _Cutoff: 0.5
-    - _DstBlend: 1
-    - _DstBlendAlpha: 0
-    - _QueueOffset: 0
-    - _SampleGI: 0
-    - _SrcBlend: 5
-    - _SrcBlendAlpha: 1
-    - _Surface: 1
-    - _XRMotionVectorsPass: 1
-    - _ZWrite: 0
-    m_Colors:
-    - _BaseColor: {r: 1, g: 0.80696106, b: 0, a: 1}
-    - _Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!1 &102073857
 GameObject:
   m_ObjectHideFlags: 0
@@ -298,7 +190,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 1
   m_IsActive: 1
 --- !u!4 &102073858
 Transform:
@@ -1470,7 +1362,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 1
   m_IsActive: 1
 --- !u!4 &133368375
 Transform:
@@ -2139,7 +2031,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 1
   m_IsActive: 1
 --- !u!4 &193394331
 Transform:
@@ -3637,6 +3529,60 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 277536069}
   m_Mesh: {fileID: 2534964839176971238, guid: fb56293111f356540b3dc9450da9e278, type: 3}
+--- !u!21 &282141742
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: SplineFlow_RuntimeMat
+  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3000
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: d178363deaac3424cb46b3703dbf0a11, type: 3}
+        m_Scale: {x: 0.5, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AddPrecomputedVelocity: 0
+    - _AlphaClip: 0
+    - _AlphaToMask: 0
+    - _Blend: 1
+    - _BlendOp: 0
+    - _Cull: 2
+    - _Cutoff: 0.5
+    - _DstBlend: 1
+    - _DstBlendAlpha: 0
+    - _QueueOffset: 0
+    - _SampleGI: 0
+    - _SrcBlend: 5
+    - _SrcBlendAlpha: 1
+    - _Surface: 1
+    - _XRMotionVectorsPass: 1
+    - _ZWrite: 0
+    m_Colors:
+    - _BaseColor: {r: 1, g: 0.91491306, b: 0, a: 1.5}
+    - _Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!1 &310292529
 GameObject:
   m_ObjectHideFlags: 0
@@ -4505,7 +4451,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 1
   m_IsActive: 1
 --- !u!4 &431973434
 Transform:
@@ -5291,7 +5237,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 1
   m_IsActive: 1
 --- !u!4 &622500024
 Transform:
@@ -7697,60 +7643,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8419178667490943989, guid: 842eb98046e1ca348b3c0807fcfe362d, type: 3}
   m_PrefabInstance: {fileID: 908478590}
   m_PrefabAsset: {fileID: 0}
---- !u!21 &916328949
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: SplineFlow_RuntimeMat
-  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 3000
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: d178363deaac3424cb46b3703dbf0a11, type: 3}
-        m_Scale: {x: 0.5, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0
-    - _AlphaToMask: 0
-    - _Blend: 1
-    - _BlendOp: 0
-    - _Cull: 2
-    - _Cutoff: 0.5
-    - _DstBlend: 1
-    - _DstBlendAlpha: 0
-    - _QueueOffset: 0
-    - _SampleGI: 0
-    - _SrcBlend: 5
-    - _SrcBlendAlpha: 1
-    - _Surface: 1
-    - _XRMotionVectorsPass: 1
-    - _ZWrite: 0
-    m_Colors:
-    - _BaseColor: {r: 1, g: 0.91491306, b: 0, a: 1.5}
-    - _Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!1 &950210830
 GameObject:
   m_ObjectHideFlags: 0
@@ -7966,7 +7858,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 1
   m_IsActive: 1
 --- !u!4 &996422746
 Transform:
@@ -8344,7 +8236,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 1
   m_IsActive: 1
 --- !u!4 &1069454137
 Transform:
@@ -9012,7 +8904,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 1
   m_IsActive: 1
 --- !u!4 &1212964138
 Transform:
@@ -9142,6 +9034,60 @@ Transform:
   - {fileID: 595790412}
   m_Father: {fileID: 7713078391886996555}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!21 &1271483847
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: SplineFlow_RuntimeMat
+  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3000
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 7e3c1d0dcde70d646a8f6bb2d4babc64, type: 3}
+        m_Scale: {x: 0.5, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AddPrecomputedVelocity: 0
+    - _AlphaClip: 0
+    - _AlphaToMask: 0
+    - _Blend: 1
+    - _BlendOp: 0
+    - _Cull: 2
+    - _Cutoff: 0.5
+    - _DstBlend: 1
+    - _DstBlendAlpha: 0
+    - _QueueOffset: 0
+    - _SampleGI: 0
+    - _SrcBlend: 5
+    - _SrcBlendAlpha: 1
+    - _Surface: 1
+    - _XRMotionVectorsPass: 1
+    - _ZWrite: 0
+    m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!1 &1299839941
 GameObject:
   m_ObjectHideFlags: 0
@@ -9159,7 +9105,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 1
   m_IsActive: 1
 --- !u!4 &1299839942
 Transform:
@@ -9290,6 +9236,60 @@ Transform:
   - {fileID: 1567784103}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!21 &1335820031
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: SplineFlow_RuntimeMat
+  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3000
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 7e3c1d0dcde70d646a8f6bb2d4babc64, type: 3}
+        m_Scale: {x: 0.5, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AddPrecomputedVelocity: 0
+    - _AlphaClip: 0
+    - _AlphaToMask: 0
+    - _Blend: 1
+    - _BlendOp: 0
+    - _Cull: 2
+    - _Cutoff: 0.5
+    - _DstBlend: 1
+    - _DstBlendAlpha: 0
+    - _QueueOffset: 0
+    - _SampleGI: 0
+    - _SrcBlend: 5
+    - _SrcBlendAlpha: 1
+    - _Surface: 1
+    - _XRMotionVectorsPass: 1
+    - _ZWrite: 0
+    m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!1 &1369993339
 GameObject:
   m_ObjectHideFlags: 0
@@ -9757,7 +9757,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 1
   m_IsActive: 1
 --- !u!4 &1567784103
 Transform:
@@ -10015,7 +10015,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 1
   m_IsActive: 1
 --- !u!4 &1655069802
 Transform:
@@ -10175,60 +10175,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 13884a27ac9560746990a3f119ba4f74, type: 3}
---- !u!21 &1732029437
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: SplineFlow_RuntimeMat
-  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 3000
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: 7e3c1d0dcde70d646a8f6bb2d4babc64, type: 3}
-        m_Scale: {x: 0.5, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0
-    - _AlphaToMask: 0
-    - _Blend: 1
-    - _BlendOp: 0
-    - _Cull: 2
-    - _Cutoff: 0.5
-    - _DstBlend: 1
-    - _DstBlendAlpha: 0
-    - _QueueOffset: 0
-    - _SampleGI: 0
-    - _SrcBlend: 5
-    - _SrcBlendAlpha: 1
-    - _Surface: 1
-    - _XRMotionVectorsPass: 1
-    - _ZWrite: 0
-    m_Colors:
-    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!1 &1737546720
 GameObject:
   m_ObjectHideFlags: 0
@@ -10575,7 +10521,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 1
   m_IsActive: 1
 --- !u!4 &1848992694
 Transform:
@@ -10829,6 +10775,228 @@ MonoBehaviour:
     m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: Object name
+--- !u!21 &1945626353
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: SplineFlow_RuntimeMat
+  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3000
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 16a2733732a4b734095555c4fd32f0e0, type: 3}
+        m_Scale: {x: 0.5, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AddPrecomputedVelocity: 0
+    - _AlphaClip: 0
+    - _AlphaToMask: 0
+    - _Blend: 1
+    - _BlendOp: 0
+    - _Cull: 2
+    - _Cutoff: 0.5
+    - _DstBlend: 1
+    - _DstBlendAlpha: 0
+    - _QueueOffset: 0
+    - _SampleGI: 0
+    - _SrcBlend: 5
+    - _SrcBlendAlpha: 1
+    - _Surface: 1
+    - _XRMotionVectorsPass: 1
+    - _ZWrite: 0
+    m_Colors:
+    - _BaseColor: {r: 1, g: 0.80696106, b: 0, a: 1}
+    - _Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
+--- !u!1 &2001820542
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2001820544}
+  - component: {fileID: 2001820543}
+  m_Layer: 0
+  m_Name: Light Probes (auto)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!220 &2001820543
+LightProbeGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2001820542}
+  m_Enabled: 1
+  m_SourcePositions:
+  - {x: 27.754597, y: 6.8285284, z: -34.89852}
+  - {x: 27.754597, y: 7.7624063, z: -34.89852}
+  - {x: 27.754597, y: 8.696284, z: -34.89852}
+  - {x: 27.754597, y: 6.8285284, z: -32.436317}
+  - {x: 27.754597, y: 7.7624063, z: -32.436317}
+  - {x: 27.754597, y: 8.696284, z: -32.436317}
+  - {x: 27.754597, y: 6.8285284, z: -29.974115}
+  - {x: 27.754597, y: 7.7624063, z: -29.974115}
+  - {x: 27.754597, y: 8.696284, z: -29.974115}
+  - {x: 27.754597, y: 6.8285284, z: -2.8898828}
+  - {x: 27.754597, y: 7.7624063, z: -2.8898828}
+  - {x: 27.754597, y: 8.696284, z: -2.8898828}
+  - {x: 27.754597, y: 6.8285284, z: -0.42767996}
+  - {x: 27.754597, y: 7.7624063, z: -0.42767996}
+  - {x: 27.754597, y: 8.696284, z: -0.42767996}
+  - {x: 27.754597, y: 6.8285284, z: 2.034523}
+  - {x: 27.754597, y: 7.7624063, z: 2.034523}
+  - {x: 27.754597, y: 8.696284, z: 2.034523}
+  - {x: 30.224371, y: 6.8285284, z: -34.89852}
+  - {x: 30.224371, y: 7.7624063, z: -34.89852}
+  - {x: 30.224371, y: 8.696284, z: -34.89852}
+  - {x: 30.224371, y: 6.8285284, z: -32.436317}
+  - {x: 30.224371, y: 7.7624063, z: -32.436317}
+  - {x: 30.224371, y: 8.696284, z: -32.436317}
+  - {x: 30.224371, y: 6.8285284, z: -29.974115}
+  - {x: 30.224371, y: 7.7624063, z: -29.974115}
+  - {x: 30.224371, y: 8.696284, z: -29.974115}
+  - {x: 30.224371, y: 6.8285284, z: -2.8898828}
+  - {x: 30.224371, y: 7.7624063, z: -2.8898828}
+  - {x: 30.224371, y: 8.696284, z: -2.8898828}
+  - {x: 30.224371, y: 6.8285284, z: -0.42767996}
+  - {x: 30.224371, y: 7.7624063, z: -0.42767996}
+  - {x: 30.224371, y: 8.696284, z: -0.42767996}
+  - {x: 30.224371, y: 6.8285284, z: 2.034523}
+  - {x: 30.224371, y: 7.7624063, z: 2.034523}
+  - {x: 30.224371, y: 8.696284, z: 2.034523}
+  - {x: 32.694145, y: 6.8285284, z: -34.89852}
+  - {x: 32.694145, y: 7.7624063, z: -34.89852}
+  - {x: 32.694145, y: 8.696284, z: -34.89852}
+  - {x: 32.694145, y: 6.8285284, z: -32.436317}
+  - {x: 32.694145, y: 7.7624063, z: -32.436317}
+  - {x: 32.694145, y: 8.696284, z: -32.436317}
+  - {x: 32.694145, y: 6.8285284, z: -29.974115}
+  - {x: 32.694145, y: 7.7624063, z: -29.974115}
+  - {x: 32.694145, y: 8.696284, z: -29.974115}
+  - {x: 32.694145, y: 6.8285284, z: -2.8898828}
+  - {x: 32.694145, y: 7.7624063, z: -2.8898828}
+  - {x: 32.694145, y: 8.696284, z: -2.8898828}
+  - {x: 32.694145, y: 6.8285284, z: -0.42767996}
+  - {x: 32.694145, y: 7.7624063, z: -0.42767996}
+  - {x: 32.694145, y: 8.696284, z: -0.42767996}
+  - {x: 32.694145, y: 6.8285284, z: 2.034523}
+  - {x: 32.694145, y: 7.7624063, z: 2.034523}
+  - {x: 32.694145, y: 8.696284, z: 2.034523}
+  - {x: 35.16392, y: 6.8285284, z: -34.89852}
+  - {x: 35.16392, y: 7.7624063, z: -34.89852}
+  - {x: 35.16392, y: 8.696284, z: -34.89852}
+  - {x: 35.16392, y: 6.8285284, z: -32.436317}
+  - {x: 35.16392, y: 7.7624063, z: -32.436317}
+  - {x: 35.16392, y: 8.696284, z: -32.436317}
+  - {x: 35.16392, y: 6.8285284, z: -29.974115}
+  - {x: 35.16392, y: 7.7624063, z: -29.974115}
+  - {x: 35.16392, y: 8.696284, z: -29.974115}
+  - {x: 35.16392, y: 6.8285284, z: -2.8898828}
+  - {x: 35.16392, y: 7.7624063, z: -2.8898828}
+  - {x: 35.16392, y: 8.696284, z: -2.8898828}
+  - {x: 35.16392, y: 6.8285284, z: -0.42767996}
+  - {x: 35.16392, y: 7.7624063, z: -0.42767996}
+  - {x: 35.16392, y: 8.696284, z: -0.42767996}
+  - {x: 35.16392, y: 6.8285284, z: 2.034523}
+  - {x: 35.16392, y: 7.7624063, z: 2.034523}
+  - {x: 35.16392, y: 8.696284, z: 2.034523}
+  - {x: 37.633698, y: 6.8285284, z: -34.89852}
+  - {x: 37.633698, y: 7.7624063, z: -34.89852}
+  - {x: 37.633698, y: 8.696284, z: -34.89852}
+  - {x: 37.633698, y: 6.8285284, z: -32.436317}
+  - {x: 37.633698, y: 7.7624063, z: -32.436317}
+  - {x: 37.633698, y: 8.696284, z: -32.436317}
+  - {x: 37.633698, y: 6.8285284, z: -29.974115}
+  - {x: 37.633698, y: 7.7624063, z: -29.974115}
+  - {x: 37.633698, y: 8.696284, z: -29.974115}
+  - {x: 37.633698, y: 6.8285284, z: -2.8898828}
+  - {x: 37.633698, y: 7.7624063, z: -2.8898828}
+  - {x: 37.633698, y: 8.696284, z: -2.8898828}
+  - {x: 37.633698, y: 6.8285284, z: -0.42767996}
+  - {x: 37.633698, y: 7.7624063, z: -0.42767996}
+  - {x: 37.633698, y: 8.696284, z: -0.42767996}
+  - {x: 37.633698, y: 6.8285284, z: 2.034523}
+  - {x: 37.633698, y: 7.7624063, z: 2.034523}
+  - {x: 37.633698, y: 8.696284, z: 2.034523}
+  - {x: 40.10347, y: 6.8285284, z: -34.89852}
+  - {x: 40.10347, y: 7.7624063, z: -34.89852}
+  - {x: 40.10347, y: 8.696284, z: -34.89852}
+  - {x: 40.10347, y: 6.8285284, z: -32.436317}
+  - {x: 40.10347, y: 7.7624063, z: -32.436317}
+  - {x: 40.10347, y: 8.696284, z: -32.436317}
+  - {x: 40.10347, y: 6.8285284, z: -29.974115}
+  - {x: 40.10347, y: 7.7624063, z: -29.974115}
+  - {x: 40.10347, y: 8.696284, z: -29.974115}
+  - {x: 40.10347, y: 6.8285284, z: -2.8898828}
+  - {x: 40.10347, y: 7.7624063, z: -2.8898828}
+  - {x: 40.10347, y: 8.696284, z: -2.8898828}
+  - {x: 40.10347, y: 6.8285284, z: -0.42767996}
+  - {x: 40.10347, y: 7.7624063, z: -0.42767996}
+  - {x: 40.10347, y: 8.696284, z: -0.42767996}
+  - {x: 40.10347, y: 6.8285284, z: 2.034523}
+  - {x: 40.10347, y: 7.7624063, z: 2.034523}
+  - {x: 40.10347, y: 8.696284, z: 2.034523}
+  - {x: 42.573246, y: 6.8285284, z: -34.89852}
+  - {x: 42.573246, y: 7.7624063, z: -34.89852}
+  - {x: 42.573246, y: 8.696284, z: -34.89852}
+  - {x: 42.573246, y: 6.8285284, z: -32.436317}
+  - {x: 42.573246, y: 7.7624063, z: -32.436317}
+  - {x: 42.573246, y: 8.696284, z: -32.436317}
+  - {x: 42.573246, y: 6.8285284, z: -29.974115}
+  - {x: 42.573246, y: 7.7624063, z: -29.974115}
+  - {x: 42.573246, y: 8.696284, z: -29.974115}
+  - {x: 42.573246, y: 6.8285284, z: -2.8898828}
+  - {x: 42.573246, y: 7.7624063, z: -2.8898828}
+  - {x: 42.573246, y: 8.696284, z: -2.8898828}
+  - {x: 42.573246, y: 6.8285284, z: -0.42767996}
+  - {x: 42.573246, y: 7.7624063, z: -0.42767996}
+  - {x: 42.573246, y: 8.696284, z: -0.42767996}
+  - {x: 42.573246, y: 6.8285284, z: 2.034523}
+  - {x: 42.573246, y: 7.7624063, z: 2.034523}
+  - {x: 42.573246, y: 8.696284, z: 2.034523}
+  m_Dering: 1
+--- !u!4 &2001820544
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2001820542}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &2008508183 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2266521059079587085, guid: b0b66f6e5f1fa4244a76e171481e28db, type: 3}
@@ -10962,7 +11130,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 1
   m_IsActive: 1
 --- !u!4 &2057390877
 Transform:
@@ -14353,7 +14521,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 2147483642
   m_IsActive: 1
 --- !u!4 &750539870121602758
 Transform:
@@ -22745,7 +22913,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 2147483642
   m_IsActive: 1
 --- !u!4 &3045495666276095203
 Transform:
@@ -26182,7 +26350,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 2147483642
   m_IsActive: 1
 --- !u!4 &3871793416633401422
 Transform:
@@ -31261,7 +31429,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 2147483642
   m_IsActive: 1
 --- !u!33 &5279044579381034536
 MeshFilter:
@@ -33080,7 +33248,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 2147483642
   m_IsActive: 1
 --- !u!1 &5788529498515146596
 GameObject:
@@ -34349,7 +34517,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 2147483642
   m_IsActive: 1
 --- !u!65 &6107560630084979583
 BoxCollider:
@@ -48145,3 +48313,4 @@ SceneRoots:
   - {fileID: 796976525}
   - {fileID: 1130868851}
   - {fileID: 1066991926}
+  - {fileID: 2001820544}
