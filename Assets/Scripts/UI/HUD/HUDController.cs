@@ -19,6 +19,8 @@ public class HUDController : SingletonMono<HUDController>
     [Header("Explosion View")]
     [Tooltip("Camera prefab with RTSCameraController, spawned for explosion view / turbine operation.")]
     [SerializeField] private GameObject explosionViewCameraPrefab;
+    [Tooltip("Background of the explosion view camera (solid colour instead of the sky).")]
+    [SerializeField] private Color explosionBackground = new Color(0.32f, 0.34f, 0.38f, 1f);
 
     protected override bool PersistAcrossScenes => true;
 
@@ -135,6 +137,7 @@ public class HUDController : SingletonMono<HUDController>
 
         selectedPart = part;
         var explodedView = part.GetComponentInParent<ModularExplodedView>();
+        GetPartCard().Show(part.transform, part.PartName, part.Description, GetExplosionCamera());
 
         CommunicationManager.HandlePartSelected_Extern(new PartSelectedPayload
         {
@@ -161,6 +164,7 @@ public class HUDController : SingletonMono<HUDController>
 
         selectedPart = null;
         plainPartShown = true;
+        GetPartCard().Show(clicked.transform, clicked.name, string.Empty, GetExplosionCamera());
         CommunicationManager.HandlePartSelected_Extern(new PartSelectedPayload
         {
             name = clicked.name,
@@ -172,9 +176,23 @@ public class HUDController : SingletonMono<HUDController>
     }
 
     private bool plainPartShown;
+    private PartInfoCard partCard;
+
+    /// <summary>Unity card (same look as the Main_Scene object card) beside the clicked part.</summary>
+    private PartInfoCard GetPartCard()
+    {
+        if (partCard == null) partCard = PartInfoCard.Create(transform);
+        return partCard;
+    }
+
+    private Camera GetExplosionCamera()
+    {
+        return explosionViewCameraInstance != null ? explosionViewCameraInstance.GetComponentInChildren<Camera>() : Camera.main;
+    }
 
     public void HideClickContext()
     {
+        if (partCard != null) partCard.Hide();
         if (selectedPart == null && !plainPartShown) return;
 
         selectedPart = null;
@@ -508,6 +526,14 @@ public class HUDController : SingletonMono<HUDController>
 
         explodedView.IsolateExplosionView();
         explosionViewCameraInstance = Instantiate(explosionViewCameraPrefab);
+
+        // Grey background instead of the (white) sky behind the isolated equipment.
+        Camera explosionCamera = explosionViewCameraInstance.GetComponentInChildren<Camera>();
+        if (explosionCamera != null)
+        {
+            explosionCamera.clearFlags = CameraClearFlags.SolidColor;
+            explosionCamera.backgroundColor = explosionBackground;
+        }
 
         var rtsCamera = explosionViewCameraInstance.GetComponent<RTSCameraController>();
         if (rtsCamera == null)

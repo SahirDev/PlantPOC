@@ -284,7 +284,8 @@ public class TestHUD : MonoBehaviour
                 RefreshPanel();
                 break;
             case "handlePartSelected":
-                ShowPart(JsonUtility.FromJson<PartSelectedPayload>(data));
+                // Unity shows the part card itself (PartInfoCard, same look as the Main_Scene card).
+                hoverLabel.gameObject.SetActive(false);
                 break;
             case "handlePartDeselected":
                 partPopup.SetActive(false);
