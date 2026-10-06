@@ -138,8 +138,8 @@ public class SceneController : SingletonMono<SceneController>
 
                 yield return null;
             }
-
-            EmitLoadProgress(sceneName, 1f);
+            // No 100 % message here: handleSceneLoaded has already been sent (scene loaded callback)
+            // and a later progress event would make React show its loader again.
 
             if (currentSceneHandle.IsValid()) Addressables.Release(currentSceneHandle);
             currentSceneHandle = default;

@@ -1124,6 +1124,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HUDController
   explosionViewCameraPrefab: {fileID: 3202194495165138142, guid: fc1e241f113d6ef4c9095c968aea59b3, type: 3}
+  explosionBackgroundImage: {fileID: 2800000, guid: 391660a55bb04f648d74eb335b99fe14, type: 3}
+  explosionBackground: {r: 0.02, g: 0.03, b: 0.1, a: 1}
+  explodeMeansExplodeAll: 1
 --- !u!114 &771405372
 MonoBehaviour:
   m_ObjectHideFlags: 0

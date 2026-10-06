@@ -19,6 +19,12 @@ public class HUDController : SingletonMono<HUDController>
     [Header("Explosion View")]
     [Tooltip("Camera prefab with RTSCameraController, spawned for explosion view / turbine operation.")]
     [SerializeField] private GameObject explosionViewCameraPrefab;
+    [Tooltip("Background picture behind the equipment in explosion view (stretched to the screen).")]
+    [SerializeField] private Texture explosionBackgroundImage;
+    [Tooltip("Background colour of the explosion view camera (used where there is no picture).")]
+    [SerializeField] private Color explosionBackground = new Color(0.02f, 0.03f, 0.1f, 1f);
+    [Tooltip("On: the explode button (ToggleExplode_Extern) explodes every part at once (Explode All).")]
+    [SerializeField] private bool explodeMeansExplodeAll = true;
 
     protected override bool PersistAcrossScenes => true;
 
@@ -135,6 +141,7 @@ public class HUDController : SingletonMono<HUDController>
 
         selectedPart = part;
         var explodedView = part.GetComponentInParent<ModularExplodedView>();
+        GetPartCard().Show(part.transform, part.PartName, part.Description, GetExplosionCamera());
 
         CommunicationManager.HandlePartSelected_Extern(new PartSelectedPayload
         {
@@ -146,11 +153,92 @@ public class HUDController : SingletonMono<HUDController>
         });
     }
 
-    public void HideClickContext()
+    /// <summary>Any object was clicked in explosion view. Uses its ExplodableViewNode (on it or a parent) when
+    /// there is one; otherwise React still gets the object's name (no part explode for it).</summary>
+    public void ShowClickContext(Vector2 screenPosition, GameObject clicked)
     {
-        if (selectedPart == null) return;
+        if (isOperating || clicked == null) return;
+
+        ExplodableViewNode node = clicked.GetComponentInParent<ExplodableViewNode>();
+        if (node != null)
+        {
+            ShowClickContext(screenPosition, node);
+            return;
+        }
 
         selectedPart = null;
+        plainPartShown = true;
+        GetPartCard().Show(clicked.transform, clicked.name, string.Empty, GetExplosionCamera());
+        CommunicationManager.HandlePartSelected_Extern(new PartSelectedPayload
+        {
+            name = clicked.name,
+            description = string.Empty,
+            exploded = false,
+            x = Screen.width > 0 ? screenPosition.x / Screen.width : 0f,
+            y = Screen.height > 0 ? 1f - screenPosition.y / Screen.height : 0f
+        });
+    }
+
+    private bool plainPartShown;
+    private PartInfoCard partCard;
+
+    /// <summary>Unity card (same look as the Main_Scene object card) beside the clicked part.</summary>
+    private PartInfoCard GetPartCard()
+    {
+        if (partCard == null) partCard = PartInfoCard.Create(transform);
+        return partCard;
+    }
+
+    /// <summary>The background picture as a screen-filling image at the far end of the explosion camera
+    /// (it belongs to the camera, so it is removed with it).</summary>
+    private void AddBackgroundImage(Camera cam)
+    {
+        if (explosionBackgroundImage == null) return;
+
+        var go = new GameObject("Explosion Background", typeof(RectTransform));
+        go.transform.SetParent(cam.transform, false);
+        go.layer = FirstRenderedLayer(cam);
+
+        Canvas canvas = go.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceCamera;
+        canvas.worldCamera = cam;
+        canvas.planeDistance = Mathf.Max(cam.nearClipPlane + 1f, cam.farClipPlane * 0.95f);
+        canvas.sortingOrder = -1000;
+
+        var imageObject = new GameObject("Image", typeof(RectTransform));
+        imageObject.layer = go.layer;
+        imageObject.transform.SetParent(go.transform, false);
+        var rect = (RectTransform)imageObject.transform;
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.sizeDelta = Vector2.zero;
+
+        var image = imageObject.AddComponent<UnityEngine.UI.RawImage>();
+        image.texture = explosionBackgroundImage;
+        image.raycastTarget = false;
+    }
+
+    private static int FirstRenderedLayer(Camera cam)
+    {
+        int ui = LayerMask.NameToLayer("UI");
+        if (ui >= 0 && (cam.cullingMask & (1 << ui)) != 0) return ui;
+        for (int i = 0; i < 32; i++)
+            if ((cam.cullingMask & (1 << i)) != 0) return i;
+        return 0;
+    }
+
+    private Camera GetExplosionCamera()
+    {
+        return explosionViewCameraInstance != null ? explosionViewCameraInstance.GetComponentInChildren<Camera>() : Camera.main;
+    }
+
+    public void HideClickContext()
+    {
+        if (partCard != null) partCard.Hide();
+        if (selectedPart == null && !plainPartShown) return;
+
+        selectedPart = null;
+        plainPartShown = false;
         CommunicationManager.HandlePartDeselected_Extern();
     }
 
@@ -207,6 +295,13 @@ public class HUDController : SingletonMono<HUDController>
     /// <summary>Toggle explosion view of the current equipment (enter / collapse).</summary>
     public void ToggleExplode()
     {
+        // The explode button explodes every part (and collapses them all again).
+        if (explodeMeansExplodeAll)
+        {
+            ToggleExplodeAll();
+            return;
+        }
+
         if (!CanDo(ActiveAction.Explode, nameof(ToggleExplode))) return;
 
         if (activeAction == ActiveAction.Explode)
@@ -430,7 +525,7 @@ public class HUDController : SingletonMono<HUDController>
             exploded = IsExploded,
             operating = isOperating,
             infoActive = infoActive,
-            canExplode = IsAllowed(ActiveAction.Explode),
+            canExplode = IsAllowed(explodeMeansExplodeAll ? ActiveAction.ExplodeAll : ActiveAction.Explode),
             canExplodeAll = IsAllowed(ActiveAction.ExplodeAll),
             canOperate = IsAllowed(ActiveAction.Operation),
             canInfo = currentType == EquipmentType.Boiler && currentContextObject != null && activeAction == ActiveAction.None && !infoActive
@@ -480,6 +575,15 @@ public class HUDController : SingletonMono<HUDController>
 
         explodedView.IsolateExplosionView();
         explosionViewCameraInstance = Instantiate(explosionViewCameraPrefab);
+
+        // Grey background instead of the (white) sky behind the isolated equipment.
+        Camera explosionCamera = explosionViewCameraInstance.GetComponentInChildren<Camera>();
+        if (explosionCamera != null)
+        {
+            explosionCamera.clearFlags = CameraClearFlags.SolidColor;
+            explosionCamera.backgroundColor = explosionBackground;
+            AddBackgroundImage(explosionCamera);
+        }
 
         var rtsCamera = explosionViewCameraInstance.GetComponent<RTSCameraController>();
         if (rtsCamera == null)

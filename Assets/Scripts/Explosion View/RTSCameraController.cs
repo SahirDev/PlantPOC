@@ -3,6 +3,9 @@ using UnityEngine.InputSystem;
 
 public class RTSCameraController : MonoBehaviour
 {
+    [Tooltip("Off: the part name only shows when a part is clicked. On: also while hovering.")]
+    [SerializeField] private bool showPartNameOnHover = false;
+
     [Header("References")]
     [SerializeField]
     private Camera targetCamera;
@@ -211,7 +214,8 @@ public class RTSCameraController : MonoBehaviour
 
         UpdateCameraPosition();
 
-        GetMouseHoveredObject();
+        // Part names show on click only (PartInfoCard); hover detection is off unless switched on.
+        if (showPartNameOnHover) GetMouseHoveredObject();
     }
 
     private void HandleHit(RaycastHit hit)
@@ -248,6 +252,10 @@ public class RTSCameraController : MonoBehaviour
             explodable.ToggleExplode(selectedObject.transform);
             Focus(GetObjectCenter(selectedObject));
         }
+
+        // Show the clicked object's name too (parts without an ExplodableViewNode).
+        if (HUDController.Instance != null && Mouse.current != null)
+            HUDController.Instance.ShowClickContext(Mouse.current.position.ReadValue(), selectedObject);
 
         Debug.Log($"Hit: {selectedObject.name}");
 
