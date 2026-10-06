@@ -249,6 +249,10 @@ public class RTSCameraController : MonoBehaviour
             Focus(GetObjectCenter(selectedObject));
         }
 
+        // Show the clicked object's name too (parts without an ExplodableViewNode).
+        if (HUDController.Instance != null && Mouse.current != null)
+            HUDController.Instance.ShowClickContext(Mouse.current.position.ReadValue(), selectedObject);
+
         Debug.Log($"Hit: {selectedObject.name}");
 
         // var selectedObject = hit.collider.gameObject;

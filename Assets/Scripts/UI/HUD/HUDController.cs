@@ -146,11 +146,39 @@ public class HUDController : SingletonMono<HUDController>
         });
     }
 
-    public void HideClickContext()
+    /// <summary>Any object was clicked in explosion view. Uses its ExplodableViewNode (on it or a parent) when
+    /// there is one; otherwise React still gets the object's name (no part explode for it).</summary>
+    public void ShowClickContext(Vector2 screenPosition, GameObject clicked)
     {
-        if (selectedPart == null) return;
+        if (isOperating || clicked == null) return;
+
+        ExplodableViewNode node = clicked.GetComponentInParent<ExplodableViewNode>();
+        if (node != null)
+        {
+            ShowClickContext(screenPosition, node);
+            return;
+        }
 
         selectedPart = null;
+        plainPartShown = true;
+        CommunicationManager.HandlePartSelected_Extern(new PartSelectedPayload
+        {
+            name = clicked.name,
+            description = string.Empty,
+            exploded = false,
+            x = Screen.width > 0 ? screenPosition.x / Screen.width : 0f,
+            y = Screen.height > 0 ? 1f - screenPosition.y / Screen.height : 0f
+        });
+    }
+
+    private bool plainPartShown;
+
+    public void HideClickContext()
+    {
+        if (selectedPart == null && !plainPartShown) return;
+
+        selectedPart = null;
+        plainPartShown = false;
         CommunicationManager.HandlePartDeselected_Extern();
     }
 

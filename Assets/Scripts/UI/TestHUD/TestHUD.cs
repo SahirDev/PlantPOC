@@ -77,6 +77,13 @@ public class TestHUD : MonoBehaviour
 
     private GameObject equipmentBar;
     private Button explodeButton, collapseButton;
+    private GameObject partPopup;
+    private RectTransform partPopupRect;
+    private Text partName, partDescription;
+    private Button partExplodeButton;
+    private Text partExplodeText;
+    private Text hoverLabel;
+    private RectTransform canvasRect;
     private GameObject doorPrompt;
     private Text doorText;
 
@@ -158,6 +165,10 @@ public class TestHUD : MonoBehaviour
         }
 
         if (toast.gameObject.activeSelf && Time.unscaledTime > toastUntil) toast.gameObject.SetActive(false);
+
+        // Part name follows the mouse while hovering a part in explosion view.
+        if (hoverLabel.gameObject.activeSelf && Mouse.current != null)
+            hoverLabel.rectTransform.anchoredPosition = ScreenToCanvas(Mouse.current.position.ReadValue()) + new Vector2(18f, 18f);
 
         // FPS (for performance testing)
         fpsFrames++;
@@ -272,6 +283,19 @@ public class TestHUD : MonoBehaviour
                 panelOpen = false;
                 RefreshPanel();
                 break;
+            case "handlePartSelected":
+                ShowPart(JsonUtility.FromJson<PartSelectedPayload>(data));
+                break;
+            case "handlePartDeselected":
+                partPopup.SetActive(false);
+                break;
+            case "handlePartHover":
+                hoverLabel.text = data;
+                hoverLabel.gameObject.SetActive(!string.IsNullOrEmpty(data));
+                break;
+            case "handlePartHoverEnd":
+                hoverLabel.gameObject.SetActive(false);
+                break;
             case "handleSceneTriggerEntered":
                 door = JsonUtility.FromJson<SceneTriggerPayload>(data);
                 RefreshDoor();
@@ -298,6 +322,8 @@ public class TestHUD : MonoBehaviour
         panelOpen = false;
         door = null;
         selectedBuilding = null;
+        partPopup.SetActive(false);
+        hoverLabel.gameObject.SetActive(false);
         overview = false;
 
         // Slider start values per room.
@@ -350,7 +376,7 @@ public class TestHUD : MonoBehaviour
         equipmentBar.SetActive(show);
         if (!show) return;
 
-        explodeButton.interactable = equipment.canExplode && !equipment.exploded;
+        explodeButton.interactable = equipment.canExplodeAll && !equipment.exploded;
         collapseButton.interactable = equipment.exploded || equipment.operating;
     }
 
@@ -577,6 +603,29 @@ public class TestHUD : MonoBehaviour
         loadingBar.anchorMax = new Vector2(Mathf.Clamp01(progress), 1f);
     }
 
+    private void ShowPart(PartSelectedPayload part)
+    {
+        hoverLabel.gameObject.SetActive(false);
+        partName.text = part.name;
+        partDescription.text = part.description;
+        partDescription.gameObject.SetActive(!string.IsNullOrEmpty(part.description));
+        partExplodeText.text = part.exploded ? "Collapse Part" : "Explode Part";
+        partPopup.SetActive(true);
+
+        // x / y are 0..1 of the screen from the top-left; keep the card on screen.
+        Vector2 size = canvasRect.rect.size;
+        Vector2 position = new Vector2(part.x * size.x + 20f, (1f - part.y) * size.y);
+        position.x = Mathf.Clamp(position.x, 10f, size.x - 330f);
+        position.y = Mathf.Clamp(position.y, 160f, size.y - 10f);
+        partPopupRect.anchoredPosition = position;
+    }
+
+    private Vector2 ScreenToCanvas(Vector2 screen)
+    {
+        float scale = canvasRect.rect.width > 0f ? canvasRect.rect.width / Screen.width : 1f;
+        return screen * scale;
+    }
+
     private void ShowToast(string message)
     {
         toast.text = message;
@@ -743,8 +792,8 @@ public class TestHUD : MonoBehaviour
         layout.childControlHeight = true;
         layout.childForceExpandWidth = true;
 
-        explodeButton = MakeButton(bar, "Explode", "Explode", 44f, ActiveColor, () => { if (Bridge != null) Bridge.ToggleExplode_Extern(); });
-        collapseButton = MakeButton(bar, "Collapse", "Collapse", 44f, ButtonColor, () => { if (Bridge != null) Bridge.CollapseEquipment_Extern(); });
+        explodeButton = MakeButton(bar, "ExplodeAll", "Explode All", 44f, ActiveColor, () => { if (Bridge != null) Bridge.ToggleExplodeAll_Extern(); });
+        collapseButton = MakeButton(bar, "CollapseAll", "Collapse All", 44f, ButtonColor, () => { if (Bridge != null) Bridge.CollapseEquipment_Extern(); });
         equipmentBar = bar.gameObject;
     }
 
@@ -798,6 +847,48 @@ public class TestHUD : MonoBehaviour
 
     private void BuildOverlays(RectTransform root)
     {
+        canvasRect = root;
+
+        // Part card (explosion view click)
+        Image card = Box("PartPopup", root, PanelColor);
+        partPopupRect = card.rectTransform;
+        partPopupRect.anchorMin = partPopupRect.anchorMax = Vector2.zero;
+        partPopupRect.pivot = new Vector2(0f, 1f);
+        partPopupRect.sizeDelta = new Vector2(320f, 0f);
+        VerticalLayoutGroup cardLayout = card.gameObject.AddComponent<VerticalLayoutGroup>();
+        cardLayout.padding = new RectOffset(16, 16, 14, 14);
+        cardLayout.spacing = 8f;
+        cardLayout.childControlWidth = true;
+        cardLayout.childControlHeight = true;
+        cardLayout.childForceExpandHeight = false;
+        card.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        RectTransform nameRow = Row(partPopupRect, "Name", 26f);
+        partName = Label(nameRow, "Text", "", 19, FontStyle.Bold, TextColor, TextAnchor.MiddleLeft);
+        partDescription = Label(partPopupRect, "Description", "", 14, FontStyle.Normal, MutedColor, TextAnchor.UpperLeft);
+        partDescription.rectTransform.sizeDelta = new Vector2(0f, 0f);
+        var buttons = new GameObject("Buttons", typeof(RectTransform));
+        buttons.transform.SetParent(partPopupRect, false);
+        HorizontalLayoutGroup buttonLayout = buttons.AddComponent<HorizontalLayoutGroup>();
+        buttonLayout.spacing = 8f;
+        buttonLayout.childControlWidth = true;
+        buttonLayout.childControlHeight = true;
+        buttonLayout.childForceExpandWidth = true;
+        partExplodeButton = MakeButton((RectTransform)buttons.transform, "ExplodePart", "Explode Part", 38f, ActiveColor,
+            () => { if (Bridge != null) Bridge.TogglePartExplode_Extern(); });
+        partExplodeText = partExplodeButton.GetComponentInChildren<Text>();
+        MakeButton((RectTransform)buttons.transform, "Close", "Close", 38f, ButtonColor,
+            () => { if (Bridge != null) Bridge.ClearPartSelection_Extern(); else partPopup.SetActive(false); });
+        partPopup = card.gameObject;
+        partPopup.SetActive(false);
+
+        // Part name next to the mouse while hovering
+        hoverLabel = Label(root, "PartHover", "", 16, FontStyle.Bold, TextColor, TextAnchor.LowerLeft);
+        hoverLabel.rectTransform.anchorMin = hoverLabel.rectTransform.anchorMax = Vector2.zero;
+        hoverLabel.rectTransform.pivot = Vector2.zero;
+        hoverLabel.rectTransform.sizeDelta = new Vector2(400f, 26f);
+        hoverLabel.gameObject.AddComponent<Shadow>().effectDistance = new Vector2(1.5f, -1.5f);
+        hoverLabel.gameObject.SetActive(false);
+
         // Loading
         Image cover = Box("Loading", root, new Color(0.03f, 0.04f, 0.08f, 0.92f));
         RectTransform coverRect = cover.rectTransform;
