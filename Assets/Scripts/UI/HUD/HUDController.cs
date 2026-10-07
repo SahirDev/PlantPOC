@@ -48,6 +48,13 @@ public class HUDController : SingletonMono<HUDController>
 
     private bool IsExploded => explosionViewCameraInstance != null;
 
+    // Read-only state (Editor test panel, debugging).
+    public EquipmentType CurrentEquipmentType => currentContextObject != null ? currentType : EquipmentType.None;
+    public string CurrentEquipmentName => currentContextObject != null ? currentContextObject.name : "";
+    public bool IsExplodedView => IsExploded;
+    public bool IsOperatingEquipment => isOperating;
+    public bool IsBoilerInfoOpen => IsBoilerInfoActive;
+
     // ================================================================== lifecycle
 
     protected override void OnSingletonAwake()
