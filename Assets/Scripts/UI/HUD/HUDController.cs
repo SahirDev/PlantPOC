@@ -39,6 +39,7 @@ public class HUDController : SingletonMono<HUDController>
     private GameObject explosionViewCameraInstance;
     private ElectricalPanelInfo currentElectricalPanel;
     private CharacterMovementController cachedPlayer;
+    private float reactBurnerPower = -1f; // last value from SetBoilerBurnerPower_Extern (0..100), -1 = none
 
     private bool IsExploded => explosionViewCameraInstance != null;
 
@@ -68,6 +69,7 @@ public class HUDController : SingletonMono<HUDController>
         explosionViewCameraInstance = null;
         currentElectricalPanel = null;
         cachedPlayer = null;
+        reactBurnerPower = -1f;
 
         SendState();
     }
@@ -85,11 +87,13 @@ public class HUDController : SingletonMono<HUDController>
         if (ctxObject != null) currentContextObject = ctxObject;
         contextInRange = true;
 
-        CommunicationManager.HandleEquipmentInRange_Extern(new EquipmentInfoPayload
+        var payload = new EquipmentInfoPayload
         {
             type = type.ToString(),
             name = currentContextObject != null ? currentContextObject.name : ""
-        });
+        };
+        CommunicationManager.HandleEquipmentInRange_Extern(payload);
+        if (type == EquipmentType.Boiler) CommunicationManager.HandleBoilerInRange_Extern(payload);
         SendState();
     }
 
@@ -105,11 +109,13 @@ public class HUDController : SingletonMono<HUDController>
         if (type != currentType) return;
 
         contextInRange = false;
-        CommunicationManager.HandleEquipmentOutOfRange_Extern(new EquipmentInfoPayload
+        var payload = new EquipmentInfoPayload
         {
             type = type.ToString(),
             name = currentContextObject != null ? currentContextObject.name : ""
-        });
+        };
+        CommunicationManager.HandleEquipmentOutOfRange_Extern(payload);
+        if (type == EquipmentType.Boiler) CommunicationManager.HandleBoilerOutOfRange_Extern(payload);
 
         // Keep the context while something is running so it can still be stopped.
         if (!HasActiveSession)
@@ -459,6 +465,95 @@ public class HUDController : SingletonMono<HUDController>
 
         explodedView.ToggleExplode(selectedPart.transform);
         HideClickContext();
+    }
+
+    // ================================================================== boiler (one function per React button)
+
+    /// <summary>Boiler: explode every part (does nothing if already exploded).</summary>
+    public void BoilerExplodeAll()
+    {
+        if (!AtBoiler(nameof(BoilerExplodeAll))) return;
+        if (activeAction == ActiveAction.ExplodeAll) { SendState(); return; }
+        ToggleExplodeAll();
+    }
+
+    /// <summary>Boiler: collapse all parts and go back to the worker (does nothing if not exploded).</summary>
+    public void BoilerCollapseAll()
+    {
+        if (!AtBoiler(nameof(BoilerCollapseAll))) return;
+        if (IsExploded) Collapse();
+        SendState();
+    }
+
+    /// <summary>Boiler: start the operation animation (fluid process).</summary>
+    public void BoilerStartOperation()
+    {
+        if (!AtBoiler(nameof(BoilerStartOperation))) return;
+        if (isOperating) { SendState(); return; }
+        ToggleOperation();
+        ApplyReactBurnerPower();
+    }
+
+    /// <summary>Boiler: stop the operation animation and reset the process.</summary>
+    public void BoilerStopOperation()
+    {
+        if (!AtBoiler(nameof(BoilerStopOperation))) return;
+        if (!isOperating) { SendState(); return; }
+        ToggleOperation();
+    }
+
+    /// <summary>Boiler: info panel with particle effects (same as StartBoilerInfo).</summary>
+    public void BoilerShowInfo()
+    {
+        if (!AtBoiler(nameof(BoilerShowInfo))) return;
+        if (IsBoilerInfoActive) { SendState(); return; }
+        StartBoilerInfo();
+        ApplyReactBurnerPower(); // the dashboard resets the burner to its default when it opens
+    }
+
+    /// <summary>Boiler: close the info panel and its particle effects.</summary>
+    public void BoilerHideInfo()
+    {
+        if (!AtBoiler(nameof(BoilerHideInfo))) return;
+
+        if (BoilerDashboardController.HasInstance && BoilerDashboardController.Instance.isActiveAndEnabled)
+            BoilerDashboardController.Instance.CloseDashboard();
+        else if (BoilerOperationInfo.instanced != null)
+            BoilerOperationInfo.instanced.ResetBoilerInfo();
+
+        SendState();
+    }
+
+    /// <summary>Boiler burner power 0..100 from the React slider. Works at any time in the boiler room
+    /// (operation, info panel or idle) and is kept when the info panel opens.</summary>
+    public void SetBoilerBurnerPower(float value)
+    {
+        reactBurnerPower = Mathf.Clamp(value, 0f, 100f);
+        if (!ApplyReactBurnerPower())
+            Fail(nameof(SetBoilerBurnerPower), "No boiler in this scene.");
+    }
+
+    private bool ApplyReactBurnerPower()
+    {
+        if (reactBurnerPower < 0f) return true;
+
+        if (BoilerDashboardController.HasInstance)
+        {
+            BoilerDashboardController.Instance.SetBurnerPower(reactBurnerPower); // also updates the dashboard values
+            return true;
+        }
+
+        BoilerFluidController fluid = GetBoilerController();
+        if (fluid == null) return false;
+        fluid.SetBurnerPower(reactBurnerPower / 100f);
+        return true;
+    }
+
+    private bool AtBoiler(string command)
+    {
+        if (currentType == EquipmentType.Boiler && currentContextObject != null) return true;
+        Fail(command, "The worker is not at the boiler.");
+        return false;
     }
 
     /// <summary>Electrical panel generator value 0..100 (only while the worker is at the panel).</summary>

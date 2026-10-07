@@ -76,6 +76,8 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     [DllImport("__Internal")] private static extern void handleOverviewObjectDeselected();
     [DllImport("__Internal")] private static extern void handleEquipmentInRange(string data);
     [DllImport("__Internal")] private static extern void handleEquipmentOutOfRange(string data);
+    [DllImport("__Internal")] private static extern void handleBoilerInRange(string data);
+    [DllImport("__Internal")] private static extern void handleBoilerOutOfRange(string data);
     [DllImport("__Internal")] private static extern void handleEquipmentState(string data);
     [DllImport("__Internal")] private static extern void handlePartHover(string data);
     [DllImport("__Internal")] private static extern void handlePartHoverEnd();
@@ -425,6 +427,61 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
 
     #endregion
 
+    #region React -> Unity : Boiler (one function per button)
+
+    /// <summary>Boiler: explode all parts. State answer: handleEquipmentState.</summary>
+    public void BoilerExplodeAll_Extern()
+    {
+        LogIncoming(nameof(BoilerExplodeAll_Extern), null);
+        if (Available<HUDController>(nameof(BoilerExplodeAll_Extern), "Equipment controls")) HUDController.Instance.BoilerExplodeAll();
+    }
+
+    /// <summary>Boiler: collapse all parts, back to the worker.</summary>
+    public void BoilerCollapseAll_Extern()
+    {
+        LogIncoming(nameof(BoilerCollapseAll_Extern), null);
+        if (Available<HUDController>(nameof(BoilerCollapseAll_Extern), "Equipment controls")) HUDController.Instance.BoilerCollapseAll();
+    }
+
+    /// <summary>Boiler: start the operation animation.</summary>
+    public void BoilerStartOperation_Extern()
+    {
+        LogIncoming(nameof(BoilerStartOperation_Extern), null);
+        if (Available<HUDController>(nameof(BoilerStartOperation_Extern), "Equipment controls")) HUDController.Instance.BoilerStartOperation();
+    }
+
+    /// <summary>Boiler: stop the operation animation.</summary>
+    public void BoilerStopOperation_Extern()
+    {
+        LogIncoming(nameof(BoilerStopOperation_Extern), null);
+        if (Available<HUDController>(nameof(BoilerStopOperation_Extern), "Equipment controls")) HUDController.Instance.BoilerStopOperation();
+    }
+
+    /// <summary>Boiler: info panel + particle effects. Also: handleBoilerDashboardOpened.</summary>
+    public void BoilerShowInfo_Extern()
+    {
+        LogIncoming(nameof(BoilerShowInfo_Extern), null);
+        if (Available<HUDController>(nameof(BoilerShowInfo_Extern), "Equipment controls")) HUDController.Instance.BoilerShowInfo();
+    }
+
+    /// <summary>Boiler: close the info panel and particle effects.</summary>
+    public void BoilerHideInfo_Extern()
+    {
+        LogIncoming(nameof(BoilerHideInfo_Extern), null);
+        if (Available<HUDController>(nameof(BoilerHideInfo_Extern), "Equipment controls")) HUDController.Instance.BoilerHideInfo();
+    }
+
+    /// <summary>Boiler burner power slider "0".."100". Works any time in the boiler room.</summary>
+    public void SetBoilerBurnerPower_Extern(string value)
+    {
+        LogIncoming(nameof(SetBoilerBurnerPower_Extern), value);
+        if (Available<HUDController>(nameof(SetBoilerBurnerPower_Extern), "Equipment controls") &&
+            TryParseFloat(value, out float power, nameof(SetBoilerBurnerPower_Extern)))
+            HUDController.Instance.SetBoilerBurnerPower(power);
+    }
+
+    #endregion
+
     #region React -> Unity : Boiler dashboard
 
     /// <summary>"0".."100".</summary>
@@ -656,6 +713,26 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         Log(nameof(handleEquipmentInRange), json);
 #if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
         handleEquipmentInRange(json);
+#endif
+    }
+
+    /// <summary>Worker is near the boiler (show the boiler buttons). → React: <c>handleBoilerInRange</c> { type, name }</summary>
+    public static void HandleBoilerInRange_Extern(EquipmentInfoPayload data)
+    {
+        string json = ToJson(data);
+        Log(nameof(handleBoilerInRange), json);
+#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
+        handleBoilerInRange(json);
+#endif
+    }
+
+    /// <summary>Worker walked away from the boiler (hide the boiler buttons). → React: <c>handleBoilerOutOfRange</c></summary>
+    public static void HandleBoilerOutOfRange_Extern(EquipmentInfoPayload data)
+    {
+        string json = ToJson(data);
+        Log(nameof(handleBoilerOutOfRange), json);
+#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
+        handleBoilerOutOfRange(json);
 #endif
     }
 

@@ -55,6 +55,12 @@ mergeInto(LibraryManager.library, {
   handleEquipmentOutOfRange: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleEquipmentOutOfRange", UTF8ToString(data));
   },
+  handleBoilerInRange: function (data) {
+    if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleBoilerInRange", UTF8ToString(data));
+  },
+  handleBoilerOutOfRange: function (data) {
+    if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleBoilerOutOfRange", UTF8ToString(data));
+  },
   handleEquipmentState: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleEquipmentState", UTF8ToString(data));
   },

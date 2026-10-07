@@ -59,6 +59,18 @@ Walking up to equipment sends `handleEquipmentInRange` + `handleEquipmentState`.
 | `TogglePartExplode_Extern` | – | Part from the last `handlePartSelected` |
 | `ClearPartSelection_Extern` | – | Close the part menu |
 
+### Boiler room (one function per button)
+Near the boiler Unity sends `handleBoilerInRange` (show the boiler buttons); walking away sends `handleBoilerOutOfRange`.
+| Function | Value | Notes |
+|---|---|---|
+| `BoilerExplodeAll_Extern` | – | Explode all parts |
+| `BoilerCollapseAll_Extern` | – | Collapse all, back to the worker |
+| `BoilerStartOperation_Extern` | – | Start the operation animation |
+| `BoilerStopOperation_Extern` | – | Stop the operation animation |
+| `BoilerShowInfo_Extern` | – | Info panel + particle effects (also sends `handleBoilerDashboardOpened`) |
+| `BoilerHideInfo_Extern` | – | Close the info panel + particles |
+| `SetBoilerBurnerPower_Extern` | `"0"`..`"100"` | Burner power slider; works any time in the boiler room |
+
 ### Turbines
 | Function | Value | Notes |
 |---|---|---|
@@ -100,6 +112,8 @@ Walking up to equipment sends `handleEquipmentInRange` + `handleEquipmentState`.
 | `handleOverviewObjectDeselected` | – | Overview selection cleared. |
 | `handleEquipmentInRange` | JSON `EquipmentInfo` | Worker reached a turbine / boiler / control room. |
 | `handleEquipmentOutOfRange` | JSON `EquipmentInfo` | Worker walked away. |
+| `handleBoilerInRange` | JSON `EquipmentInfo` | Worker is near the boiler: show the boiler buttons. |
+| `handleBoilerOutOfRange` | JSON `EquipmentInfo` | Worker left the boiler: hide the boiler buttons. |
 | `handleEquipmentState` | JSON `EquipmentState` | Full button state. Enable/disable React buttons from the can* flags. |
 | `handlePartHover` | string | Part name under the mouse (explosion view). |
 | `handlePartHoverEnd` | – | Mouse left the part. |
