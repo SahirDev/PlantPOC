@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -44,6 +45,8 @@ public class HUDController : SingletonMono<HUDController>
     private GameObject explosionViewCameraInstance;
     private ElectricalPanelInfo currentElectricalPanel;
     private CharacterMovementController cachedPlayer;
+    private Coroutine collapseRoutine;
+    private bool isCollapsing; // parts still sliding back: worker stays off, no new actions
     private float reactBurnerPower = -1f; // last value from SetBoilerBurnerPower_Extern (0..100), -1 = none
 
     private bool IsExploded => explosionViewCameraInstance != null;
@@ -158,7 +161,7 @@ public class HUDController : SingletonMono<HUDController>
     /// <summary>A part was clicked in explosion view: React shows its context menu at x/y.</summary>
     public void ShowClickContext(Vector2 screenPosition, ExplodableViewNode part)
     {
-        if (isOperating || part == null) return;
+        if (isOperating || isCollapsing || part == null) return;
 
         selectedPart = part;
         var explodedView = part.GetComponentInParent<ModularExplodedView>();
@@ -701,7 +704,7 @@ public class HUDController : SingletonMono<HUDController>
     {
         if (currentContextObject == null) return false;
         if (currentType != EquipmentType.Turbine && currentType != EquipmentType.Boiler) return false;
-        if (IsBoilerInfoActive) return false;
+        if (IsBoilerInfoActive || isCollapsing) return false;
         return activeAction == ActiveAction.None || activeAction == action;
     }
 
@@ -813,14 +816,41 @@ public class HUDController : SingletonMono<HUDController>
         return true;
     }
 
+    // The parts slide back first (explosion camera still on); the worker comes back only when they are home.
+    // Switching the worker on at once put it among moving colliders, which pushed / dragged it along.
     private void Collapse()
     {
         ModularExplodedView explodedView = GetExplodedView();
+        float wait = 0f;
         if (explodedView != null)
         {
             explodedView.CollapseAll();
-            explodedView.RestoreExplosionView();
+            wait = explodedView.AnimationDuration;
         }
+
+        activeAction = ActiveAction.None;
+        HideClickContext();
+
+        if (collapseRoutine != null) StopCoroutine(collapseRoutine);
+        collapseRoutine = null;
+
+        if (wait > 0f && isActiveAndEnabled) collapseRoutine = StartCoroutine(FinishCollapseLater(explodedView, wait));
+        else FinishCollapse(explodedView);
+    }
+
+    private IEnumerator FinishCollapseLater(ModularExplodedView explodedView, float wait)
+    {
+        isCollapsing = true;
+        yield return new WaitForSeconds(wait + 0.05f);
+        collapseRoutine = null;
+        FinishCollapse(explodedView);
+        SendState(); // exploded = false now
+    }
+
+    private void FinishCollapse(ModularExplodedView explodedView)
+    {
+        isCollapsing = false;
+        if (explodedView != null) explodedView.RestoreExplosionView();
 
         if (explosionViewCameraInstance != null)
         {
@@ -830,9 +860,6 @@ public class HUDController : SingletonMono<HUDController>
 
         CharacterMovementController player = GetPlayer();
         if (player != null) player.gameObject.SetActive(true);
-
-        activeAction = ActiveAction.None;
-        HideClickContext();
     }
 
     private CharacterMovementController GetPlayer()

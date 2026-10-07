@@ -21,6 +21,8 @@ public class ModularExplodedView : MonoBehaviour
 
     public Transform ExplosionCameraPoint => explosionCameraPoint;
     public float InitialDistance => initialDistance;
+    /// <summary>Seconds an explode / collapse animation takes.</summary>
+    public float AnimationDuration => animationDuration;
 
     private readonly HashSet<Transform> exploded = new();
     private readonly Dictionary<Transform, Vector3> originalPositions = new();
