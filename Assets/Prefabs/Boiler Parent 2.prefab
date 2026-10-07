@@ -49956,16 +49956,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
-  partId: BLR-6189
+  partId: BLR-3002
   equipment: Boiler
   lastMaintenanceDate: 21 Sep 2026
   maintenanceType: Cleaning
-  technician: Maintenance Team B
+  technician: Maintenance Team A
   currentCondition: 1
-  runningHours: 5000
+  runningHours: 9860
   nextMaintenanceDue: 20 Mar 2027
-  issueFound: Minor dust build-up
-  actionTaken: Cleaned and re-tightened fasteners
+  issueFound: Minor soot deposits on inner face
+  actionTaken: Cleaned, gasket faces inspected
   sparePartUsed: None
   remarks: Fit for service
 --- !u!1 &2776599651077052380
@@ -64982,18 +64982,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
-  partId: BLR-9461
+  partId: BLR-2001
   equipment: Boiler
-  lastMaintenanceDate: 01 Jun 2026
-  maintenanceType: Lubrication
-  technician: Maintenance Team A
-  currentCondition: 2
-  runningHours: 19250
-  nextMaintenanceDue: 30 Aug 2026
-  issueFound: Slight vibration above baseline
-  actionTaken: Re-torqued mounts, monitoring vibration
+  lastMaintenanceDate: 01 Oct 2026
+  maintenanceType: Repair
+  technician: A. Khan (Mechanical)
+  currentCondition: 3
+  runningHours: 26320
+  nextMaintenanceDue: 15 Oct 2026
+  issueFound: Mechanical seal leaking, vibration 7.1 mm/s
+  actionTaken: Seal replaced, standby pump in service
   sparePartUsed: Seal kit
-  remarks: Monitor closely until next planned service
+  remarks: Priority job - vibration analysis after restart
 --- !u!1 &3532345092413280123
 GameObject:
   m_ObjectHideFlags: 0
@@ -131671,16 +131671,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
-  partId: BLR-9676
+  partId: BLR-3001
   equipment: Boiler
-  lastMaintenanceDate: 02 Aug 2026
-  maintenanceType: Cleaning
-  technician: S. Patel (Instrumentation)
+  lastMaintenanceDate: 20 Sep 2026
+  maintenanceType: Inspection
+  technician: Maintenance Team A
   currentCondition: 1
-  runningHours: 10250
-  nextMaintenanceDue: 29 Jan 2027
-  issueFound: Normal wear, within tolerance
-  actionTaken: Lubricated and checked alignment
+  runningHours: 9860
+  nextMaintenanceDue: 19 Mar 2027
+  issueFound: Gasket and bolts in good condition
+  actionTaken: Visual inspection, bolts re-torqued
   sparePartUsed: None
   remarks: Fit for service
 --- !u!1 &6331858828838804462
@@ -163019,18 +163019,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
-  partId: BLR-8147
+  partId: BLR-9001
   equipment: Boiler
-  lastMaintenanceDate: 25 May 2026
-  maintenanceType: Cleaning
-  technician: A. Khan (Mechanical)
+  lastMaintenanceDate: 03 Sep 2026
+  maintenanceType: Inspection
+  technician: Fire Safety Team
   currentCondition: 2
-  runningHours: 20000
-  nextMaintenanceDue: 23 Aug 2026
-  issueFound: Early signs of corrosion
-  actionTaken: Applied anti-corrosion coating
-  sparePartUsed: Filter element
-  remarks: Monitor closely until next planned service
+  runningHours: 8760
+  nextMaintenanceDue: 03 Nov 2026
+  issueFound: Pressure gauge at lower green limit
+  actionTaken: Recharge scheduled
+  sparePartUsed: Extinguisher refill (CO2)
+  remarks: Monthly visual check per fire safety plan
 --- !u!1 &7380498325548498658
 GameObject:
   m_ObjectHideFlags: 0
@@ -181344,18 +181344,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
-  partId: BLR-1701
+  partId: BLR-1001
   equipment: Boiler
-  lastMaintenanceDate: 02 Sep 2026
-  maintenanceType: Lubrication
-  technician: M. Iyer (Electrical)
-  currentCondition: 1
-  runningHours: 12500
-  nextMaintenanceDue: 01 Mar 2027
-  issueFound: Normal wear, within tolerance
-  actionTaken: Lubricated and checked alignment
+  lastMaintenanceDate: 12 Aug 2026
+  maintenanceType: Inspection
+  technician: OEM Service Engineer
+  currentCondition: 2
+  runningHours: 23150
+  nextMaintenanceDue: 10 Nov 2026
+  issueFound: Scale build-up on water-wall tubes
+  actionTaken: Water treatment adjusted, chemical cleaning planned
   sparePartUsed: None
-  remarks: Fit for service
+  remarks: Monitor tube metal temperature
 --- !u!1 &7998465591645316327
 GameObject:
   m_ObjectHideFlags: 0

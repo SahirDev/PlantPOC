@@ -7,14 +7,15 @@ using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Tools > Thermal Plant, maintenance sheet (explosion view, Boiler + Turbine rooms):
-///   14. Create Maintenance Sheet Prefab   -> Assets/Resources/MaintenanceSheet.prefab (restyle freely)
+///   14. Create Maintenance Sheet Prefab   -> Assets/Prefabs/UI/MaintenanceSheet.prefab (restyle freely;
+///       HUDController in Bootstrap references it)
 ///   15. Add Maintenance Records To Parts  -> a MaintenanceRecord with generated values on every part of the
 ///       boiler (BoilerRoom) and the turbine (SteamTurbine prefab), to edit per part in the Inspector.
 /// Both are optional: without them the sheet is built in code and the values are generated.
 /// </summary>
 public static partial class ThermalPlantTools
 {
-    private const string SheetPrefabPath = "Assets/Resources/MaintenanceSheet.prefab";
+    private const string SheetPrefabPath = "Assets/Prefabs/UI/MaintenanceSheet.prefab";
     private const string TurbinePrefabPath = "Assets/Prefabs/SteamTurbine.prefab";
 
     [MenuItem(MenuRoot + "14. Create Maintenance Sheet Prefab", priority = 14)]
@@ -26,7 +27,8 @@ public static partial class ThermalPlantTools
                 "Replace", "Cancel"))
             return;
 
-        if (!AssetDatabase.IsValidFolder("Assets/Resources")) AssetDatabase.CreateFolder("Assets", "Resources");
+        if (!AssetDatabase.IsValidFolder("Assets/Prefabs")) AssetDatabase.CreateFolder("Assets", "Prefabs");
+        if (!AssetDatabase.IsValidFolder("Assets/Prefabs/UI")) AssetDatabase.CreateFolder("Assets/Prefabs", "UI");
 
         MaintenanceSheetPanel sheet = MaintenanceSheetPanel.CreateDefault(null);
         GameObject prefab = PrefabUtility.SaveAsPrefabAsset(sheet.gameObject, SheetPrefabPath);

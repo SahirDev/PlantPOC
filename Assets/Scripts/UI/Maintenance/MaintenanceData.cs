@@ -35,7 +35,8 @@ public static class MaintenanceData
         part.TryGetComponent(out MaintenanceRecord record); // real null when missing (safe with ?.)
         string partName = part.PartName;
         string equipment = Equipment(part, record);
-        var random = new System.Random(StableHash(equipment + "/" + partName));
+        // Object name too: two parts can share a display name (e.g. "Generator" x2) but must differ.
+        var random = new System.Random(StableHash(equipment + "/" + partName + "/" + part.gameObject.name));
 
         // Condition first: it decides the findings.
         MaintenanceRecord.Condition condition = record != null && record.currentCondition != MaintenanceRecord.Condition.Auto
@@ -54,7 +55,8 @@ public static class MaintenanceData
         int turbine = TurbineNumber(part);
         if (turbine > 0 && !id.StartsWith("T" + turbine + "-")) id = $"T{turbine}-{id}";
 
-        int hours = record != null && record.runningHours > 0 ? record.runningHours : 2000 + random.Next(30) * 750 + turbine * 137;
+        // The 4 turbines share one prefab record: their hours differ a little per turbine.
+        int hours = record != null && record.runningHours > 0 ? record.runningHours + turbine * 211 : 2000 + random.Next(30) * 750 + turbine * 137;
 
         return new MaintenanceInfo
         {

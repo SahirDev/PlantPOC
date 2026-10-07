@@ -16085,6 +16085,7 @@ GameObject:
   - component: {fileID: 8561532095209794497}
   - component: {fileID: 9014915773310498166}
   - component: {fileID: 700741377689395805}
+  - component: {fileID: 968196408185819179}
   m_Layer: 6
   m_Name: Boiler Chamber
   m_TagString: Untagged
@@ -60024,6 +60025,7 @@ GameObject:
   - component: {fileID: 3807251720185637245}
   - component: {fileID: 1435647973381803428}
   - component: {fileID: 3557908394884287839}
+  - component: {fileID: 8842514861359412280}
   m_Layer: 6
   m_Name: Fire Extinguisher
   m_TagString: Untagged
@@ -166801,6 +166803,7 @@ GameObject:
   - component: {fileID: 5424013959306469003}
   - component: {fileID: 1683666574056297347}
   - component: {fileID: 4614901027235511774}
+  - component: {fileID: 3741603982383516983}
   m_Layer: 6
   m_Name: Boiler Pump System
   m_TagString: Untagged
@@ -168928,6 +168931,7 @@ GameObject:
   - component: {fileID: 4981053030706368470}
   - component: {fileID: 6042922152663981697}
   - component: {fileID: 1966692089095174930}
+  - component: {fileID: 545363681616962640}
   m_Layer: 6
   m_Name: Boiler Left Inspection Cover
   m_TagString: Untagged
@@ -191835,6 +191839,7 @@ GameObject:
   - component: {fileID: 3339293134457075871}
   - component: {fileID: 8714630710408219285}
   - component: {fileID: 1621222268288065178}
+  - component: {fileID: 7674918311415852851}
   m_Layer: 6
   m_Name: Boiler Right Inspection Cover
   m_TagString: Untagged
@@ -229993,3 +229998,123 @@ SceneRoots:
   - {fileID: 1921020876}
   - {fileID: 2073584924}
   - {fileID: 1454028456}
+--- !u!114 &8842514861359412280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2667257334752675733}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
+  partId: BLR-9001
+  equipment: Boiler
+  lastMaintenanceDate: 03 Sep 2026
+  maintenanceType: Inspection
+  technician: Fire Safety Team
+  currentCondition: 2
+  runningHours: 8760
+  nextMaintenanceDue: 03 Nov 2026
+  issueFound: Pressure gauge at lower green limit
+  actionTaken: Recharge scheduled
+  sparePartUsed: Extinguisher refill (CO2)
+  remarks: Monthly visual check per fire safety plan
+--- !u!114 &3741603982383516983
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7306000209688233897}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
+  partId: BLR-2001
+  equipment: Boiler
+  lastMaintenanceDate: 01 Oct 2026
+  maintenanceType: Repair
+  technician: A. Khan (Mechanical)
+  currentCondition: 3
+  runningHours: 26320
+  nextMaintenanceDue: 15 Oct 2026
+  issueFound: Mechanical seal leaking, vibration 7.1 mm/s
+  actionTaken: Seal replaced, standby pump in service
+  sparePartUsed: Seal kit
+  remarks: Priority job - vibration analysis after restart
+--- !u!114 &545363681616962640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7534937099925111962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
+  partId: BLR-3001
+  equipment: Boiler
+  lastMaintenanceDate: 20 Sep 2026
+  maintenanceType: Inspection
+  technician: Maintenance Team A
+  currentCondition: 1
+  runningHours: 9860
+  nextMaintenanceDue: 19 Mar 2027
+  issueFound: Gasket and bolts in good condition
+  actionTaken: Visual inspection, bolts re-torqued
+  sparePartUsed: None
+  remarks: Fit for service
+--- !u!114 &7674918311415852851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8091523336116944586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
+  partId: BLR-3002
+  equipment: Boiler
+  lastMaintenanceDate: 21 Sep 2026
+  maintenanceType: Cleaning
+  technician: Maintenance Team A
+  currentCondition: 1
+  runningHours: 9860
+  nextMaintenanceDue: 20 Mar 2027
+  issueFound: Minor soot deposits on inner face
+  actionTaken: Cleaned, gasket faces inspected
+  sparePartUsed: None
+  remarks: Fit for service
+--- !u!114 &968196408185819179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 338733822700328568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
+  partId: BLR-1001
+  equipment: Boiler
+  lastMaintenanceDate: 12 Aug 2026
+  maintenanceType: Inspection
+  technician: OEM Service Engineer
+  currentCondition: 2
+  runningHours: 23150
+  nextMaintenanceDue: 10 Nov 2026
+  issueFound: Scale build-up on water-wall tubes
+  actionTaken: Water treatment adjusted, chemical cleaning planned
+  sparePartUsed: None
+  remarks: Monitor tube metal temperature

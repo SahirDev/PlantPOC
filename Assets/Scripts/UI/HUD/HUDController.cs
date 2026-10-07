@@ -26,6 +26,11 @@ public class HUDController : SingletonMono<HUDController>
     [Tooltip("On: the explode button (ToggleExplode_Extern) explodes every part at once (Explode All).")]
     [SerializeField] private bool explodeMeansExplodeAll = true;
 
+    [Header("Maintenance Sheet")]
+    [Tooltip("Assets/Prefabs/UI/MaintenanceSheet.prefab - created once at start (hidden) and kept for the whole session. " +
+             "Empty = the default layout is built in code.")]
+    [SerializeField] private GameObject maintenanceSheetPrefab;
+
     protected override bool PersistAcrossScenes => true;
 
     private GameObject currentContextObject;
@@ -48,6 +53,7 @@ public class HUDController : SingletonMono<HUDController>
     protected override void OnSingletonAwake()
     {
         SceneManager.sceneLoaded += HandleSceneLoaded;
+        GetMaintenanceSheet(); // once, at start: no hitch on the first part click, no cost while hidden
     }
 
     protected override void OnSingletonDestroy()
@@ -200,16 +206,22 @@ public class HUDController : SingletonMono<HUDController>
     private PartInfoCard partCard;
     private MaintenanceSheetPanel maintenanceSheet;
 
-    /// <summary>Bottom-right maintenance sheet: the editable prefab Resources/MaintenanceSheet, else built in code.</summary>
+    /// <summary>Bottom-right maintenance sheet: from the Maintenance Sheet Prefab, else built in code.
+    /// Child of this persistent HUD, so it is created once and kept across all scenes.</summary>
     private MaintenanceSheetPanel GetMaintenanceSheet()
     {
         if (maintenanceSheet != null) return maintenanceSheet;
 
-        var prefab = Resources.Load<GameObject>(MaintenanceSheetPanel.ResourcePath);
-        if (prefab != null)
+        if (maintenanceSheetPrefab != null)
         {
-            maintenanceSheet = Instantiate(prefab, transform).GetComponent<MaintenanceSheetPanel>();
-            if (maintenanceSheet != null) maintenanceSheet.name = "MaintenanceSheet";
+            GameObject instance = Instantiate(maintenanceSheetPrefab, transform);
+            instance.name = "MaintenanceSheet";
+            maintenanceSheet = instance.GetComponent<MaintenanceSheetPanel>();
+            if (maintenanceSheet == null)
+            {
+                Debug.LogWarning("[HUD-Controller] Maintenance Sheet Prefab has no MaintenanceSheetPanel - using the default layout.", this);
+                Destroy(instance);
+            }
         }
 
         if (maintenanceSheet == null) maintenanceSheet = MaintenanceSheetPanel.CreateDefault(transform);

@@ -144,16 +144,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
-  partId: TRB-7049
+  partId: TRB-2101
   equipment: 
-  lastMaintenanceDate: 02 Jun 2026
-  maintenanceType: Repair
-  technician: A. Khan (Mechanical)
+  lastMaintenanceDate: 14 Sep 2026
+  maintenanceType: Inspection
+  technician: M. Iyer (Electrical)
   currentCondition: 1
-  runningHours: 4798
-  nextMaintenanceDue: 29 Nov 2026
-  issueFound: Normal wear, within tolerance
-  actionTaken: Lubricated and checked alignment
+  runningHours: 18640
+  nextMaintenanceDue: 13 Mar 2027
+  issueFound: Winding insulation resistance normal
+  actionTaken: IR test and brush gear inspection
   sparePartUsed: None
   remarks: Fit for service
 --- !u!1 &79183807623724698
@@ -659,16 +659,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
-  partId: TRB-7609
+  partId: TRB-4101
   equipment: 
-  lastMaintenanceDate: 04 Aug 2026
-  maintenanceType: Replacement
-  technician: M. Iyer (Electrical)
+  lastMaintenanceDate: 10 Jun 2026
+  maintenanceType: Inspection
+  technician: Maintenance Team A
   currentCondition: 1
-  runningHours: 14548
-  nextMaintenanceDue: 31 Jan 2027
-  issueFound: Minor dust build-up
-  actionTaken: Cleaned and re-tightened fasteners
+  runningHours: 12450
+  nextMaintenanceDue: 07 Dec 2026
+  issueFound: No leaks, supports intact
+  actionTaken: Visual inspection, support bolts re-torqued
   sparePartUsed: None
   remarks: Fit for service
 --- !u!1 &4272176332752072192
@@ -815,18 +815,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
-  partId: TRB-7049
+  partId: TRB-2102
   equipment: 
-  lastMaintenanceDate: 02 Jun 2026
-  maintenanceType: Repair
-  technician: A. Khan (Mechanical)
-  currentCondition: 1
-  runningHours: 4798
-  nextMaintenanceDue: 29 Nov 2026
-  issueFound: Normal wear, within tolerance
-  actionTaken: Lubricated and checked alignment
-  sparePartUsed: None
-  remarks: Fit for service
+  lastMaintenanceDate: 22 Jul 2026
+  maintenanceType: Cleaning
+  technician: S. Patel (Instrumentation)
+  currentCondition: 2
+  runningHours: 21310
+  nextMaintenanceDue: 20 Oct 2026
+  issueFound: Stator winding temperature 6 °C above baseline
+  actionTaken: Cleaned cooling air filters, temperature trend under watch
+  sparePartUsed: Air filter element
+  remarks: Recheck temperature trend in 2 weeks
 --- !u!1 &5595971402897670976
 GameObject:
   m_ObjectHideFlags: 0
@@ -971,18 +971,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
-  partId: TRB-1423
+  partId: TRB-5201
   equipment: 
-  lastMaintenanceDate: 07 Jun 2026
-  maintenanceType: Lubrication
-  technician: OEM Service Engineer
+  lastMaintenanceDate: 02 Jul 2026
+  maintenanceType: Repair
+  technician: R. Sharma (Mechanical)
   currentCondition: 2
-  runningHours: 9298
-  nextMaintenanceDue: 05 Sep 2026
-  issueFound: Gasket showing minor seepage
-  actionTaken: Tightened flange, gasket scheduled
-  sparePartUsed: Filter element
-  remarks: Monitor closely until next planned service
+  runningHours: 20940
+  nextMaintenanceDue: 30 Oct 2026
+  issueFound: Minor seepage at horizontal joint gasket
+  actionTaken: Joint bolts re-tightened, gasket on order
+  sparePartUsed: Gasket set
+  remarks: Monitor joint until gasket replacement
 --- !u!1 &6956627476035711767
 GameObject:
   m_ObjectHideFlags: 0
@@ -1221,18 +1221,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
-  partId: TRB-7742
+  partId: TRB-5301
   equipment: 
-  lastMaintenanceDate: 18 May 2026
+  lastMaintenanceDate: 25 Aug 2026
   maintenanceType: Lubrication
-  technician: OEM Service Engineer
-  currentCondition: 2
-  runningHours: 23548
-  nextMaintenanceDue: 16 Aug 2026
-  issueFound: Bearing temperature trending up
-  actionTaken: Re-greased bearing, trend under watch
-  sparePartUsed: Filter element
-  remarks: Monitor closely until next planned service
+  technician: R. Sharma (Mechanical)
+  currentCondition: 1
+  runningHours: 19380
+  nextMaintenanceDue: 21 Feb 2027
+  issueFound: Shaft run-out within tolerance
+  actionTaken: Bearing re-greased, alignment checked
+  sparePartUsed: Lubricant (ISO VG 68)
+  remarks: Fit for service
 --- !u!1 &7564188734389868058
 GameObject:
   m_ObjectHideFlags: 0
@@ -1376,18 +1376,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
-  partId: TRB-8765
+  partId: TRB-3102
   equipment: 
-  lastMaintenanceDate: 17 May 2026
+  lastMaintenanceDate: 28 Sep 2026
   maintenanceType: Repair
-  technician: Maintenance Team A
-  currentCondition: 2
-  runningHours: 2548
-  nextMaintenanceDue: 15 Aug 2026
-  issueFound: Slight vibration above baseline
-  actionTaken: Re-torqued mounts, monitoring vibration
-  sparePartUsed: Seal kit
-  remarks: Monitor closely until next planned service
+  technician: OEM Service Engineer
+  currentCondition: 3
+  runningHours: 24880
+  nextMaintenanceDue: 28 Oct 2026
+  issueFound: Gear tooth pitting found on pinion
+  actionTaken: Load limited to 70 %, pinion replacement ordered
+  sparePartUsed: Bearing assembly
+  remarks: Priority job - review at next shift handover
 --- !u!1 &7836191983731925264
 GameObject:
   m_ObjectHideFlags: 0
@@ -1535,18 +1535,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
-  partId: TRB-3384
+  partId: TRB-5302
   equipment: 
-  lastMaintenanceDate: 23 Sep 2026
-  maintenanceType: Inspection
-  technician: S. Patel (Instrumentation)
-  currentCondition: 2
-  runningHours: 23548
-  nextMaintenanceDue: 22 Dec 2026
-  issueFound: Bearing temperature trending up
-  actionTaken: Re-greased bearing, trend under watch
-  sparePartUsed: Gasket set
-  remarks: Monitor closely until next planned service
+  lastMaintenanceDate: 30 Sep 2026
+  maintenanceType: Replacement
+  technician: Maintenance Team B
+  currentCondition: 3
+  runningHours: 25410
+  nextMaintenanceDue: 14 Oct 2026
+  issueFound: Crack detected near exhaust hood weld seam
+  actionTaken: Temporary weld repair, NDT scheduled, section replacement ordered
+  sparePartUsed: Seal kit
+  remarks: Restricted operation until NDT result
 --- !u!1 &8177369220379367946
 GameObject:
   m_ObjectHideFlags: 0
@@ -1692,18 +1692,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
-  partId: TRB-4498
+  partId: TRB-5101
   equipment: 
-  lastMaintenanceDate: 09 Aug 2026
-  maintenanceType: Lubrication
-  technician: Maintenance Team B
-  currentCondition: 1
-  runningHours: 11548
-  nextMaintenanceDue: 05 Feb 2027
-  issueFound: Normal wear, within tolerance
-  actionTaken: Lubricated and checked alignment
+  lastMaintenanceDate: 18 Aug 2026
+  maintenanceType: Inspection
+  technician: OEM Service Engineer
+  currentCondition: 2
+  runningHours: 22760
+  nextMaintenanceDue: 16 Nov 2026
+  issueFound: Minor erosion on first-stage nozzles
+  actionTaken: Borescope inspection, erosion mapped
   sparePartUsed: None
-  remarks: Fit for service
+  remarks: Plan nozzle refurbishment at next outage
 --- !u!1 &9056133308263727029
 GameObject:
   m_ObjectHideFlags: 0
@@ -1847,18 +1847,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
-  partId: TRB-8765
+  partId: TRB-3101
   equipment: 
-  lastMaintenanceDate: 17 May 2026
-  maintenanceType: Repair
-  technician: Maintenance Team A
-  currentCondition: 2
-  runningHours: 2548
-  nextMaintenanceDue: 15 Aug 2026
-  issueFound: Slight vibration above baseline
-  actionTaken: Re-torqued mounts, monitoring vibration
-  sparePartUsed: Seal kit
-  remarks: Monitor closely until next planned service
+  lastMaintenanceDate: 05 Aug 2026
+  maintenanceType: Lubrication
+  technician: A. Khan (Mechanical)
+  currentCondition: 1
+  runningHours: 16200
+  nextMaintenanceDue: 01 Feb 2027
+  issueFound: Oil sample within limits
+  actionTaken: Oil top-up, breather cleaned
+  sparePartUsed: Lubricant (ISO VG 68)
+  remarks: Fit for service
 --- !u!1001 &3323056644277515006
 PrefabInstance:
   m_ObjectHideFlags: 0

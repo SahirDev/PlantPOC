@@ -6,14 +6,12 @@ using UnityEngine.UI;
 /// Maintenance sheet of the selected part (Boiler / Turbine explosion view). Bottom-right corner, 150 px from
 /// the right and bottom edge (1920x1080 reference). Header with the part name and a collapse / open button.
 ///
-/// The UI is a normal uGUI prefab: Assets/Resources/MaintenanceSheet.prefab (Tools > Thermal Plant >
-/// 14. Create Maintenance Sheet Prefab). Restyle it freely - keep the references on this component.
-/// Without the prefab the same layout is built in code. Shown by HUDController when a part is clicked.
+/// The UI is a normal uGUI prefab: Assets/Prefabs/UI/MaintenanceSheet.prefab, assigned on HUDController in
+/// Bootstrap (created once at start, hidden, kept for the session). Restyle it freely - keep the references on
+/// this component. Without the prefab the same layout is built in code. Shown when a part is clicked.
 /// </summary>
 public class MaintenanceSheetPanel : MonoBehaviour
 {
-    public const string ResourcePath = "MaintenanceSheet";
-
     public static readonly string[] RowLabels =
     {
         "Part Name", "Part ID", "Equipment", "Last Maintenance Date", "Maintenance Type", "Current Condition",
