@@ -435,7 +435,7 @@ public sealed class Player : MonoBehaviour
                 CameraController.PlayerCamera.transform.SetPositionAndRotation(visit.cameraPosition, visit.cameraRotation);
             }
 
-            FocusController.ClickToFocusEnabled = settings == null || settings.allowClickToFocus;
+            FocusController.ClickToFocusEnabled = settings != null && settings.allowClickToFocus; // off unless a scene asks for it
             var lockCursor = settings == null || settings.lockCursorOnEntry;
             CameraController.RestoreCursorState(lockCursor, lockCursor ? CursorLockMode.Locked : CursorLockMode.None, !lockCursor);
             var suspend = settings != null && settings.startSuspended;

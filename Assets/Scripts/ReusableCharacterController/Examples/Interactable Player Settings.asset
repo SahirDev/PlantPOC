@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Interactable Player Settings
   m_EditorClassIdentifier: ReusableCharacterController::PlayerSceneSettings
   startSuspended: 0
-  allowClickToFocus: 1
+  allowClickToFocus: 0
   entryMode: 0
   restoreLastVisit: 1
   lockCursorOnEntry: 1

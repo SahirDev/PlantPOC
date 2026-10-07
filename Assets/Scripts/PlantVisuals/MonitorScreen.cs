@@ -71,8 +71,9 @@ public class MonitorScreen : MonoBehaviour
     private TMP_Text title, footer;
     private TMP_Text[] values;
     private Image statusDot;
-    private float nextRefresh;
+    private float nextRefresh, refreshedAt = -10f;
     private bool built;
+    private const float FlashSeconds = 0.6f;
 
     // ------------------------------------------------------------------ self-install
 
@@ -132,10 +133,19 @@ public class MonitorScreen : MonoBehaviour
         Refresh();
     }
 
+    // Real time (unscaled): keeps updating even if the game clock is paused.
     private void Update()
     {
-        if (!built || Time.time < nextRefresh) return;
-        Refresh();
+        if (!built) return;
+        if (Time.unscaledTime >= nextRefresh) Refresh();
+
+        // Short flash after each update, so a refresh is visible even when a value stays the same.
+        float t = (Time.unscaledTime - refreshedAt) / FlashSeconds;
+        if (t <= 1.05f)
+        {
+            float alpha = Mathf.Lerp(0.35f, 1f, Mathf.Clamp01(t));
+            for (int i = 0; i < values.Length; i++) values[i].alpha = alpha;
+        }
     }
 
     private TurbineData NearestTurbine()
@@ -155,8 +165,9 @@ public class MonitorScreen : MonoBehaviour
 
     private void Refresh()
     {
-        nextRefresh = Time.time + refreshSeconds;
+        nextRefresh = Time.unscaledTime + refreshSeconds;
         if (!built) return;
+        refreshedAt = Time.unscaledTime;
 
         if (source == Source.Turbine) ShowTurbine();
         else ShowBoiler();
@@ -173,7 +184,7 @@ public class MonitorScreen : MonoBehaviour
         values[2].text = $"{v.pressure:F2} bar";
         values[3].text = $"{v.burner:F0} %";
         values[4].text = $"{v.valve:F0} %";
-        values[5].text = $"{v.winding:F0} °C";
+        values[5].text = $"{v.winding:F1} °C";
         statusDot.color = v.operating ? Green : MutedColor;
     }
 
@@ -396,6 +407,10 @@ public static class BoilerMonitorValues
             v.valve = 0f;
         }
 
+        // Live sensor readings: small measurement noise on every update (the set values burner / valve stay exact).
+        v.waterLevel = Mathf.Clamp(v.waterLevel + Random.Range(-0.25f, 0.25f), 0f, 100f);
+        v.temperature += Random.Range(-0.25f, 0.25f);
+        v.pressure = Mathf.Max(0f, v.pressure + (v.pressure > 0.05f ? Random.Range(-0.04f, 0.04f) : Random.Range(0f, 0.02f)));
         v.winding = 60f + v.burner * 0.09f + Random.Range(-1.5f, 1.5f);
         last = v;
         return v;

@@ -6903,7 +6903,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63808539276147441b8a40f5bc6a3b52, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ReusableCharacterController::CharacterFocusController
-  clickToFocusEnabled: 1
+  clickToFocusEnabled: 0
   viewStateMachine: {fileID: 2112622393173713368}
   cameraController: {fileID: 2587350460993273067}
   characterController: {fileID: 4745464689715097657}

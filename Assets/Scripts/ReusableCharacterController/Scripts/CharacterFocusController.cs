@@ -14,7 +14,8 @@ public class CharacterFocusController : MonoBehaviour
     private bool ControlBlocked => playerOwner != null && playerOwner.IsControlBlocked;
 
     [Header("Focus")]
-    [SerializeField] private bool clickToFocusEnabled = true;
+    [Tooltip("Off: clicking equipment never switches the worker to the orbit camera (explosion view only).")]
+    [SerializeField] private bool clickToFocusEnabled = false;
 
     [Header("References")]
     [SerializeField] private CharacterViewStateMachine viewStateMachine;
