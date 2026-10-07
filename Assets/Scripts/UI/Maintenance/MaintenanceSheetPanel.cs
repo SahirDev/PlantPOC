@@ -15,7 +15,8 @@ public class MaintenanceSheetPanel : MonoBehaviour
     public static readonly string[] RowLabels =
     {
         "Part Name", "Part ID", "Equipment", "Last Maintenance Date", "Maintenance Type", "Current Condition",
-        "Running Hours", "Next Maintenance Due", "Technician", "Issue Found", "Action Taken", "Spare Part Used", "Remarks"
+        "Running Hours", "Next Maintenance Due", "Technician", "Issue Found", "Action Taken", "Spare Part Used", "Remarks",
+        "Description"
     };
     private const int ConditionRow = 5;
 
@@ -59,7 +60,7 @@ public class MaintenanceSheetPanel : MonoBehaviour
         {
             info.partName, info.partId, info.equipment, info.lastMaintenanceDate, info.maintenanceType, info.condition,
             info.runningHours, info.nextMaintenanceDue, info.technician, info.issueFound, info.actionTaken,
-            info.sparePartUsed, info.remarks
+            info.sparePartUsed, info.remarks, info.description
         };
 
         for (int i = 0; i < values.Length && i < rowValues.Length; i++)

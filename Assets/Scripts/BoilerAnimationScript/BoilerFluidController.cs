@@ -287,8 +287,13 @@ public class BoilerFluidController : MonoBehaviour
     private float maxWaterLevelOnMinBurner = 1.0f;
 
     [SerializeField, Min(0.01f)]
-    [Tooltip("Speed of water level increase/decrease per second (natural smooth flow).")]
+    [Tooltip("Fastest the water level may move (fill per second, 1 = full tank).")]
     private float waterChangeSpeed = 0.35f;
+
+    [SerializeField, Min(0.05f)]
+    [Tooltip("About how many seconds the water takes to settle at a new level: it starts slowly, glides and " +
+             "eases in (natural), instead of moving at one constant speed.")]
+    private float waterSettleTime = 3f;
 
     [Header("Low Water Warning (< 35%)")]
     [SerializeField]
@@ -311,6 +316,7 @@ public class BoilerFluidController : MonoBehaviour
 
     private float currentWaterLevel = 0.70f;
     private float targetWaterLevel = 0.70f;
+    private float waterLevelVelocity;
     private bool isInfoActive = false;
     private bool lastWarningState = false;
 
@@ -596,7 +602,17 @@ public class BoilerFluidController : MonoBehaviour
 
         if (additionalParticlesRoot == null && transform.parent != null)
         {
+            // Anywhere under the boiler (it sits under Boiler Chamber, not directly under Boiler Parent).
+            // Not found = it stays switched off and the steam / smoke / splash never show.
             var pe = transform.parent.Find("ParticleEffects");
+            if (pe == null)
+            {
+                foreach (Transform t in transform.parent.GetComponentsInChildren<Transform>(true))
+                {
+                    if (t.name == "ParticleEffects") { pe = t; break; }
+                }
+            }
+
             if (pe != null)
             {
                 additionalParticlesRoot = pe.gameObject;
@@ -657,6 +673,7 @@ public class BoilerFluidController : MonoBehaviour
     {
         targetWaterLevel = Mathf.Clamp01(fill01);
         currentWaterLevel = targetWaterLevel;
+        waterLevelVelocity = 0f;
         finalCylinderFill = currentWaterLevel;
 
         if (IsActiveSession)
@@ -852,13 +869,22 @@ public class BoilerFluidController : MonoBehaviour
         }
 
         // Smoothly and continuously adjust currentWaterLevel towards targetWaterLevel
-        if (Mathf.Abs(currentWaterLevel - targetWaterLevel) > 0.0005f)
+        if (Mathf.Abs(currentWaterLevel - targetWaterLevel) > 0.0005f || Mathf.Abs(waterLevelVelocity) > 0.0005f)
         {
-            currentWaterLevel = Mathf.MoveTowards(
+            // Eased (SmoothDamp): slow start, glide, slow settle - capped at waterChangeSpeed.
+            currentWaterLevel = Mathf.SmoothDamp(
                 currentWaterLevel,
                 targetWaterLevel,
-                waterChangeSpeed * Time.deltaTime
+                ref waterLevelVelocity,
+                waterSettleTime,
+                waterChangeSpeed,
+                Time.deltaTime
             );
+            if (Mathf.Abs(currentWaterLevel - targetWaterLevel) <= 0.0005f && Mathf.Abs(waterLevelVelocity) <= 0.0005f)
+            {
+                currentWaterLevel = targetWaterLevel;
+                waterLevelVelocity = 0f;
+            }
             finalCylinderFill = currentWaterLevel;
 
             if (IsActiveSession)
@@ -883,17 +909,7 @@ public class BoilerFluidController : MonoBehaviour
             SetWarningLamps(shouldWarn);
         }
 
-        // =====================================================
-        // SPACE
-        // =====================================================
-
-        if (Input.GetKeyDown(KeyCode.Space) &&
-            !started)
-        {
-            //StartProcess();
-        }
-
-
+        // (Space is the worker jump key; the process is started from React / the dev panel.)
         if (!started)
         {
             return;
@@ -1874,6 +1890,8 @@ public class BoilerFluidController : MonoBehaviour
         }
 
 
+        EnsureActiveForPlay(particle);
+
         ParticleSystem.MainModule main =
             particle.main;
 
@@ -1891,6 +1909,19 @@ public class BoilerFluidController : MonoBehaviour
     // =========================================================
     // PLAY LOOPING ARRAY
     // =========================================================
+
+    /// <summary>A particle system on a switched-off object does not play: switch on its parents under the
+    /// boiler (e.g. ParticleEffects) first.</summary>
+    private void EnsureActiveForPlay(ParticleSystem particle)
+    {
+        if (particle == null || particle.gameObject.activeInHierarchy) return;
+
+        Transform stopAt = transform.parent != null ? transform.parent : transform.root;
+        for (Transform t = particle.transform; t != null && t != stopAt; t = t.parent)
+        {
+            if (!t.gameObject.activeSelf) t.gameObject.SetActive(true);
+        }
+    }
 
     private void PlayLoopingParticleArray(
         ParticleSystem[] particles
@@ -2465,6 +2496,7 @@ public class BoilerFluidController : MonoBehaviour
         // FIRST PLAY
         // =====================================================
 
+        EnsureActiveForPlay(splash.particle);
         splash.particle.Play();
 
 
@@ -2492,7 +2524,8 @@ public class BoilerFluidController : MonoBehaviour
             }
 
 
-            splash.particle.Play();
+            EnsureActiveForPlay(splash.particle);
+        splash.particle.Play();
         }
     }
 
@@ -2744,8 +2777,10 @@ public class BoilerFluidController : MonoBehaviour
 
         UpdateWaterAndParticleVisibility();
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         Debug.Log(
             "[BoilerFluidController] Entire boiler process reset."
         );
+#endif
     }
 }

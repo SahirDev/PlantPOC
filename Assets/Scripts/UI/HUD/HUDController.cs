@@ -162,14 +162,19 @@ public class HUDController : SingletonMono<HUDController>
 
         selectedPart = part;
         var explodedView = part.GetComponentInParent<ModularExplodedView>();
-        GetPartCard().Show(part.transform, part.PartName, part.Description, GetExplosionCamera());
 
-        // Maintenance sheet (bottom-right) - only in the explosion view.
+        // Explosion view: everything (incl. name + description) is in the maintenance sheet bottom-right,
+        // no floating card beside the part. Outside the explosion view: the card as before.
         if (IsExploded)
         {
+            if (partCard != null) partCard.Hide();
             MaintenanceInfo maintenance = MaintenanceData.For(part);
             GetMaintenanceSheet().Show(maintenance);
             CommunicationManager.HandlePartMaintenance_Extern(maintenance);
+        }
+        else
+        {
+            GetPartCard().Show(part.transform, part.PartName, part.Description, GetExplosionCamera());
         }
 
         CommunicationManager.HandlePartSelected_Extern(new PartSelectedPayload

@@ -91,7 +91,8 @@ public class BoilerDashboardController : SingletonMono<BoilerDashboardController
         // Smoothly adjust water level towards the target set by burner power
         if (Mathf.Abs(waterLevel - targetWaterLevel) > 0.05f)
         {
-            waterLevel = Mathf.MoveTowards(waterLevel, targetWaterLevel, 30f * Time.deltaTime);
+            // Gentle (was 30 %/s, a jump): the tank itself eases on top of this in BoilerFluidController.
+            waterLevel = Mathf.MoveTowards(waterLevel, targetWaterLevel, 8f * Time.deltaTime);
             dirty = true;
             onWaterLevelChanged?.Invoke(waterLevel);
             if (fluidController != null) fluidController.SetWaterLevel(waterLevel / 100f);

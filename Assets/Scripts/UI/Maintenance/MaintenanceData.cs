@@ -6,7 +6,7 @@ using UnityEngine;
 public class MaintenanceInfo
 {
     public string partName, partId, equipment, lastMaintenanceDate, maintenanceType, condition, runningHours,
-        nextMaintenanceDue, technician, issueFound, actionTaken, sparePartUsed, remarks;
+        nextMaintenanceDue, technician, issueFound, actionTaken, sparePartUsed, remarks, description;
 }
 
 /// <summary>
@@ -61,6 +61,7 @@ public static class MaintenanceData
         return new MaintenanceInfo
         {
             partName = partName,
+            description = string.IsNullOrWhiteSpace(part.Description) ? "-" : part.Description.Trim(),
             partId = id,
             equipment = equipment,
             lastMaintenanceDate = Value(record?.lastMaintenanceDate, last.ToString("dd MMM yyyy")),

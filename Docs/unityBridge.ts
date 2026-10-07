@@ -66,7 +66,7 @@ export interface UnityEvents {
   handlePartMaintenance: {
     partName: string; partId: string; equipment: string; lastMaintenanceDate: string; maintenanceType: string;
     condition: string; runningHours: string; nextMaintenanceDue: string; technician: string; issueFound: string;
-    actionTaken: string; sparePartUsed: string; remarks: string;
+    actionTaken: string; sparePartUsed: string; remarks: string; description: string;
   };
   handleSmokeLevelChanged: { level: number; status: string; indication: string; color: string };
   handleTurbineInRange: TurbineData;
