@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -21,6 +22,14 @@ public class PlantIsometricCameraController : SingletonMono<PlantIsometricCamera
     [SerializeField] private Player workerPlayer;
     [SerializeField] private bool startInIsometricView = true;
     [SerializeField] private Key switchKey = Key.C;
+
+    [Header("Overview <-> Worker Transition")]
+    [Tooltip("Fly the camera between the overview and the worker instead of cutting.")]
+    [SerializeField] private bool smoothTransition = true;
+    [Tooltip("Seconds for the fly-in / fly-out.")]
+    [SerializeField, Min(0.05f)] private float transitionDuration = 1.2f;
+    [Tooltip("Speed profile of the fly (0..1 -> 0..1). Default: ease in and out.")]
+    [SerializeField] private AnimationCurve transitionCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("References")]
     [SerializeField] private BoxColliderHighlighter highlighter;
@@ -131,6 +140,14 @@ public class PlantIsometricCameraController : SingletonMono<PlantIsometricCamera
     // True once the smoothed camera has reached its target; no transform writes until input changes the target.
     private bool cameraSettled;
 
+    // Fly between overview and worker (the overview camera itself is animated on top of the worker camera).
+    private Coroutine transitionRoutine;
+    private bool transitionToWorker;
+    private float isoDefaultFov, isoDefaultNear;
+    private bool isoDefaultsCaptured;
+
+    public bool IsTransitioning => transitionRoutine != null;
+
     private Vector3 DefaultPivot => defaultPivot != null ? defaultPivot.position : Vector3.zero;
 
     protected override void Awake()
@@ -155,7 +172,7 @@ public class PlantIsometricCameraController : SingletonMono<PlantIsometricCamera
         base.Start();
         if (IsDuplicate) return;
 
-        SetIsometricMode(startInIsometricView);
+        SetIsometricMode(startInIsometricView, null, false);
         ResetView();
     }
 
@@ -163,7 +180,7 @@ public class PlantIsometricCameraController : SingletonMono<PlantIsometricCamera
     {
         if (keyboard == null) keyboard = Keyboard.current;
         if (keyboard != null && keyboard[switchKey].wasPressedThisFrame) SwitchCamera();
-        if (!IsInIsometricMode) return;
+        if (!IsInIsometricMode || IsTransitioning) return;
 
         RefreshPointerState();
         HandleNavigation();
@@ -178,21 +195,49 @@ public class PlantIsometricCameraController : SingletonMono<PlantIsometricCamera
 
     public void SetIsometricMode(bool overview)
     {
-        SetIsometricMode(overview, null);
+        SetIsometricMode(overview, null, smoothTransition);
     }
 
     /// <summary>Leaves the overview and switches the worker on at the given position, always in TPP (used by Teleport).</summary>
     public void EnableWorkerModeAt(Vector3 workerPosition)
     {
-        SetIsometricMode(false, workerPosition);
+        SetIsometricMode(false, workerPosition, smoothTransition);
     }
 
     // Exactly one of the two is ever on:
     //   overview -> plant overview camera ON,  worker completely OFF (hidden, no camera, no minimap, no input)
     //   worker   -> worker ON,                 plant overview camera OFF (camera + audio listener)
-    private void SetIsometricMode(bool overview, Vector3? workerTeleportPosition)
+    private void SetIsometricMode(bool overview, Vector3? workerTeleportPosition, bool animate)
     {
         ResolveLiveWorker();
+        CaptureIsoDefaults();
+
+        // Where the screen view is right now (start of a fly). Mid-fly the overview camera is what is visible.
+        bool flyingNow = IsTransitioning;
+        bool haveStartPose = false;
+        Vector3 startPosition = Vector3.zero;
+        Quaternion startRotation = Quaternion.identity;
+        float startFov = isoDefaultFov, startNear = isoDefaultNear;
+
+        if (flyingNow && camTransform != null)
+        {
+            startPosition = camTransform.position;
+            startRotation = camTransform.rotation;
+            startFov = isometricCamera.fieldOfView;
+            startNear = isometricCamera.nearClipPlane;
+            haveStartPose = true;
+        }
+        else if (overview && !IsInIsometricMode && workerCamera != null && workerCamera.isActiveAndEnabled)
+        {
+            Transform workerTransform = workerCamera.transform;
+            startPosition = workerTransform.position;
+            startRotation = workerTransform.rotation;
+            startFov = workerCamera.fieldOfView;
+            startNear = workerCamera.nearClipPlane;
+            haveStartPose = true;
+        }
+
+        StopTransition();
 
         if (overview)
         {
@@ -202,6 +247,9 @@ public class PlantIsometricCameraController : SingletonMono<PlantIsometricCamera
 
             // Overview camera on.
             SetIsometricCameraActive(true);
+
+            if (animate && haveStartPose && camTransform != null)
+                transitionRoutine = StartCoroutine(FlyToOverview(startPosition, startRotation, startFov, startNear));
         }
         else
         {
@@ -210,8 +258,20 @@ public class PlantIsometricCameraController : SingletonMono<PlantIsometricCamera
 
             if (workerCamera != null) workerCamera.enabled = true;
 
-            // Overview camera off.
-            SetIsometricCameraActive(false);
+            if (animate && workerCamera != null && camTransform != null && isometricCamera != null &&
+                (IsInIsometricMode || flyingNow))
+            {
+                // Keep the overview camera drawing on top and fly it into the worker camera, then switch it off.
+                if (!flyingNow) { startPosition = camTransform.position; startRotation = camTransform.rotation; startFov = isometricCamera.fieldOfView; startNear = isometricCamera.nearClipPlane; }
+                SetIsometricCameraActive(true);
+                if (isometricListener != null) isometricListener.enabled = false; // the worker carries the listener now
+                transitionRoutine = StartCoroutine(FlyToWorker(startPosition, startRotation, startFov, startNear));
+            }
+            else
+            {
+                // Overview camera off.
+                SetIsometricCameraActive(false);
+            }
         }
 
         IsInIsometricMode = overview;
@@ -258,6 +318,103 @@ public class PlantIsometricCameraController : SingletonMono<PlantIsometricCamera
         // carries the listener while it is active (avoids "no audio listener" / "2 audio listeners").
         if (isometricListener == null) isometricListener = isometricCamera.GetComponent<AudioListener>();
         if (isometricListener != null) isometricListener.enabled = active;
+    }
+
+    // ------------------------------------------------------------------ fly transition
+
+    private void CaptureIsoDefaults()
+    {
+        if (isoDefaultsCaptured || isometricCamera == null) return;
+        isoDefaultFov = isometricCamera.fieldOfView;
+        isoDefaultNear = isometricCamera.nearClipPlane;
+        isoDefaultsCaptured = true;
+    }
+
+    private float Ease(float t) => transitionCurve != null && transitionCurve.length > 0 ? transitionCurve.Evaluate(Mathf.Clamp01(t)) : Mathf.SmoothStep(0f, 1f, t);
+
+    /// <summary>Overview camera flies from its view to the (live) worker camera, then the worker camera takes over.</summary>
+    private IEnumerator FlyToWorker(Vector3 fromPosition, Quaternion fromRotation, float fromFov, float fromNear)
+    {
+        transitionToWorker = true;
+        float elapsed = 0f;
+
+        while (elapsed < transitionDuration && workerCamera != null)
+        {
+            yield return null; // runs after the worker camera moved last frame
+            elapsed += Time.unscaledDeltaTime;
+            float t = Ease(elapsed / transitionDuration);
+
+            Transform target = workerCamera.transform;
+            camTransform.SetPositionAndRotation(Vector3.Lerp(fromPosition, target.position, t), Quaternion.Slerp(fromRotation, target.rotation, t));
+            isometricCamera.fieldOfView = Mathf.Lerp(fromFov, workerCamera.fieldOfView, t);
+            isometricCamera.nearClipPlane = Mathf.Lerp(fromNear, workerCamera.nearClipPlane, t);
+        }
+
+        FinishTransition();
+    }
+
+    /// <summary>Overview camera starts at the worker's view and flies out to the overview view.</summary>
+    private IEnumerator FlyToOverview(Vector3 fromPosition, Quaternion fromRotation, float fromFov, float fromNear)
+    {
+        transitionToWorker = false;
+
+        // Overview target = where the smoothed camera rests now.
+        Quaternion toRotation = Quaternion.Euler(targetPitch, targetYaw, 0f);
+        Vector3 toPosition = ClampCameraPosition(targetPivot - toRotation * Vector3.forward * targetDistance);
+        currentYaw = targetYaw; currentPitch = targetPitch; currentDistance = targetDistance; currentPivot = targetPivot;
+
+        float elapsed = 0f;
+        camTransform.SetPositionAndRotation(fromPosition, fromRotation);
+        isometricCamera.fieldOfView = fromFov;
+        isometricCamera.nearClipPlane = fromNear;
+
+        while (elapsed < transitionDuration)
+        {
+            yield return null;
+            elapsed += Time.unscaledDeltaTime;
+            float t = Ease(elapsed / transitionDuration);
+
+            camTransform.SetPositionAndRotation(Vector3.Lerp(fromPosition, toPosition, t), Quaternion.Slerp(fromRotation, toRotation, t));
+            isometricCamera.fieldOfView = Mathf.Lerp(fromFov, isoDefaultFov, t);
+            isometricCamera.nearClipPlane = Mathf.Lerp(fromNear, isoDefaultNear, t);
+        }
+
+        FinishTransition();
+    }
+
+    private void FinishTransition()
+    {
+        transitionRoutine = null;
+        RestoreIsoLens();
+
+        if (transitionToWorker)
+        {
+            SetIsometricCameraActive(false);
+        }
+        else
+        {
+            cameraSettled = false;
+            UpdateCameraImmediate();
+        }
+
+        pointerFrame = -1;
+        pickCacheValid = false;
+    }
+
+    /// <summary>Stops a running fly (a new switch starts its own from where the view is now).</summary>
+    private void StopTransition()
+    {
+        if (transitionRoutine == null) return;
+        StopCoroutine(transitionRoutine);
+        transitionRoutine = null;
+        RestoreIsoLens();
+    }
+
+    private void RestoreIsoLens()
+    {
+        if (isometricCamera == null || !isoDefaultsCaptured) return;
+        isometricCamera.fieldOfView = isoDefaultFov;
+        isometricCamera.nearClipPlane = isoDefaultNear;
     }
 
     public void EnableIsometricMode()
