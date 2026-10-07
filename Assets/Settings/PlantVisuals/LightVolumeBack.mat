@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: ScreenTint
-  m_Shader: {fileID: 4800000, guid: a45619599be7437596b0078ae28cad5a, type: 3}
+  m_Name: LightVolumeBack
+  m_Shader: {fileID: 4800000, guid: 0b6683e07b4e4687adf0ecc1598fa409, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -16,7 +16,7 @@ Material:
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
+  m_CustomRenderQueue: 3490
   stringTagMap: {}
   disabledShaderPasses: []
   m_LockedProperties: 
@@ -25,9 +25,8 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _StencilComp: 3
-    - _StencilRef: 0
-    m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Cull: 1
+    - _StencilOp: 3
+    m_Colors: []
   m_BuildTextureStacks: []
   m_AllowLocking: 1
