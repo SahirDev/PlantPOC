@@ -169,7 +169,7 @@ public class HUDController : SingletonMono<HUDController>
         {
             if (partCard != null) partCard.Hide();
             MaintenanceInfo maintenance = MaintenanceData.For(part);
-            GetMaintenanceSheet().Show(maintenance);
+            GetMaintenanceSheet().Show(maintenance, part.transform, GetExplosionCamera()); // part + view: report picture
             CommunicationManager.HandlePartMaintenance_Extern(maintenance);
         }
         else

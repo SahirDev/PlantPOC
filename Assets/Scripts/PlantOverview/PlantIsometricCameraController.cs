@@ -179,7 +179,7 @@ public class PlantIsometricCameraController : SingletonMono<PlantIsometricCamera
     private void Update()
     {
         if (keyboard == null) keyboard = Keyboard.current;
-        if (keyboard != null && keyboard[switchKey].wasPressedThisFrame) SwitchCamera();
+        if (keyboard != null && keyboard[switchKey].wasPressedThisFrame && !UITextInput.IsTyping) SwitchCamera();
         if (!IsInIsometricMode || IsTransitioning) return;
 
         RefreshPointerState();

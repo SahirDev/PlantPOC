@@ -1,5 +1,8 @@
+using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
@@ -9,6 +12,11 @@ using UnityEngine.UI;
 /// The UI is a normal uGUI prefab: Assets/Prefabs/UI/MaintenanceSheet.prefab, assigned on HUDController in
 /// Bootstrap (created once at start, hidden, kept for the session). Restyle it freely - keep the references on
 /// this component. Without the prefab the same layout is built in code. Shown when a part is clicked.
+///
+/// Edit (header button): every value becomes a text field; Done shows the typed values (also sent to React as
+/// handlePartMaintenance). Export (bottom button, while editing): downloads an Excel report with the values and
+/// a picture of the part. Nothing is stored: selecting another part shows its own data again.
+/// The Edit / Export buttons are created at runtime in the style of the collapse button when not assigned.
 /// </summary>
 public class MaintenanceSheetPanel : MonoBehaviour
 {
@@ -38,31 +46,59 @@ public class MaintenanceSheetPanel : MonoBehaviour
     [SerializeField] private Color criticalColor = new Color(1f, 0.38f, 0.32f);
     [SerializeField] private Color valueColor = Color.white;
 
-    private bool collapsed;
+    [Header("Edit / Export (empty = created at runtime)")]
+    [Tooltip("Header button: EDIT <-> DONE.")]
+    [SerializeField] private Button editButton;
+    [SerializeField] private TMP_Text editButtonLabel;
+    [Tooltip("Bottom button: downloads the sheet + part picture as Excel (.xlsx).")]
+    [SerializeField] private Button exportButton;
+    [Tooltip("On: Export shows only while editing. Off: always.")]
+    [SerializeField] private bool exportOnlyWhileEditing = true;
+    [SerializeField] private Color inputBackground = new Color(1f, 1f, 1f, 0.1f);
+
+    private bool collapsed, editing, wired;
+    private MaintenanceInfo current;
+    private Transform currentPart;
+    private Camera currentView;
+    private TMP_InputField[] inputs;
+    private GameObject exportArea; // the footer (auto) or the assigned button
 
     public bool IsVisible => panel != null && panel.activeSelf;
+    public bool IsEditing => editing;
 
     private void Awake()
     {
         collapsed = startCollapsed;
-        if (collapseButton != null) collapseButton.onClick.AddListener(ToggleCollapsed);
+        EnsureEditControls();
+        Wire();
         ApplyCollapsed();
+        RefreshEditControls();
         if (panel != null) panel.SetActive(false);
     }
 
-    public void Show(MaintenanceInfo info)
+    private void Wire()
+    {
+        if (wired || collapseButton == null) return;
+        wired = true;
+        collapseButton.onClick.AddListener(ToggleCollapsed);
+        if (editButton != null) editButton.onClick.AddListener(ToggleEdit);
+        if (exportButton != null) exportButton.onClick.AddListener(Export);
+    }
+
+    /// <param name="part">The part (for the picture in the Excel report).</param>
+    /// <param name="view">Camera the user looks through (the picture uses its direction).</param>
+    public void Show(MaintenanceInfo info, Transform part = null, Camera view = null)
     {
         if (info == null) { Hide(); return; }
 
+        EndEdit(false); // another part: unsaved typing is dropped
+        current = info;
+        currentPart = part;
+        currentView = view;
+
         if (partTitle != null) partTitle.text = info.partName;
 
-        string[] rowValues =
-        {
-            info.partName, info.partId, info.equipment, info.lastMaintenanceDate, info.maintenanceType, info.condition,
-            info.runningHours, info.nextMaintenanceDue, info.technician, info.issueFound, info.actionTaken,
-            info.sparePartUsed, info.remarks, info.description
-        };
-
+        string[] rowValues = ToRows(info);
         for (int i = 0; i < values.Length && i < rowValues.Length; i++)
         {
             if (values[i] == null) continue;
@@ -70,12 +106,143 @@ public class MaintenanceSheetPanel : MonoBehaviour
             values[i].color = i == ConditionRow ? ConditionColor(info.condition) : valueColor;
         }
 
+        RefreshEditControls();
         if (panel != null) panel.SetActive(true);
     }
 
     public void Hide()
     {
+        EndEdit(false);
         if (panel != null) panel.SetActive(false);
+    }
+
+    // ================================================================== edit
+
+    public void ToggleEdit()
+    {
+        if (editing) EndEdit(true);
+        else BeginEdit();
+    }
+
+    public void BeginEdit()
+    {
+        if (editing || current == null) return;
+        if (collapsed) SetCollapsed(false);
+        EnsureInputs();
+
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (values[i] == null || inputs[i] == null) continue;
+            inputs[i].text = values[i].text == "-" ? string.Empty : values[i].text;
+            values[i].gameObject.SetActive(false);
+            inputs[i].gameObject.SetActive(true);
+        }
+
+        editing = true;
+        RefreshEditControls();
+    }
+
+    /// <param name="apply">true = the typed values become the sheet (Done); false = dropped.</param>
+    public void EndEdit(bool apply)
+    {
+        if (!editing) return;
+        editing = false;
+
+        GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (values[i] == null || inputs[i] == null) continue;
+            if (apply)
+            {
+                string typed = inputs[i].text.Trim();
+                values[i].text = typed.Length == 0 ? "-" : typed;
+            }
+            if (selected == inputs[i].gameObject) EventSystem.current.SetSelectedGameObject(null);
+            inputs[i].gameObject.SetActive(false);
+            values[i].gameObject.SetActive(true);
+        }
+
+        if (apply && current != null)
+        {
+            FromRows(current, CurrentRowValues());
+            if (partTitle != null) partTitle.text = current.partName;
+            if (ConditionRow < values.Length && values[ConditionRow] != null)
+                values[ConditionRow].color = ConditionColor(current.condition);
+            CommunicationManager.HandlePartMaintenance_Extern(current);
+        }
+
+        RefreshEditControls();
+    }
+
+    // ================================================================== export
+
+    /// <summary>Downloads the sheet (as shown / as typed) + a picture of the part as an Excel file.</summary>
+    public void Export()
+    {
+        if (current == null) return;
+
+        string[] rowValues = CurrentRowValues();
+        var rows = new List<XlsxReport.Row>(RowLabels.Length);
+        for (int i = 0; i < RowLabels.Length; i++)
+        {
+            string value = i < rowValues.Length ? rowValues[i] : "-";
+            rows.Add(new XlsxReport.Row
+            {
+                label = RowLabels[i],
+                value = value,
+                highlight = i == ConditionRow ? ConditionHighlight(value) : XlsxReport.Highlight.None
+            });
+        }
+
+        const int pictureWidth = 1024, pictureHeight = 768;
+        byte[] picture = PartSnapshot.CaptureJpg(currentPart, currentView, pictureWidth, pictureHeight);
+
+        string partName = rowValues.Length > 0 ? rowValues[0] : current.partName;
+        string equipment = rowValues.Length > 2 ? rowValues[2] : current.equipment;
+        byte[] file = XlsxReport.Build("MAINTENANCE REPORT", $"{partName}  |  {equipment}",
+            "Generated " + DateTime.Now.ToString("dd MMM yyyy, HH:mm"), rows, picture, 640, 480);
+
+        string id = rowValues.Length > 1 && rowValues[1] != "-" ? rowValues[1] : partName;
+        FileDownload.Save(FileDownload.SafeName($"Maintenance_{id}_{DateTime.Now:yyyyMMdd_HHmm}.xlsx"), file, FileDownload.XlsxMime);
+    }
+
+    // ================================================================== rows <-> data
+
+    private static string[] ToRows(MaintenanceInfo info) => new[]
+    {
+        info.partName, info.partId, info.equipment, info.lastMaintenanceDate, info.maintenanceType, info.condition,
+        info.runningHours, info.nextMaintenanceDue, info.technician, info.issueFound, info.actionTaken,
+        info.sparePartUsed, info.remarks, info.description
+    };
+
+    private static void FromRows(MaintenanceInfo info, string[] rows)
+    {
+        string Get(int i) => i < rows.Length ? rows[i] : "-";
+        info.partName = Get(0); info.partId = Get(1); info.equipment = Get(2); info.lastMaintenanceDate = Get(3);
+        info.maintenanceType = Get(4); info.condition = Get(5); info.runningHours = Get(6); info.nextMaintenanceDue = Get(7);
+        info.technician = Get(8); info.issueFound = Get(9); info.actionTaken = Get(10); info.sparePartUsed = Get(11);
+        info.remarks = Get(12); info.description = Get(13);
+    }
+
+    // What the sheet shows right now: the typed text while editing, else the values.
+    private string[] CurrentRowValues()
+    {
+        var rows = new string[values.Length];
+        for (int i = 0; i < values.Length; i++)
+        {
+            string text = editing && inputs != null && inputs[i] != null ? inputs[i].text.Trim()
+                : values[i] != null ? values[i].text : string.Empty;
+            rows[i] = string.IsNullOrEmpty(text) ? "-" : text;
+        }
+        return rows;
+    }
+
+    private static XlsxReport.Highlight ConditionHighlight(string condition)
+    {
+        string c = (condition ?? string.Empty).ToLowerInvariant();
+        if (c.Contains("crit")) return XlsxReport.Highlight.Critical;
+        if (c.Contains("warn")) return XlsxReport.Highlight.Warning;
+        return c.Contains("good") ? XlsxReport.Highlight.Good : XlsxReport.Highlight.None;
     }
 
     public void ToggleCollapsed()
@@ -98,12 +265,138 @@ public class MaintenanceSheetPanel : MonoBehaviour
 
     private Color ConditionColor(string condition)
     {
-        switch (condition)
+        switch (ConditionHighlight(condition))
         {
-            case "Critical": return criticalColor;
-            case "Warning": return warningColor;
-            default: return goodColor;
+            case XlsxReport.Highlight.Critical: return criticalColor;
+            case XlsxReport.Highlight.Warning: return warningColor;
+            case XlsxReport.Highlight.Good: return goodColor;
+            default: return valueColor;
         }
+    }
+
+    private void RefreshEditControls()
+    {
+        if (editButtonLabel != null) editButtonLabel.text = editing ? "DONE" : "EDIT";
+        if (exportArea != null) exportArea.SetActive(editing || !exportOnlyWhileEditing);
+    }
+
+    // ================================================================== edit controls (runtime-built when missing)
+
+    /// <summary>Creates the Edit / Export buttons in the style of the collapse button when they are not assigned.</summary>
+    private void EnsureEditControls()
+    {
+        if (collapseButton == null) return;
+
+        if (editButton == null)
+        {
+            editButton = CloneButton("EditButton", collapseButton.transform.parent, "EDIT", 70f, out editButtonLabel);
+            editButton.transform.SetSiblingIndex(collapseButton.transform.GetSiblingIndex());
+        }
+        else if (editButtonLabel == null) editButtonLabel = editButton.GetComponentInChildren<TMP_Text>(true);
+
+        if (exportButton == null && body != null)
+        {
+            var footer = new GameObject("Footer", typeof(RectTransform));
+            footer.transform.SetParent(body.transform, false);
+            var layout = footer.AddComponent<HorizontalLayoutGroup>();
+            layout.padding = new RectOffset(16, 16, 10, 4);
+            layout.childAlignment = TextAnchor.MiddleRight;
+            layout.childControlWidth = layout.childControlHeight = true;
+            layout.childForceExpandWidth = layout.childForceExpandHeight = false;
+
+            exportButton = CloneButton("ExportButton", footer.transform, "EXPORT EXCEL", 150f, out _);
+            if (exportButton.TryGetComponent(out Image image)) image.color = new Color(1f, 0.62f, 0.25f, 0.9f);
+            exportArea = footer;
+        }
+        else if (exportButton != null)
+        {
+            Transform parent = exportButton.transform.parent;
+            exportArea = parent != null && parent.name == "Footer" ? parent.gameObject : exportButton.gameObject;
+        }
+    }
+
+    private Button CloneButton(string objectName, Transform parent, string label, float width, out TMP_Text text)
+    {
+        GameObject go = Instantiate(collapseButton.gameObject, parent, false);
+        go.name = objectName;
+
+        var button = go.GetComponent<Button>();
+        button.onClick = new Button.ButtonClickedEvent(); // not the collapse action
+
+        text = go.GetComponentInChildren<TMP_Text>(true);
+        if (text != null)
+        {
+            text.text = label;
+            text.enableAutoSizing = false;
+            text.fontSize = 13f;
+            text.fontStyle = FontStyles.Bold;
+            text.characterSpacing = 2f;
+        }
+
+        if (!go.TryGetComponent(out LayoutElement element)) element = go.AddComponent<LayoutElement>();
+        element.minWidth = element.preferredWidth = width;
+        return button;
+    }
+
+    // One text field per row, next to its value (hidden until Edit).
+    private void EnsureInputs()
+    {
+        if (inputs != null && inputs.Length == values.Length) return;
+        inputs = new TMP_InputField[values.Length];
+        for (int i = 0; i < values.Length; i++)
+            if (values[i] != null) inputs[i] = CreateInput(values[i], i >= 9); // Issue Found and below: longer text
+    }
+
+    private TMP_InputField CreateInput(TMP_Text value, bool multiLine)
+    {
+        var go = new GameObject("Input", typeof(RectTransform));
+        go.SetActive(false);
+        go.transform.SetParent(value.transform.parent, false);
+        go.transform.SetSiblingIndex(value.transform.GetSiblingIndex() + 1);
+
+        var background = go.AddComponent<Image>();
+        background.color = inputBackground;
+
+        var area = new GameObject("Text Area", typeof(RectTransform), typeof(RectMask2D));
+        area.transform.SetParent(go.transform, false);
+        var areaRect = (RectTransform)area.transform;
+        Stretch(areaRect);
+        areaRect.offsetMin = new Vector2(6f, 4f);
+        areaRect.offsetMax = new Vector2(-6f, -4f);
+
+        var textObject = new GameObject("Text", typeof(RectTransform));
+        textObject.transform.SetParent(area.transform, false);
+        Stretch((RectTransform)textObject.transform);
+        var text = textObject.AddComponent<TextMeshProUGUI>();
+        text.font = value.font;
+        text.fontSize = value.fontSize;
+        text.color = valueColor;
+        text.alignment = TextAlignmentOptions.TopLeft;
+        text.textWrappingMode = TextWrappingModes.Normal;
+        text.richText = false;
+        text.raycastTarget = false;
+
+        var input = go.AddComponent<TMP_InputField>();
+        input.textViewport = areaRect;
+        input.textComponent = text;
+        input.targetGraphic = background;
+        input.richText = false;
+        input.lineType = multiLine ? TMP_InputField.LineType.MultiLineNewline : TMP_InputField.LineType.MultiLineSubmit;
+        input.customCaretColor = true;
+        input.caretColor = Color.white;
+        input.caretWidth = 2;
+        input.selectionColor = new Color(1f, 0.62f, 0.25f, 0.35f);
+
+        var element = go.AddComponent<LayoutElement>();
+        element.layoutPriority = 2;      // wins the width (fills the row) ...
+        element.preferredWidth = 10f;
+        element.flexibleWidth = 1f;
+        element.minHeight = 26f;         // ... the height grows with the text (input field)
+
+        // Re-layout as the text grows / shrinks (the panel grows upwards).
+        var row = (RectTransform)value.transform.parent;
+        input.onValueChanged.AddListener(_ => LayoutRebuilder.MarkLayoutForRebuild(row));
+        return input;
     }
 
     // ================================================================== default layout (code + prefab tool)
@@ -215,12 +508,14 @@ public class MaintenanceSheetPanel : MonoBehaviour
         sheet.collapseIcon = icon;
         sheet.partTitle = partTitle;
         sheet.values = values;
+        sheet.EnsureEditControls(); // Edit / Export buttons (saved in the prefab by the menu tool)
 
         // Built at runtime: Awake already ran before the references existed - wire it now.
         if (Application.isPlaying)
         {
-            buttonComponent.onClick.AddListener(sheet.ToggleCollapsed);
+            sheet.Wire();
             sheet.ApplyCollapsed();
+            sheet.RefreshEditControls();
             panel.SetActive(false);
         }
 

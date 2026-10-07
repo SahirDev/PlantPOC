@@ -64,7 +64,7 @@ public class SceneChangeCol : MonoBehaviour
         if (!canChangeScene) return;
 
         Keyboard keyboard = Keyboard.current;
-        if (keyboard != null && keyboard[acceptKey].wasPressedThisFrame) LoadScene();
+        if (keyboard != null && keyboard[acceptKey].wasPressedThisFrame && !UITextInput.IsTyping) LoadScene();
     }
 
     public void LoadScene()

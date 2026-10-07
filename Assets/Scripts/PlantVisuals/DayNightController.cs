@@ -101,7 +101,8 @@ public class DayNightController : MonoBehaviour
 
     private void Update()
     {
-        if (cycleKey != Key.None && Keyboard.current != null && Keyboard.current[cycleKey].wasPressedThisFrame)
+        if (cycleKey != Key.None && Keyboard.current != null && Keyboard.current[cycleKey].wasPressedThisFrame
+            && !UITextInput.IsTyping)
             SetTime((TimeOfDay)(((int)Current + 1) % 3));
 
         if (!Mathf.Approximately(lampLevel, lampTarget))

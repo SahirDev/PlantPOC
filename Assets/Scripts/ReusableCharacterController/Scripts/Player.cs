@@ -34,7 +34,11 @@ public sealed class Player : MonoBehaviour
     public CharacterViewModeEffects ViewModeEffects { get; private set; }
     public PlayerReference Reference => playerReference;
     public bool IsControlSuspended { get; private set; }
-    public bool IsControlBlocked => IsControlSuspended || changingControl || scenePending || loadingScene || Time.frameCount <= blockThroughFrame;
+    public bool IsControlBlocked => IsControlSuspended || changingControl || scenePending || loadingScene || Time.frameCount <= blockThroughFrame
+        || (ExternalInputBlock != null && ExternalInputBlock());
+
+    /// <summary>Extra block from outside this assembly (set by UITextInput: true while typing in a Unity text field).</summary>
+    public static System.Func<bool> ExternalInputBlock;
     public Scene CurrentScene => gameplayScene;
     public UnityEvent OnControlSuspended => onControlSuspended;
     public UnityEvent OnControlResumed => onControlResumed;
