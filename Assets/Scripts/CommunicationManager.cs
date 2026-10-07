@@ -77,6 +77,8 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     [DllImport("__Internal")] private static extern void handleEquipmentInRange(string data);
     [DllImport("__Internal")] private static extern void handleEquipmentOutOfRange(string data);
     [DllImport("__Internal")] private static extern void handleBoilerInRange(string data);
+    [DllImport("__Internal")] private static extern void handleTurbineInRange(string data);
+    [DllImport("__Internal")] private static extern void handleTurbineOutOfRange(string data);
     [DllImport("__Internal")] private static extern void handleBoilerOutOfRange(string data);
     [DllImport("__Internal")] private static extern void handleEquipmentState(string data);
     [DllImport("__Internal")] private static extern void handlePartHover(string data);
@@ -405,6 +407,38 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     {
         LogIncoming(nameof(ClearPartSelection_Extern), null);
         if (Available<HUDController>(nameof(ClearPartSelection_Extern), "Equipment controls")) HUDController.Instance.HideClickContext();
+    }
+
+    #endregion
+
+    #region React -> Unity : Turbine (one function per button, acts on the turbine the worker is at)
+
+    /// <summary>Turbine: explode all parts. State answer: handleEquipmentState.</summary>
+    public void TurbineExplodeAll_Extern()
+    {
+        LogIncoming(nameof(TurbineExplodeAll_Extern), null);
+        if (Available<HUDController>(nameof(TurbineExplodeAll_Extern), "Equipment controls")) HUDController.Instance.TurbineExplodeAll();
+    }
+
+    /// <summary>Turbine: collapse all parts (also stops operation).</summary>
+    public void TurbineCollapseAll_Extern()
+    {
+        LogIncoming(nameof(TurbineCollapseAll_Extern), null);
+        if (Available<HUDController>(nameof(TurbineCollapseAll_Extern), "Equipment controls")) HUDController.Instance.TurbineCollapseAll();
+    }
+
+    /// <summary>Turbine: start operation (exploded + spinning + steam). Live values: handleTurbineData.</summary>
+    public void TurbineStartOperation_Extern()
+    {
+        LogIncoming(nameof(TurbineStartOperation_Extern), null);
+        if (Available<HUDController>(nameof(TurbineStartOperation_Extern), "Equipment controls")) HUDController.Instance.TurbineStartOperation();
+    }
+
+    /// <summary>Turbine: stop operation.</summary>
+    public void TurbineStopOperation_Extern()
+    {
+        LogIncoming(nameof(TurbineStopOperation_Extern), null);
+        if (Available<HUDController>(nameof(TurbineStopOperation_Extern), "Equipment controls")) HUDController.Instance.TurbineStopOperation();
     }
 
     #endregion
@@ -749,6 +783,27 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         Log(nameof(handleEquipmentInRange), json);
 #if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
         handleEquipmentInRange(json);
+#endif
+    }
+
+    /// <summary>Worker is near turbine 1-4 (show that turbine's buttons). → React: <c>handleTurbineInRange</c>
+    /// { id: "1".."4", name: "Turbine-1", type, operating, steamPressure, temperature, ... }</summary>
+    public static void HandleTurbineInRange_Extern(TurbineDataPayload data)
+    {
+        string json = ToJson(data);
+        Log(nameof(handleTurbineInRange), json);
+#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
+        handleTurbineInRange(json);
+#endif
+    }
+
+    /// <summary>Worker walked away from that turbine. → React: <c>handleTurbineOutOfRange</c> (same data)</summary>
+    public static void HandleTurbineOutOfRange_Extern(TurbineDataPayload data)
+    {
+        string json = ToJson(data);
+        Log(nameof(handleTurbineOutOfRange), json);
+#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
+        handleTurbineOutOfRange(json);
 #endif
     }
 

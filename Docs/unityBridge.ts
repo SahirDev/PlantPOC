@@ -62,6 +62,8 @@ export interface UnityEvents {
   handleOverviewObjectDeselected: void;
   handleEquipmentInRange: EquipmentInfo;
   handleEquipmentOutOfRange: EquipmentInfo;
+  handleTurbineInRange: TurbineData;
+  handleTurbineOutOfRange: TurbineData;
   handleBoilerInRange: EquipmentInfo;
   handleBoilerOutOfRange: EquipmentInfo;
   handleEquipmentState: EquipmentState;
@@ -103,6 +105,10 @@ export interface UnityFunctions {
   ToggleExplodeAll_Extern: void;
   ToggleOperation_Extern: void;
   StartBoilerInfo_Extern: void;
+  TurbineExplodeAll_Extern: void;
+  TurbineCollapseAll_Extern: void;
+  TurbineStartOperation_Extern: void;
+  TurbineStopOperation_Extern: void;
   BoilerExplodeAll_Extern: void;
   BoilerCollapseAll_Extern: void;
   BoilerStartOperation_Extern: void;

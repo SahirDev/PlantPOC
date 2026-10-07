@@ -59,6 +59,15 @@ Walking up to equipment sends `handleEquipmentInRange` + `handleEquipmentState`.
 | `TogglePartExplode_Extern` | – | Part from the last `handlePartSelected` |
 | `ClearPartSelection_Extern` | – | Close the part menu |
 
+### Turbine room (one function per button, acts on the turbine the worker is at)
+Near turbine 1-4 Unity sends `handleTurbineInRange` { id: "1".."4", name: "Turbine-1", operating, ... }; walking away sends `handleTurbineOutOfRange`.
+| Function | Value | Notes |
+|---|---|---|
+| `TurbineExplodeAll_Extern` | – | Explode all parts |
+| `TurbineCollapseAll_Extern` | – | Collapse all (also stops operation), back to the worker |
+| `TurbineStartOperation_Extern` | – | Operation: exploded + spinning + steam; live values via `handleTurbineData` |
+| `TurbineStopOperation_Extern` | – | Stop operation |
+
 ### Boiler room (one function per button)
 Near the boiler Unity sends `handleBoilerInRange` (show the boiler buttons); walking away sends `handleBoilerOutOfRange`.
 | Function | Value | Notes |
@@ -120,6 +129,8 @@ Walking into info point 1, 2 or 3 sends `handleControlRoomInfoEntered` { index, 
 | `handleEquipmentOutOfRange` | JSON `EquipmentInfo` | Worker walked away. |
 | `handleControlRoomInfoEntered` | JSON `{index,name,title}` | Worker in control room info point 1/2/3: show that info panel. |
 | `handleControlRoomInfoExited` | JSON `{index,name,title}` | Worker left the info point: hide it. |
+| `handleTurbineInRange` | JSON `TurbineData` | Worker near turbine `id` 1-4: show its buttons. |
+| `handleTurbineOutOfRange` | JSON `TurbineData` | Worker left that turbine. |
 | `handleBoilerInRange` | JSON `EquipmentInfo` | Worker is near the boiler: show the boiler buttons. |
 | `handleBoilerOutOfRange` | JSON `EquipmentInfo` | Worker left the boiler: hide the boiler buttons. |
 | `handleEquipmentState` | JSON `EquipmentState` | Full button state. Enable/disable React buttons from the can* flags. |

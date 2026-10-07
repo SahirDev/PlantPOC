@@ -94,6 +94,7 @@ public class HUDController : SingletonMono<HUDController>
         };
         CommunicationManager.HandleEquipmentInRange_Extern(payload);
         if (type == EquipmentType.Boiler) CommunicationManager.HandleBoilerInRange_Extern(payload);
+        if (type == EquipmentType.Turbine) CommunicationManager.HandleTurbineInRange_Extern(GetTurbinePayload());
         SendState();
     }
 
@@ -116,6 +117,7 @@ public class HUDController : SingletonMono<HUDController>
         };
         CommunicationManager.HandleEquipmentOutOfRange_Extern(payload);
         if (type == EquipmentType.Boiler) CommunicationManager.HandleBoilerOutOfRange_Extern(payload);
+        if (type == EquipmentType.Turbine) CommunicationManager.HandleTurbineOutOfRange_Extern(GetTurbinePayload());
 
         // Keep the context while something is running so it can still be stopped.
         if (!HasActiveSession)
@@ -562,6 +564,53 @@ public class HUDController : SingletonMono<HUDController>
         if (fluid == null) return false;
         fluid.SetBurnerPower(reactBurnerPower / 100f);
         return true;
+    }
+
+    // ================================================================== turbine (one function per React button)
+
+    /// <summary>Turbine the worker is at: explode all parts (does nothing if already exploded).</summary>
+    public void TurbineExplodeAll()
+    {
+        if (!AtEquipment(EquipmentType.Turbine, nameof(TurbineExplodeAll))) return;
+        if (activeAction == ActiveAction.ExplodeAll) { SendState(); return; }
+        ToggleExplodeAll();
+    }
+
+    /// <summary>Turbine: collapse all parts (also stops operation), back to the worker.</summary>
+    public void TurbineCollapseAll()
+    {
+        if (!AtEquipment(EquipmentType.Turbine, nameof(TurbineCollapseAll))) return;
+        CollapseAll();
+    }
+
+    /// <summary>Turbine: start operation (explosion view + spinning + steam effects).</summary>
+    public void TurbineStartOperation()
+    {
+        if (!AtEquipment(EquipmentType.Turbine, nameof(TurbineStartOperation))) return;
+        if (isOperating) { SendState(); return; }
+        ToggleOperation();
+    }
+
+    /// <summary>Turbine: stop operation, back to the worker.</summary>
+    public void TurbineStopOperation()
+    {
+        if (!AtEquipment(EquipmentType.Turbine, nameof(TurbineStopOperation))) return;
+        if (!isOperating) { SendState(); return; }
+        ToggleOperation();
+    }
+
+    private TurbineDataPayload GetTurbinePayload()
+    {
+        if (currentContextObject != null && currentContextObject.TryGetComponent<TurbineData>(out var turbine))
+            return turbine.ToPayload();
+        return new TurbineDataPayload { id = currentContextObject != null ? currentContextObject.name : "", name = currentContextObject != null ? currentContextObject.name : "" };
+    }
+
+    private bool AtEquipment(EquipmentType type, string command)
+    {
+        if (currentType == type && currentContextObject != null) return true;
+        Fail(command, $"The worker is not at a {type}.");
+        return false;
     }
 
     private bool AtBoiler(string command)
