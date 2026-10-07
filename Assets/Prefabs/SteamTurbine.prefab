@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 8131775091064284532}
   - component: {fileID: 8781968259887901294}
   - component: {fileID: 4424891253404175252}
+  - component: {fileID: 2987826734558996276}
   m_Layer: 6
   m_Name: Generator-1
   m_TagString: Untagged
@@ -131,6 +132,30 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2, y: 2.2319555, z: 2.9453175}
   m_Center: {x: -1.7763568e-15, y: -1.7763568e-15, z: 0.000000059604645}
+--- !u!114 &2987826734558996276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 14606789120542272}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
+  partId: TRB-7049
+  equipment: 
+  lastMaintenanceDate: 02 Jun 2026
+  maintenanceType: Repair
+  technician: A. Khan (Mechanical)
+  currentCondition: 1
+  runningHours: 4798
+  nextMaintenanceDue: 29 Nov 2026
+  issueFound: Normal wear, within tolerance
+  actionTaken: Lubricated and checked alignment
+  sparePartUsed: None
+  remarks: Fit for service
 --- !u!1 &79183807623724698
 GameObject:
   m_ObjectHideFlags: 0
@@ -503,6 +528,7 @@ GameObject:
   - component: {fileID: 6429117858399997260}
   - component: {fileID: 172496860757559981}
   - component: {fileID: 2669771652953806298}
+  - component: {fileID: 286978778695022197}
   m_Layer: 6
   m_Name: Connection Pipe
   m_TagString: Untagged
@@ -621,6 +647,30 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 11.018824, y: 1.4534551, z: 7.257697}
   m_Center: {x: 0, y: 0, z: 0.00000047683716}
+--- !u!114 &286978778695022197
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4201941440246434180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
+  partId: TRB-7609
+  equipment: 
+  lastMaintenanceDate: 04 Aug 2026
+  maintenanceType: Replacement
+  technician: M. Iyer (Electrical)
+  currentCondition: 1
+  runningHours: 14548
+  nextMaintenanceDue: 31 Jan 2027
+  issueFound: Minor dust build-up
+  actionTaken: Cleaned and re-tightened fasteners
+  sparePartUsed: None
+  remarks: Fit for service
 --- !u!1 &4272176332752072192
 GameObject:
   m_ObjectHideFlags: 0
@@ -634,6 +684,7 @@ GameObject:
   - component: {fileID: 807365988789188090}
   - component: {fileID: 6520190011660071247}
   - component: {fileID: 4923047454024383970}
+  - component: {fileID: 2737509177913554741}
   m_Layer: 6
   m_Name: Generator-2
   m_TagString: Untagged
@@ -752,6 +803,30 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2, y: 2.2319555, z: 2.2621496}
   m_Center: {x: -1.7763568e-15, y: -1.7763568e-15, z: 0.000000059604645}
+--- !u!114 &2737509177913554741
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4272176332752072192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
+  partId: TRB-7049
+  equipment: 
+  lastMaintenanceDate: 02 Jun 2026
+  maintenanceType: Repair
+  technician: A. Khan (Mechanical)
+  currentCondition: 1
+  runningHours: 4798
+  nextMaintenanceDue: 29 Nov 2026
+  issueFound: Normal wear, within tolerance
+  actionTaken: Lubricated and checked alignment
+  sparePartUsed: None
+  remarks: Fit for service
 --- !u!1 &5595971402897670976
 GameObject:
   m_ObjectHideFlags: 0
@@ -765,6 +840,7 @@ GameObject:
   - component: {fileID: 2159512370038783039}
   - component: {fileID: 126231883112553855}
   - component: {fileID: 3256888447329049189}
+  - component: {fileID: 4078685388218314656}
   m_Layer: 6
   m_Name: IntermediatePressureChamber
   m_TagString: Untagged
@@ -883,6 +959,30 @@ MonoBehaviour:
   partName: Intermediate Pressure Chamber
   description: 'The Intermediate Pressure Chamber is a section of the steam turbine
     system that handles steam after it has expanded through the high-pressure stage. '
+--- !u!114 &4078685388218314656
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5595971402897670976}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
+  partId: TRB-1423
+  equipment: 
+  lastMaintenanceDate: 07 Jun 2026
+  maintenanceType: Lubrication
+  technician: OEM Service Engineer
+  currentCondition: 2
+  runningHours: 9298
+  nextMaintenanceDue: 05 Sep 2026
+  issueFound: Gasket showing minor seepage
+  actionTaken: Tightened flange, gasket scheduled
+  sparePartUsed: Filter element
+  remarks: Monitor closely until next planned service
 --- !u!1 &6956627476035711767
 GameObject:
   m_ObjectHideFlags: 0
@@ -986,6 +1086,7 @@ GameObject:
   - component: {fileID: 8877438311471445096}
   - component: {fileID: 9156658920045684722}
   - component: {fileID: 8584795576437075987}
+  - component: {fileID: 3531253455268166941}
   m_Layer: 6
   m_Name: LowPressureTurbineRod
   m_TagString: Untagged
@@ -1108,6 +1209,30 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 33.362324, y: 9.609041, z: 9.609041}
   m_Center: {x: -2.7695458, y: 0, z: 0}
+--- !u!114 &3531253455268166941
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7268307037179273674}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
+  partId: TRB-7742
+  equipment: 
+  lastMaintenanceDate: 18 May 2026
+  maintenanceType: Lubrication
+  technician: OEM Service Engineer
+  currentCondition: 2
+  runningHours: 23548
+  nextMaintenanceDue: 16 Aug 2026
+  issueFound: Bearing temperature trending up
+  actionTaken: Re-greased bearing, trend under watch
+  sparePartUsed: Filter element
+  remarks: Monitor closely until next planned service
 --- !u!1 &7564188734389868058
 GameObject:
   m_ObjectHideFlags: 0
@@ -1121,6 +1246,7 @@ GameObject:
   - component: {fileID: 1342349987784104266}
   - component: {fileID: 8306122460332655502}
   - component: {fileID: 7069221763584802255}
+  - component: {fileID: 4233766126117394567}
   m_Layer: 6
   m_Name: Gearbox-2
   m_TagString: Untagged
@@ -1238,6 +1364,30 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.103159, y: 1.800791, z: 2.538726}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &4233766126117394567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7564188734389868058}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
+  partId: TRB-8765
+  equipment: 
+  lastMaintenanceDate: 17 May 2026
+  maintenanceType: Repair
+  technician: Maintenance Team A
+  currentCondition: 2
+  runningHours: 2548
+  nextMaintenanceDue: 15 Aug 2026
+  issueFound: Slight vibration above baseline
+  actionTaken: Re-torqued mounts, monitoring vibration
+  sparePartUsed: Seal kit
+  remarks: Monitor closely until next planned service
 --- !u!1 &7836191983731925264
 GameObject:
   m_ObjectHideFlags: 0
@@ -1251,6 +1401,7 @@ GameObject:
   - component: {fileID: 5120281253482596740}
   - component: {fileID: 6545970787966544474}
   - component: {fileID: 5447110033079763311}
+  - component: {fileID: 7207029364147192686}
   m_Layer: 6
   m_Name: LowPressureChamber-Right
   m_TagString: Untagged
@@ -1372,6 +1523,30 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 7927367980583500448, guid: 1182b1760f44c1f488142c0a7efbaf7c, type: 3}
+--- !u!114 &7207029364147192686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7836191983731925264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
+  partId: TRB-3384
+  equipment: 
+  lastMaintenanceDate: 23 Sep 2026
+  maintenanceType: Inspection
+  technician: S. Patel (Instrumentation)
+  currentCondition: 2
+  runningHours: 23548
+  nextMaintenanceDue: 22 Dec 2026
+  issueFound: Bearing temperature trending up
+  actionTaken: Re-greased bearing, trend under watch
+  sparePartUsed: Gasket set
+  remarks: Monitor closely until next planned service
 --- !u!1 &8177369220379367946
 GameObject:
   m_ObjectHideFlags: 0
@@ -1385,6 +1560,7 @@ GameObject:
   - component: {fileID: 4556525285702203984}
   - component: {fileID: 7870951442552055285}
   - component: {fileID: 4592860892348001333}
+  - component: {fileID: 6087377699118664696}
   m_Layer: 6
   m_Name: High Pressure Chamber
   m_TagString: Untagged
@@ -1504,6 +1680,30 @@ MonoBehaviour:
   description: The High Pressure Chamber is a pressure-containing section of the
     steam system that receives and holds high-pressure steam before it is directed
     to the next stage of the turbine or steam circuit.
+--- !u!114 &6087377699118664696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8177369220379367946}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
+  partId: TRB-4498
+  equipment: 
+  lastMaintenanceDate: 09 Aug 2026
+  maintenanceType: Lubrication
+  technician: Maintenance Team B
+  currentCondition: 1
+  runningHours: 11548
+  nextMaintenanceDue: 05 Feb 2027
+  issueFound: Normal wear, within tolerance
+  actionTaken: Lubricated and checked alignment
+  sparePartUsed: None
+  remarks: Fit for service
 --- !u!1 &9056133308263727029
 GameObject:
   m_ObjectHideFlags: 0
@@ -1517,6 +1717,7 @@ GameObject:
   - component: {fileID: 6795457905460336893}
   - component: {fileID: 140063018601165394}
   - component: {fileID: 803787727166443304}
+  - component: {fileID: 7755501081857591642}
   m_Layer: 6
   m_Name: Gearbox-1
   m_TagString: Untagged
@@ -1634,6 +1835,30 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.3199277, y: 1.7981325, z: 1.9840846}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7755501081857591642
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9056133308263727029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04db9aa99c0a449899baf648f4826ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaintenanceRecord
+  partId: TRB-8765
+  equipment: 
+  lastMaintenanceDate: 17 May 2026
+  maintenanceType: Repair
+  technician: Maintenance Team A
+  currentCondition: 2
+  runningHours: 2548
+  nextMaintenanceDue: 15 Aug 2026
+  issueFound: Slight vibration above baseline
+  actionTaken: Re-torqued mounts, monitoring vibration
+  sparePartUsed: Seal kit
+  remarks: Monitor closely until next planned service
 --- !u!1001 &3323056644277515006
 PrefabInstance:
   m_ObjectHideFlags: 0
