@@ -24,5 +24,53 @@ ScriptedImporter:
     skinUpdateWhenOffscreen: 1
     lightIntensityFactor: 1
     sceneObjectCreation: 2
-  assetDependencies: []
+  assetDependencies:
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T00.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T00.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T01.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T01.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T02.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T02.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T03.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T03.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T04.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T04.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T05.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T05.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T06.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T06.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T07.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T07.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T08.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T08.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T09.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T09.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T10.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T10.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T11.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T11.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T12.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T12.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T13.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T13.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T14.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T14.png
+  - type: 1
+    originalUri: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T15.png
+    assetPath: Assets\Model\fired-boiler\source\fire_Boiler1_GL1_Textures\T15.png
   reportItems: []
