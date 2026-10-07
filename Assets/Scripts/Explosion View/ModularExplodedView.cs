@@ -24,7 +24,6 @@ public class ModularExplodedView : MonoBehaviour
 
     private readonly HashSet<Transform> exploded = new();
     private readonly Dictionary<Transform, Vector3> originalPositions = new();
-    private RTSCameraController _cameraController;
 
     private readonly List<GameObject> hiddenObjects = new();
     private bool isIsolated;
@@ -35,7 +34,6 @@ public class ModularExplodedView : MonoBehaviour
     {
         CacheHierarchy(transform);
 
-        _cameraController = FindAnyObjectByType<RTSCameraController>();
     }
 
     // private void Update()
@@ -214,7 +212,7 @@ public class ModularExplodedView : MonoBehaviour
         if (target != null)
         {
             target.localPosition = end;
-            if (_cameraController != null) _cameraController.Focus(target.position);
+            // (No camera re-centre here: it ran for every moving part and threw the camera around / out of the room.)
         }
     }
 

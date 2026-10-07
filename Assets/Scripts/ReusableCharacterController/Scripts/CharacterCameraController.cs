@@ -70,6 +70,11 @@ public class CharacterCameraController : MonoBehaviour
     [SerializeField]
     private bool drawCameraCollisionGizmos = true;
 
+    [Tooltip("TPP: when a wall / equipment pushes the camera this close to the worker's head, the worker's body is " +
+             "hidden (its shadow stays), so the camera never shows the inside of the character. 0 = off.")]
+    [SerializeField, Min(0f)]
+    private float hideCharacterDistance = 1.1f;
+
     [Header("Camera Transition")]
     [SerializeField, Min(0f)]
     private float transitionDuration = 0.25f;
@@ -119,6 +124,10 @@ public class CharacterCameraController : MonoBehaviour
     private Vector3 lastDesiredTPPPosition;
     private Vector3 lastResolvedTPPPosition;
     private bool lastSphereCastHit;
+
+    private Renderer[] characterRenderers;
+    private UnityEngine.Rendering.ShadowCastingMode[] characterShadowModes;
+    private bool characterHidden;
 
     public Camera PlayerCamera => playerCamera;
     public Transform CharacterRoot => characterRoot;
@@ -467,6 +476,39 @@ public class CharacterCameraController : MonoBehaviour
         return resolvedPosition;
     }
 
+    // Body meshes -> shadow only (still casts its shadow, not drawn). The FPP hiding (renderer.enabled) is separate.
+    private void SetCharacterHidden(bool hidden)
+    {
+        if (hidden == characterHidden) return;
+        characterHidden = hidden;
+
+        if (characterRenderers == null) CacheCharacterRenderers();
+
+        for (int i = 0; i < characterRenderers.Length; i++)
+        {
+            if (characterRenderers[i] == null) continue;
+            characterRenderers[i].shadowCastingMode = hidden ? UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly : characterShadowModes[i];
+        }
+    }
+
+    private void CacheCharacterRenderers()
+    {
+        var list = new System.Collections.Generic.List<Renderer>();
+        Transform cameraTransform = playerCamera != null ? playerCamera.transform : null;
+        int bodyLayer = characterRoot.gameObject.layer;
+
+        foreach (Renderer r in characterRoot.GetComponentsInChildren<Renderer>(true))
+        {
+            if (cameraTransform != null && r.transform.IsChildOf(cameraTransform)) continue;
+            // Skinned body / clothes, and meshes on the worker's own layer (helmet, tools). Not minimap icons etc.
+            if (r is SkinnedMeshRenderer || (r is MeshRenderer && r.gameObject.layer == bodyLayer)) list.Add(r);
+        }
+
+        characterRenderers = list.ToArray();
+        characterShadowModes = new UnityEngine.Rendering.ShadowCastingMode[characterRenderers.Length];
+        for (int i = 0; i < characterRenderers.Length; i++) characterShadowModes[i] = characterRenderers[i].shadowCastingMode;
+    }
+
     private void ResetLookSmoothing()
     {
         smoothedLookInput = Vector2.zero;
@@ -530,8 +572,14 @@ public class CharacterCameraController : MonoBehaviour
             targetPosition = ResolveTPPCameraCollision(desiredPosition);
             targetRotation = yawRotation * tppRotationOffset * Quaternion.Euler(pitch, 0f, 0f);
 
+            // Hysteresis (+0.15 m) so the body does not flicker at the edge.
+            float headDistance = Vector3.Distance(targetPosition, lastCollisionOrigin);
+            SetCharacterHidden(hideCharacterDistance > 0f && headDistance < hideCharacterDistance + (characterHidden ? 0.15f : 0f));
+
             return true;
         }
+
+        SetCharacterHidden(false);
 
         if (fppPosition == null)
             return false;
@@ -633,6 +681,7 @@ public class CharacterCameraController : MonoBehaviour
         enabledCursorActionHere = false;
 
         SetCursorLocked(false);
+        SetCharacterHidden(false);
     }
 
     private void OnDrawGizmosSelected()

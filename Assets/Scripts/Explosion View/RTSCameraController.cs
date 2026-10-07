@@ -34,6 +34,19 @@ public class RTSCameraController : MonoBehaviour
     [SerializeField]
     private float maxZoomDistance = 60f;
 
+    [Header("Stay Inside The Room")]
+    [Tooltip("Walls / floor / roof the camera must not pass (exploded parts on Interactable are ignored).")]
+    [SerializeField]
+    private LayerMask roomLayers = 1; // Default
+
+    [Tooltip("Space kept between the camera and a wall.")]
+    [SerializeField, Min(0.05f)]
+    private float wallMargin = 0.5f;
+
+    [Tooltip("The camera never gets closer to the orbit centre than this (even if a wall is closer).")]
+    [SerializeField, Min(0.1f)]
+    private float minCameraDistance = 2f;
+
     [Header("Raycast")]
     [SerializeField]
     private LayerMask interactableLayers;
@@ -69,6 +82,11 @@ public class RTSCameraController : MonoBehaviour
     public Camera Camera => targetCamera;
 
     private ExplodableViewNode currentHoveredPart;
+
+    // A room built as one big box collider (e.g. the turbine warehouse): rays from inside do not hit it,
+    // so the camera is kept inside its bounds instead.
+    private bool hasRoomBox;
+    private Bounds roomBox;
 
     private void Awake()
     {
@@ -132,6 +150,7 @@ public class RTSCameraController : MonoBehaviour
         _distance = explodedView.InitialDistance;
 
         _pivot = GetObjectCenter(explodedView.gameObject);
+        FindRoomBox();
 
         _initialized = true;
         _skipNextCameraUpdate = true;
@@ -199,6 +218,7 @@ public class RTSCameraController : MonoBehaviour
         _pitch = Mathf.Clamp(_pitch, minPitch, maxPitch);
         _distance = Mathf.Clamp(10f, minZoomDistance, maxZoomDistance);
         _pivot = targetCamera.transform.position + targetCamera.transform.forward * _distance;
+        FindRoomBox();
 
         UpdateCameraPosition();
     }
@@ -221,57 +241,18 @@ public class RTSCameraController : MonoBehaviour
         if (showPartNameOnHover) GetMouseHoveredObject();
     }
 
+    // A click only selects: it never moves the camera or explodes anything (that is done by the buttons).
+    // Most boiler / turbine meshes are children of a part, so the part is looked up in the parents.
     private void HandleHit(RaycastHit hit)
     {
-        var selectedObject = hit.collider.gameObject;
+        if (hit.collider == null || HUDController.Instance == null || Mouse.current == null) return;
 
-        if (selectedObject == null || hit.collider == null)
-        {
-            if (HUDController.Instance != null)
-            {
-                HUDController.Instance.HideClickContext();
-                HUDController.Instance.HideDescription();
-            }
-        }
+        GameObject selectedObject = hit.collider.gameObject;
+        ExplodableViewNode part = selectedObject.GetComponentInParent<ExplodableViewNode>();
+        Vector2 pointer = Mouse.current.position.ReadValue();
 
-        if (selectedObject.TryGetComponent<ExplodableViewNode>(out var part))
-        {
-            if (HUDController.Instance != null && Mouse.current != null)
-            {
-                HUDController.Instance.ShowClickContext(
-                    Mouse.current.position.ReadValue(),
-                    part
-                );
-            }
-
-            // Debug.Log($"Selected Part: {selectedObject.name}");
-            return;
-        }
-
-        var explodable = GetExplodable(selectedObject);
-
-        if (explodable != null)
-        {
-            explodable.ToggleExplode(selectedObject.transform);
-            Focus(GetObjectCenter(selectedObject));
-        }
-
-        // Show the clicked object's name too (parts without an ExplodableViewNode).
-        if (HUDController.Instance != null && Mouse.current != null)
-            HUDController.Instance.ShowClickContext(Mouse.current.position.ReadValue(), selectedObject);
-
-        Debug.Log($"Hit: {selectedObject.name}");
-
-        // var selectedObject = hit.collider.gameObject;
-        // var explodable = GetExplodable(selectedObject);
-        //
-        // if (explodable != null)
-        // {
-        //     explodable.ToggleExplode(selectedObject.transform);
-        //     Focus(GetObjectCenter(selectedObject));
-        // }
-        //
-        // Debug.Log($"Hit: {selectedObject.name}");
+        if (part != null) HUDController.Instance.ShowClickContext(pointer, part);
+        else HUDController.Instance.ShowClickContext(pointer, selectedObject); // shows its name only
     }
 
     private ModularExplodedView GetExplodable(GameObject obj)
@@ -326,10 +307,49 @@ public class RTSCameraController : MonoBehaviour
     private void UpdateCameraPosition()
     {
         var rotation = Quaternion.Euler(_pitch, _yaw, 0f);
-        var offset = rotation * Vector3.back * _distance;
+        var direction = rotation * Vector3.back;
 
-        targetCamera.transform.position = _pivot + offset;
+        targetCamera.transform.position = _pivot + direction * RoomLimitedDistance(direction, _distance);
         targetCamera.transform.rotation = rotation;
+    }
+
+    // Shortens the orbit distance so the camera stops in front of walls / the room box instead of leaving the room.
+    private float RoomLimitedDistance(Vector3 direction, float distance)
+    {
+        float limit = distance;
+
+        if (roomLayers.value != 0 && Physics.SphereCast(_pivot, wallMargin, direction, out RaycastHit hit, distance, roomLayers, QueryTriggerInteraction.Ignore))
+            limit = Mathf.Min(limit, hit.distance);
+
+        if (hasRoomBox && roomBox.Contains(_pivot))
+        {
+            for (int axis = 0; axis < 3; axis++)
+            {
+                if (direction[axis] > 0.0001f) limit = Mathf.Min(limit, (roomBox.max[axis] - _pivot[axis]) / direction[axis]);
+                else if (direction[axis] < -0.0001f) limit = Mathf.Min(limit, (roomBox.min[axis] - _pivot[axis]) / direction[axis]);
+            }
+        }
+
+        return Mathf.Max(limit, Mathf.Min(minCameraDistance, distance));
+    }
+
+    private void FindRoomBox()
+    {
+        hasRoomBox = false;
+        if (roomLayers.value == 0) return;
+
+        float largest = 0f;
+        foreach (Collider c in Physics.OverlapSphere(_pivot, 0.05f, roomLayers, QueryTriggerInteraction.Ignore))
+        {
+            if (!(c is BoxCollider) || !c.bounds.Contains(_pivot)) continue;
+            float size = c.bounds.size.x * c.bounds.size.z;
+            if (size <= largest || c.bounds.size.x < 5f || c.bounds.size.z < 5f) continue; // a room, not a box on the floor
+            largest = size;
+            roomBox = c.bounds;
+            hasRoomBox = true;
+        }
+
+        if (hasRoomBox) roomBox.Expand(-2f * wallMargin);
     }
 
     public void Focus(Vector3 position)
