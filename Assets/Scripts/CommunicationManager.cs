@@ -577,9 +577,6 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
             HandleError_Extern(nameof(SetTimeOfDay_Extern), $"Unknown time '{value}'. Use \"day\", \"evening\" or \"night\".");
     }
 
-
-    #endregion
-
     /// <summary>Chimney smoke slider "0".."1" (default 0.2). 0 = no smoke, 0.2 white, 0.4 dark gray, 0.6 black,
     /// 0.8 yellow-brown, 1 blue-gray. Main_Scene only. Answer: handleSmokeLevelChanged.</summary>
     public void SetSmokeLevel_Extern(string value)
