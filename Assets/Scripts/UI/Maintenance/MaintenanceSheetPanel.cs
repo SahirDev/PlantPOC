@@ -15,7 +15,7 @@ using UnityEngine.UI;
 ///
 /// Edit (header button): the values become text fields (Part Name / ID / Equipment stay locked, Description is
 /// hidden and not exported); Done shows the typed values (also sent to React as
-/// handlePartMaintenance). Export (bottom button, while editing): downloads an Excel report with the values and
+/// handlePartMaintenance). Print Report (bottom button): downloads an Excel report with the values and
 /// a picture of the part. Nothing is stored: selecting another part shows its own data again.
 /// The Edit / Export buttons are created at runtime in the style of the collapse button when not assigned.
 /// </summary>
@@ -58,8 +58,8 @@ public class MaintenanceSheetPanel : MonoBehaviour
     [SerializeField] private TMP_Text editButtonLabel;
     [Tooltip("Bottom button: downloads the sheet + part picture as Excel (.xlsx).")]
     [SerializeField] private Button exportButton;
-    [Tooltip("On: Export shows only while editing. Off: always.")]
-    [SerializeField] private bool exportOnlyWhileEditing = true;
+    [Tooltip("Off (default): PRINT REPORT shows whenever the sheet is open. On: only while editing.")]
+    [SerializeField] private bool exportOnlyWhileEditing = false;
     [SerializeField] private Color inputBackground = new Color(1f, 1f, 1f, 0.1f);
 
     private bool collapsed, editing, wired;
@@ -215,7 +215,7 @@ public class MaintenanceSheetPanel : MonoBehaviour
             "Generated " + DateTime.Now.ToString("dd MMM yyyy, HH:mm"), rows, picture, 640, 480);
 
         string id = rowValues.Length > 1 && rowValues[1] != "-" ? rowValues[1] : partName;
-        FileDownload.Save(FileDownload.SafeName($"Maintenance_{id}_{DateTime.Now:yyyyMMdd_HHmm}.xlsx"), file, FileDownload.XlsxMime);
+        FileDownload.Save(FileDownload.SafeName($"Maintenance_Report_{id}_{DateTime.Now:yyyyMMdd_HHmm}.xlsx"), file, FileDownload.XlsxMime);
     }
 
     // ================================================================== rows <-> data
@@ -316,7 +316,7 @@ public class MaintenanceSheetPanel : MonoBehaviour
             layout.childControlWidth = layout.childControlHeight = true;
             layout.childForceExpandWidth = layout.childForceExpandHeight = false;
 
-            exportButton = CloneButton("ExportButton", footer.transform, "EXPORT EXCEL", 150f, out _);
+            exportButton = CloneButton("ExportButton", footer.transform, "PRINT REPORT", 150f, out _);
             if (exportButton.TryGetComponent(out Image image)) image.color = new Color(1f, 0.62f, 0.25f, 0.9f);
             exportArea = footer;
         }
