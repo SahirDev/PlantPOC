@@ -151,6 +151,14 @@ public class HUDController : SingletonMono<HUDController>
         var explodedView = part.GetComponentInParent<ModularExplodedView>();
         GetPartCard().Show(part.transform, part.PartName, part.Description, GetExplosionCamera());
 
+        // Maintenance sheet (bottom-right) - only in the explosion view.
+        if (IsExploded)
+        {
+            MaintenanceInfo maintenance = MaintenanceData.For(part);
+            GetMaintenanceSheet().Show(maintenance);
+            CommunicationManager.HandlePartMaintenance_Extern(maintenance);
+        }
+
         CommunicationManager.HandlePartSelected_Extern(new PartSelectedPayload
         {
             name = part.PartName,
@@ -177,6 +185,7 @@ public class HUDController : SingletonMono<HUDController>
         selectedPart = null;
         plainPartShown = true;
         GetPartCard().Show(clicked.transform, clicked.name, string.Empty, GetExplosionCamera());
+        if (maintenanceSheet != null) maintenanceSheet.Hide(); // not a part: no maintenance data
         CommunicationManager.HandlePartSelected_Extern(new PartSelectedPayload
         {
             name = clicked.name,
@@ -189,6 +198,23 @@ public class HUDController : SingletonMono<HUDController>
 
     private bool plainPartShown;
     private PartInfoCard partCard;
+    private MaintenanceSheetPanel maintenanceSheet;
+
+    /// <summary>Bottom-right maintenance sheet: the editable prefab Resources/MaintenanceSheet, else built in code.</summary>
+    private MaintenanceSheetPanel GetMaintenanceSheet()
+    {
+        if (maintenanceSheet != null) return maintenanceSheet;
+
+        var prefab = Resources.Load<GameObject>(MaintenanceSheetPanel.ResourcePath);
+        if (prefab != null)
+        {
+            maintenanceSheet = Instantiate(prefab, transform).GetComponent<MaintenanceSheetPanel>();
+            if (maintenanceSheet != null) maintenanceSheet.name = "MaintenanceSheet";
+        }
+
+        if (maintenanceSheet == null) maintenanceSheet = MaintenanceSheetPanel.CreateDefault(transform);
+        return maintenanceSheet;
+    }
 
     /// <summary>Unity card (same look as the Main_Scene object card) beside the clicked part.</summary>
     private PartInfoCard GetPartCard()
@@ -243,6 +269,7 @@ public class HUDController : SingletonMono<HUDController>
     public void HideClickContext()
     {
         if (partCard != null) partCard.Hide();
+        if (maintenanceSheet != null) maintenanceSheet.Hide();
         if (selectedPart == null && !plainPartShown) return;
 
         selectedPart = null;

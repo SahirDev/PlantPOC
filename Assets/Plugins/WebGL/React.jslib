@@ -79,6 +79,9 @@ mergeInto(LibraryManager.library, {
   handlePartSelected: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handlePartSelected", UTF8ToString(data));
   },
+  handlePartMaintenance: function (data) {
+    if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handlePartMaintenance", UTF8ToString(data));
+  },
   handlePartDeselected: function () {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handlePartDeselected");
   },

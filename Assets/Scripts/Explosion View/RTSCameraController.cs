@@ -171,10 +171,13 @@ public class RTSCameraController : MonoBehaviour
         }
     }
 
-    // The UI is React now: React reports when the mouse is over one of its panels.
+    // React panels (reported by React) and Unity UI on top (e.g. the maintenance sheet): clicks / scroll there
+    // must not select parts or zoom the camera.
     private bool IsPointerOverUI()
     {
-        return ExternalUIState.PointerOverUI;
+        if (ExternalUIState.PointerOverUI) return true;
+        UnityEngine.EventSystems.EventSystem eventSystem = UnityEngine.EventSystems.EventSystem.current;
+        return eventSystem != null && eventSystem.IsPointerOverGameObject();
     }
 
     private void Start()

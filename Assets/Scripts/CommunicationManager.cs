@@ -85,6 +85,7 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     [DllImport("__Internal")] private static extern void handlePartHoverEnd();
     [DllImport("__Internal")] private static extern void handlePartSelected(string data);
     [DllImport("__Internal")] private static extern void handlePartDeselected();
+    [DllImport("__Internal")] private static extern void handlePartMaintenance(string data);
     [DllImport("__Internal")] private static extern void handleTurbineData(string data);
     [DllImport("__Internal")] private static extern void handleTurbineList(string data);
     [DllImport("__Internal")] private static extern void handleBoilerDashboardOpened(string data);
@@ -941,6 +942,17 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         Log(nameof(handlePartSelected), json);
 #if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
         handlePartSelected(json);
+#endif
+    }
+
+    /// <summary>Maintenance sheet of the clicked part (explosion view; Unity shows it bottom-right too).
+    /// → React: <c>handlePartMaintenance</c> { partName, partId, equipment, lastMaintenanceDate, ... }</summary>
+    public static void HandlePartMaintenance_Extern(MaintenanceInfo data)
+    {
+        string json = ToJson(data);
+        Log(nameof(handlePartMaintenance), json);
+#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
+        handlePartMaintenance(json);
 #endif
     }
 

@@ -136,6 +136,7 @@ Walking into info point 1, 2 or 3 sends `handleControlRoomInfoEntered` { index, 
 | `handleEquipmentOutOfRange` | JSON `EquipmentInfo` | Worker walked away. |
 | `handleControlRoomInfoEntered` | JSON `{index,name,title}` | Worker in control room info point 1/2/3: show that info panel. |
 | `handleControlRoomInfoExited` | JSON `{index,name,title}` | Worker left the info point: hide it. |
+| `handlePartMaintenance` | JSON `MaintenanceInfo` | Maintenance sheet of the part clicked in the explosion view (Unity also shows it bottom-right). Fields: partName, partId, equipment, lastMaintenanceDate, maintenanceType, condition (Good / Warning / Critical), runningHours, nextMaintenanceDue, technician, issueFound, actionTaken, sparePartUsed, remarks. |
 | `handleSmokeLevelChanged` | JSON `{level,status,indication,color}` | Smoke level changed (also at Main_Scene start). status: none / normal / degrading / severe / nox_sox / contamination. |
 | `handleTimeOfDayChanged` | string | "day" / "evening" / "night" (also sent when Main_Scene starts). |
 | `handleTurbineInRange` | JSON `TurbineData` | Worker near turbine `id` 1-4: show its buttons. |

@@ -63,6 +63,11 @@ export interface UnityEvents {
   handleEquipmentInRange: EquipmentInfo;
   handleEquipmentOutOfRange: EquipmentInfo;
   handleTimeOfDayChanged: string; // "day" | "evening" | "night"
+  handlePartMaintenance: {
+    partName: string; partId: string; equipment: string; lastMaintenanceDate: string; maintenanceType: string;
+    condition: string; runningHours: string; nextMaintenanceDue: string; technician: string; issueFound: string;
+    actionTaken: string; sparePartUsed: string; remarks: string;
+  };
   handleSmokeLevelChanged: { level: number; status: string; indication: string; color: string };
   handleTurbineInRange: TurbineData;
   handleTurbineOutOfRange: TurbineData;
