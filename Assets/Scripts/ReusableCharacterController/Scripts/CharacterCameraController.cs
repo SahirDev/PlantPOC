@@ -67,6 +67,11 @@ public class CharacterCameraController : MonoBehaviour
     [SerializeField, Min(0f)]
     private float cameraCollisionPadding = 0.05f;
 
+    [Tooltip("Near clip plane of the worker camera (all modes). Must be well below the collision radius, otherwise " +
+             "the camera stops at the wall but still shows through it (the old 0.3 did).")]
+    [SerializeField, Range(0.01f, 0.3f)]
+    private float nearClipPlane = 0.06f;
+
     [SerializeField]
     private bool drawCameraCollisionGizmos = true;
 
@@ -125,6 +130,7 @@ public class CharacterCameraController : MonoBehaviour
     private Vector3 lastResolvedTPPPosition;
     private bool lastSphereCastHit;
 
+    private readonly RaycastHit[] backHitBuffer = new RaycastHit[8];
     private Renderer[] characterRenderers;
     private UnityEngine.Rendering.ShadowCastingMode[] characterShadowModes;
     private bool characterHidden;
@@ -154,6 +160,7 @@ public class CharacterCameraController : MonoBehaviour
         if (characterRoot == null) characterRoot = transform;
 
         if (playerCamera == null) playerCamera = GetComponentInChildren<Camera>(true);
+        if (playerCamera != null) playerCamera.nearClipPlane = nearClipPlane;
         focusController = GetComponent<CharacterFocusController>();
         movementController = GetComponent<CharacterMovementController>();
     }
@@ -461,12 +468,35 @@ public class CharacterCameraController : MonoBehaviour
 
         castDirection /= desiredDistance;
 
-        bool hitObstacle = Physics.SphereCast(sphereCastOrigin,cameraCollisionRadius,castDirection,out RaycastHit hit,desiredDistance,cameraCollisionLayers,QueryTriggerInteraction.Ignore);
+        float safeDistance = desiredDistance;
+        bool hitObstacle = false;
+
+        if (Physics.SphereCast(sphereCastOrigin,cameraCollisionRadius,castDirection,out RaycastHit hit,desiredDistance,cameraCollisionLayers,QueryTriggerInteraction.Ignore))
+        {
+            safeDistance = hit.distance - cameraCollisionPadding;
+            hitObstacle = true;
+        }
+
+        // One-sided walls (mesh colliders) are invisible to the cast above when seen from their back side:
+        // check from the camera towards the worker as well and keep the obstacle nearest to the worker.
+        int backHits = Physics.RaycastNonAlloc(desiredCameraPosition,-castDirection,backHitBuffer,desiredDistance,cameraCollisionLayers,QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < backHits; i++)
+        {
+            Collider c = backHitBuffer[i].collider;
+            if (c == null || c.transform.IsChildOf(characterRoot)) continue; // the worker's own colliders
+
+            float distanceFromWorker = desiredDistance - backHitBuffer[i].distance - cameraCollisionRadius - cameraCollisionPadding;
+            if (distanceFromWorker < safeDistance)
+            {
+                safeDistance = distanceFromWorker;
+                hitObstacle = true;
+            }
+        }
 
         if (!hitObstacle)
             return desiredCameraPosition;
 
-        float safeDistance = Mathf.Clamp(hit.distance - cameraCollisionPadding,0f,desiredDistance);
+        safeDistance = Mathf.Clamp(safeDistance,0f,desiredDistance);
 
         Vector3 resolvedPosition = sphereCastOrigin + castDirection * safeDistance;
 
