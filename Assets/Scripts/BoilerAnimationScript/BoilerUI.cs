@@ -292,6 +292,9 @@ public class BoilerDashboardController : SingletonMono<BoilerDashboardController
         };
     }
 
+    /// <summary>The values as shown on the dashboard (used by the boiler room monitor).</summary>
+    public BoilerDashboardPayload CurrentValues => BuildPayload();
+
     /// <summary>Sends the current values to React (handleBoilerDashboard).</summary>
     public void SendDashboard()
     {
