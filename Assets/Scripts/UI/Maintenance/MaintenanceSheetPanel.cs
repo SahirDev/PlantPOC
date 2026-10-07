@@ -13,7 +13,8 @@ using UnityEngine.UI;
 /// Bootstrap (created once at start, hidden, kept for the session). Restyle it freely - keep the references on
 /// this component. Without the prefab the same layout is built in code. Shown when a part is clicked.
 ///
-/// Edit (header button): every value becomes a text field; Done shows the typed values (also sent to React as
+/// Edit (header button): the values become text fields (Part Name / ID / Equipment stay locked, Description is
+/// hidden and not exported); Done shows the typed values (also sent to React as
 /// handlePartMaintenance). Export (bottom button, while editing): downloads an Excel report with the values and
 /// a picture of the part. Nothing is stored: selecting another part shows its own data again.
 /// The Edit / Export buttons are created at runtime in the style of the collapse button when not assigned.
@@ -27,6 +28,11 @@ public class MaintenanceSheetPanel : MonoBehaviour
         "Description"
     };
     private const int ConditionRow = 5;
+    private const int DescriptionRow = 13;
+    // Part Name, Part ID, Equipment: identify the part - shown but not editable.
+    private static bool IsReadOnly(int row) => row <= 2;
+    // Description: on the sheet only - hidden while editing and not in the Excel report.
+    private static bool IsEditable(int row) => !IsReadOnly(row) && row != DescriptionRow;
 
     [Header("References")]
     [Tooltip("The sheet (shown / hidden).")]
@@ -132,11 +138,14 @@ public class MaintenanceSheetPanel : MonoBehaviour
 
         for (int i = 0; i < values.Length; i++)
         {
-            if (values[i] == null || inputs[i] == null) continue;
+            if (values[i] == null) continue;
+            if (IsReadOnly(i)) values[i].alpha = 0.55f; // locked look
+            if (inputs[i] == null) continue;
             inputs[i].text = values[i].text == "-" ? string.Empty : values[i].text;
             values[i].gameObject.SetActive(false);
             inputs[i].gameObject.SetActive(true);
         }
+        SetDescriptionRowVisible(false);
 
         editing = true;
         RefreshEditControls();
@@ -149,8 +158,10 @@ public class MaintenanceSheetPanel : MonoBehaviour
         editing = false;
 
         GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+        SetDescriptionRowVisible(true);
         for (int i = 0; i < values.Length; i++)
         {
+            if (values[i] != null && IsReadOnly(i)) values[i].alpha = 1f;
             if (values[i] == null || inputs[i] == null) continue;
             if (apply)
             {
@@ -185,6 +196,7 @@ public class MaintenanceSheetPanel : MonoBehaviour
         var rows = new List<XlsxReport.Row>(RowLabels.Length);
         for (int i = 0; i < RowLabels.Length; i++)
         {
+            if (i == DescriptionRow) continue; // sheet only, not in the report
             string value = i < rowValues.Length ? rowValues[i] : "-";
             rows.Add(new XlsxReport.Row
             {
@@ -344,7 +356,13 @@ public class MaintenanceSheetPanel : MonoBehaviour
         if (inputs != null && inputs.Length == values.Length) return;
         inputs = new TMP_InputField[values.Length];
         for (int i = 0; i < values.Length; i++)
-            if (values[i] != null) inputs[i] = CreateInput(values[i], i >= 9); // Issue Found and below: longer text
+            if (values[i] != null && IsEditable(i)) inputs[i] = CreateInput(values[i], i >= 9); // Issue Found and below: longer text
+    }
+
+    private void SetDescriptionRowVisible(bool visible)
+    {
+        if (DescriptionRow < values.Length && values[DescriptionRow] != null && values[DescriptionRow].transform.parent != null)
+            values[DescriptionRow].transform.parent.gameObject.SetActive(visible);
     }
 
     private TMP_InputField CreateInput(TMP_Text value, bool multiLine)
