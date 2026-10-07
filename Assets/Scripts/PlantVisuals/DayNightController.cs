@@ -23,7 +23,8 @@ public class DayNightController : MonoBehaviour
 
     [Header("Look (multiplied over the whole view)")]
     [SerializeField] private Color eveningTint = new Color(1f, 0.72f, 0.52f, 1f);
-    [SerializeField] private Color nightTint = new Color(0.17f, 0.21f, 0.36f, 1f);
+    [Tooltip("Night darkness. Brighter = more 'moonlight' on the unlit parts of the plant.")]
+    [SerializeField] private Color nightTint = new Color(0.27f, 0.31f, 0.47f, 1f);
 
     [Header("Street Lamps")]
     [Tooltip("Parent of all street lamps (bulb + light pool renderers are found under it).")]
@@ -34,9 +35,12 @@ public class DayNightController : MonoBehaviour
     [SerializeField] private Material poolMaterial;
     [Tooltip("Template material of the floodlight glow on building walls / chimney bases (PlantPOC/AdditiveGlow).")]
     [SerializeField] private Material washMaterial;
+    [Tooltip("Template material of the soft light on building roofs (PlantPOC/AdditiveGlow).")]
+    [SerializeField] private Material roofMaterial;
     [SerializeField] private Color bulbColor = new Color(1f, 0.85f, 0.55f, 1f);
     [SerializeField] private Color poolColor = new Color(1f, 0.72f, 0.38f, 0.55f);
     [SerializeField] private Color washColor = new Color(1f, 0.8f, 0.55f, 0.45f);
+    [SerializeField] private Color roofColor = new Color(0.85f, 0.88f, 1f, 0.22f);
     [Tooltip("How bright the lamps are in the evening (0..1). Night = 1.")]
     [SerializeField, Range(0f, 1f)] private float eveningLampLevel = 0.5f;
     [SerializeField, Min(0.1f)] private float lampFadeSeconds = 1.5f;
@@ -50,7 +54,8 @@ public class DayNightController : MonoBehaviour
     private readonly List<Renderer> bulbRenderers = new List<Renderer>();
     private readonly List<Renderer> poolRenderers = new List<Renderer>();
     private readonly List<Renderer> washRenderers = new List<Renderer>();
-    private Material bulbInstance, poolInstance, washInstance;
+    private readonly List<Renderer> roofRenderers = new List<Renderer>();
+    private Material bulbInstance, poolInstance, washInstance, roofInstance;
     private float lampLevel, lampTarget;
     private static readonly int ColorId = Shader.PropertyToID("_Color");
 
@@ -62,6 +67,7 @@ public class DayNightController : MonoBehaviour
         if (bulbMaterial != null) bulbInstance = new Material(bulbMaterial);
         if (poolMaterial != null) poolInstance = new Material(poolMaterial);
         if (washMaterial != null) washInstance = new Material(washMaterial);
+        if (roofMaterial != null) roofInstance = new Material(roofMaterial);
 
         if (lampsRoot != null)
         {
@@ -70,6 +76,7 @@ public class DayNightController : MonoBehaviour
                 if (bulbMaterial != null && r.sharedMaterial == bulbMaterial) { r.sharedMaterial = bulbInstance; bulbRenderers.Add(r); }
                 else if (poolMaterial != null && r.sharedMaterial == poolMaterial) { r.sharedMaterial = poolInstance; poolRenderers.Add(r); }
                 else if (washMaterial != null && r.sharedMaterial == washMaterial) { r.sharedMaterial = washInstance; washRenderers.Add(r); }
+                else if (roofMaterial != null && r.sharedMaterial == roofMaterial) { r.sharedMaterial = roofInstance; roofRenderers.Add(r); }
             }
         }
     }
@@ -85,6 +92,7 @@ public class DayNightController : MonoBehaviour
         if (bulbInstance != null) Destroy(bulbInstance);
         if (poolInstance != null) Destroy(poolInstance);
         if (washInstance != null) Destroy(washInstance);
+        if (roofInstance != null) Destroy(roofInstance);
     }
 
     private void Update()
@@ -142,10 +150,12 @@ public class DayNightController : MonoBehaviour
         foreach (Renderer r in bulbRenderers) if (r != null) r.enabled = on;
         foreach (Renderer r in poolRenderers) if (r != null) r.enabled = on;
         foreach (Renderer r in washRenderers) if (r != null) r.enabled = on;
+        foreach (Renderer r in roofRenderers) if (r != null) r.enabled = on;
         if (!on) return;
 
         if (bulbInstance != null) bulbInstance.SetColor(ColorId, new Color(bulbColor.r, bulbColor.g, bulbColor.b, bulbColor.a * lampLevel));
         if (poolInstance != null) poolInstance.SetColor(ColorId, new Color(poolColor.r, poolColor.g, poolColor.b, poolColor.a * lampLevel));
         if (washInstance != null) washInstance.SetColor(ColorId, new Color(washColor.r, washColor.g, washColor.b, washColor.a * lampLevel));
+        if (roofInstance != null) roofInstance.SetColor(ColorId, new Color(roofColor.r, roofColor.g, roofColor.b, roofColor.a * lampLevel));
     }
 }

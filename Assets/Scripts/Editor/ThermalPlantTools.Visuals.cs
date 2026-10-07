@@ -10,11 +10,12 @@ using UnityEngine.SceneManagement;
 /// <summary>
 /// Tools > Thermal Plant > 12. Create Day-Night + Building Lights (Main_Scene)
 ///
-/// Builds the night lighting from the real building positions and rotations:
-///   - buildings (boiler rooms, turbine room, control room, accommodation, surveillance room):
-///       street lamps at the corners + warm floodlight glow on every wall, so the building is visible at night
+/// Builds the night lighting for every building of the plant overview (each ObjectInfo with its BoxCollider,
+/// the same boxes used for selection - exact position, size and angle):
+///   - buildings: street lamps at the corners, warm floodlight glow on every wall and a soft light on the roof
 ///   - parking: lamps around the edge
 ///   - chimneys: uplight glow around the bottom of the chimney + a light pool at its base
+/// Plus a lighter night tint ("moonlight") so unlit parts stay readable.
 /// Everything goes under PlantVisuals/Building Lights (replaced on every run). No real lights, no lightmaps.
 /// Also removes the old steam-cycle flow view if it is still in the scene.
 /// </summary>
@@ -29,19 +30,8 @@ public static partial class ThermalPlantTools
 
     private enum LightKind { Building, Area, Chimney }
 
-    // What gets lit. First name found (active) is used; add / rename entries here if the scene changes.
-    private static readonly (string label, LightKind kind, string[] names)[] LitPlaces =
-    {
-        ("Boiler Room 01", LightKind.Building, new[] { "Boiler Room 01" }),
-        ("Boiler Room 02", LightKind.Building, new[] { "Boiler Room 02" }),
-        ("Turbine Room", LightKind.Building, new[] { "Turbine Room" }),
-        ("Control Room", LightKind.Building, new[] { "Monitor Room", "control_room", "Control Room" }),
-        ("Accommodation", LightKind.Building, new[] { "Accomadation Room", "Accommodation" }),
-        ("Surveillance Room", LightKind.Building, new[] { "SurvailanceRoom" }),
-        ("Parking", LightKind.Area, new[] { "Car Parking", "Parking Lot" }),
-        ("Chimney 01", LightKind.Chimney, new[] { "Chimney 01" }),
-        ("Chimney 02", LightKind.Chimney, new[] { "Chimney 02" })
-    };
+    // Small buildings (largest side below this) get wall / roof glow but no corner lamps.
+    private const float MinLampBuildingSize = 8f;
 
     [MenuItem(MenuRoot + "12. Create Day-Night + Building Lights (Main_Scene)", priority = 12)]
     private static void CreateDayNightAndLights()
@@ -49,8 +39,8 @@ public static partial class ThermalPlantTools
         if (!EditorUtility.DisplayDialog("Day / Night + building lights",
                 "In Main_Scene this creates / rebuilds:\n\n" +
                 "- PlantVisuals with Screen Tint Overlay + Day Night Controller (N key: Day / Evening / Night)\n" +
-                "- lights for the boiler rooms, turbine room, control room, accommodation, surveillance room, " +
-                "parking and the bottom of the chimneys (lamps + glow on the walls)\n" +
+                "- lights for every overview building (ObjectInfo + box collider): lamps, glow on the walls, " +
+                "a soft light on the roof; parking lamps; glow at the bottom of the chimneys\n" +
                 "- removes the old steam-cycle flow view if it is there\n\n" +
                 "No real lights and no extra lightmaps (cheap on WebGL). The scene is saved. Continue?", "Create", "Cancel"))
             return;
@@ -73,30 +63,39 @@ public static partial class ThermalPlantTools
         Mesh quad = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
         int lamps = 0, washes = 0;
 
-        foreach (var place in LitPlaces)
+        var seen = new HashSet<GameObject>();
+        foreach (ObjectInfo info in FindAllInScene<ObjectInfo>(scene))
         {
-            GameObject target = FindFirstActive(scene, place.names);
-            if (target == null)
+            if (info == null || !info.gameObject.activeInHierarchy || !seen.Add(info.gameObject)) continue;
+
+            string label = info.DisplayName;
+            BoxCollider box = info.GetComponent<BoxCollider>();
+            Bounds local;
+            Matrix4x4 toWorld;
+            Quaternion rotation;
+            bool ok = box != null
+                ? TryGetBoxBounds(box, out local, out toWorld, out rotation)
+                : TryGetOrientedBounds(info.gameObject, out local, out toWorld, out rotation);
+            if (!ok)
             {
-                log.AppendLine($"! {place.label}: not found ({string.Join(" / ", place.names)}) - skipped");
+                log.AppendLine($"! {label}: no box collider / mesh - skipped");
                 continue;
             }
 
-            if (!TryGetOrientedBounds(target, out Bounds local, out Matrix4x4 toWorld, out Quaternion rotation))
-            {
-                log.AppendLine($"! {place.label}: '{target.name}' has no visible mesh - skipped");
-                continue;
-            }
+            string key = (label + " " + info.gameObject.name).ToLowerInvariant();
+            LightKind kind = key.Contains("chimney") ? LightKind.Chimney : key.Contains("parking") ? LightKind.Area : LightKind.Building;
 
-            var group = new GameObject(place.label).transform;
+            var group = new GameObject(label).transform;
             group.SetParent(lightsRoot, false);
             int l0 = lamps, w0 = washes;
 
-            switch (place.kind)
+            switch (kind)
             {
                 case LightKind.Building:
-                    lamps += PlaceCornerLamps(lampPrefab, scene, group, local, toWorld, 2.5f, false);
+                    if (Mathf.Max(local.size.x, local.size.z) >= MinLampBuildingSize)
+                        lamps += PlaceCornerLamps(lampPrefab, scene, group, local, toWorld, 2.5f, false);
                     washes += PlaceWallWashes(group, quad, m.wash, local, toWorld, rotation);
+                    washes += PlaceRoofLight(group, quad, m.roof, local, toWorld, rotation);
                     break;
                 case LightKind.Area:
                     lamps += PlaceCornerLamps(lampPrefab, scene, group, local, toWorld, 1.5f, true);
@@ -106,7 +105,7 @@ public static partial class ThermalPlantTools
                     break;
             }
 
-            log.AppendLine($"+ {place.label} ('{target.name}'): {lamps - l0} lamps, {washes - w0} wall glows");
+            log.AppendLine($"+ {label} ({kind}): {lamps - l0} lamps, {washes - w0} glows");
         }
 
         var dayNight = root.GetComponent<DayNightController>();
@@ -116,6 +115,8 @@ public static partial class ThermalPlantTools
         so.FindProperty("bulbMaterial").objectReferenceValue = m.bulb;
         so.FindProperty("poolMaterial").objectReferenceValue = m.pool;
         so.FindProperty("washMaterial").objectReferenceValue = m.wash;
+        so.FindProperty("roofMaterial").objectReferenceValue = m.roof;
+        so.FindProperty("nightTint").colorValue = new Color(0.27f, 0.31f, 0.47f, 1f); // a little "moonlight"
         so.ApplyModifiedPropertiesWithoutUndo();
 
         EditorSceneManager.MarkSceneDirty(scene);
@@ -191,6 +192,15 @@ public static partial class ThermalPlantTools
         return count;
     }
 
+    // Soft light on the roof (seen from the overview camera), a little above it so it never flickers.
+    private static int PlaceRoofLight(Transform parent, Mesh quad, Material roof, Bounds local, Matrix4x4 toWorld, Quaternion rotation)
+    {
+        Vector3 top = toWorld.MultiplyPoint3x4(new Vector3(local.center.x, local.max.y + 0.15f, local.center.z));
+        CreateGlowQuad(parent, "Roof Light", quad, roof, top, rotation * Quaternion.Euler(90f, 0f, 0f),
+            new Vector3(local.size.x, local.size.z, 1f));
+        return 1;
+    }
+
     // Glow around the bottom of the chimney (6 panels round it) + a light pool on the ground.
     private static int PlaceChimneyUplights(Transform parent, Mesh quad, Material wash, Material pool, Bounds local, Matrix4x4 toWorld)
     {
@@ -257,7 +267,7 @@ public static partial class ThermalPlantTools
 
     private class Materials
     {
-        public Material tint, bulb, pool, pole, wash;
+        public Material tint, bulb, pool, pole, wash, roof;
     }
 
     private static Scene OpenMainScene()
@@ -300,6 +310,10 @@ public static partial class ThermalPlantTools
             return vertical * edges;
         });
 
+        // Soft rectangle: even in the middle, fading at all edges.
+        Texture2D roofTexture = EnsureGlowTexture("RoofGlow.png", log, (u, v) =>
+            Mathf.SmoothStep(0f, 1f, Mathf.Min(u, 1f - u) * 5f) * Mathf.SmoothStep(0f, 1f, Mathf.Min(v, 1f - v) * 5f));
+
         var m = new Materials
         {
             tint = EnsureMaterial("ScreenTint", multiply, log, mat => mat.SetColor("_Color", Color.white)),
@@ -321,6 +335,12 @@ public static partial class ThermalPlantTools
                 mat.SetFloat("_ZTest", (float)CompareFunction.LessEqual);
                 mat.renderQueue = (int)RenderQueue.Transparent + 600;
             }),
+            roof = EnsureMaterial("RoofGlow", glow, log, mat =>
+            {
+                mat.SetTexture("_MainTex", roofTexture);
+                mat.SetFloat("_ZTest", (float)CompareFunction.LessEqual);
+                mat.renderQueue = (int)RenderQueue.Transparent + 600;
+            }),
             pole = EnsureMaterial("LampPole", Shader.Find("Universal Render Pipeline/Lit"), log, mat =>
             {
                 mat.SetColor("_BaseColor", new Color(0.22f, 0.23f, 0.25f));
@@ -329,7 +349,7 @@ public static partial class ThermalPlantTools
             })
         };
 
-        foreach (Material mat in new[] { m.bulb, m.pool, m.pole, m.wash }) if (mat != null) mat.enableInstancing = true;
+        foreach (Material mat in new[] { m.bulb, m.pool, m.pole, m.wash, m.roof }) if (mat != null) mat.enableInstancing = true;
         AssetDatabase.SaveAssets();
         return m;
     }
@@ -455,13 +475,31 @@ public static partial class ThermalPlantTools
 
     // ================================================================== scene helpers
 
-    private static GameObject FindFirstActive(Scene scene, string[] names)
+    /// <summary>The selection box of an overview building, in an upright frame turned like the building.</summary>
+    private static bool TryGetBoxBounds(BoxCollider box, out Bounds local, out Matrix4x4 toWorld, out Quaternion rotation)
     {
-        foreach (string name in names)
-            foreach (GameObject root in scene.GetRootGameObjects())
-                foreach (Transform t in root.GetComponentsInChildren<Transform>(false))
-                    if (t.name == name) return t.gameObject;
-        return null;
+        Transform t = box.transform;
+
+        // Heading of the box: its most horizontal axis (models are often imported rotated -90 on X).
+        Vector3 axis = t.right;
+        foreach (Vector3 candidate in new[] { t.forward, t.up })
+            if (Mathf.Abs(candidate.y) < Mathf.Abs(axis.y)) axis = candidate;
+        axis.y = 0f;
+        float yaw = axis.sqrMagnitude > 0.0001f ? Mathf.Atan2(axis.x, axis.z) * Mathf.Rad2Deg - 90f : 0f;
+
+        rotation = Quaternion.Euler(0f, yaw, 0f);
+        toWorld = Matrix4x4.TRS(t.TransformPoint(box.center), rotation, Vector3.one);
+        Matrix4x4 toLocal = toWorld.inverse;
+
+        local = default;
+        for (int i = 0; i < 8; i++)
+        {
+            Vector3 corner = box.center + Vector3.Scale(box.size * 0.5f, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+            Vector3 p = toLocal.MultiplyPoint3x4(t.TransformPoint(corner));
+            if (i == 0) local = new Bounds(p, Vector3.zero);
+            else local.Encapsulate(p);
+        }
+        return local.size.sqrMagnitude > 0.01f;
     }
 
     /// <summary>
