@@ -119,7 +119,16 @@ public class ElectricalValuesPayload
     public float oilTemp;        // °C
     public float windingTemp;    // °C
     public bool coolingFan;
-    public string alarmLevel;    // "normal" (<85) | "high" (85-90) | "warning" (>=90)
+    public string alarmLevel;    // "normal" | "high" (red lamp) | "warning" (blinking, >= 80 by default)
+}
+
+/// <summary>Control room info point the worker walked into / out of.</summary>
+[Serializable]
+public class ControlRoomInfoPayload
+{
+    public int index;     // 1, 2 or 3 – which info panel to show
+    public string name;   // GameObject name
+    public string title;  // optional title (GameObject name if empty)
 }
 
 // -------------------------------------------------------------------------------------

@@ -281,7 +281,7 @@ public class HUDController : SingletonMono<HUDController>
     }
 
     public void UpdateElectricalPanelValues(float generatorValue, float generatorKV, float gridKV, float loading,
-        float oilTemp, float windingTemp, bool coolingFan)
+        float oilTemp, float windingTemp, bool coolingFan, string alarmLevel = null)
     {
         CommunicationManager.HandleElectricalValues_Extern(new ElectricalValuesPayload
         {
@@ -292,8 +292,23 @@ public class HUDController : SingletonMono<HUDController>
             oilTemp = oilTemp,
             windingTemp = windingTemp,
             coolingFan = coolingFan,
-            alarmLevel = generatorValue >= 90f ? "warning" : generatorValue >= 85f ? "high" : "normal"
+            alarmLevel = alarmLevel ?? (generatorValue >= 80f ? "warning" : generatorValue >= 75f ? "high" : "normal")
         });
+    }
+
+    /// <summary>Control room slider 0..100 from React. Works anywhere in the control room (not only at the
+    /// panel). From the panel's Warning Threshold (default 80) the warning lights blink.</summary>
+    public void SetControlRoomSlider(float value)
+    {
+        ElectricalPanelInfo[] panels = FindObjectsByType<ElectricalPanelInfo>(FindObjectsSortMode.None);
+        if (panels.Length == 0)
+        {
+            Fail(nameof(SetControlRoomSlider), "No electrical panel in this scene (open the Control_Room first).");
+            return;
+        }
+
+        float clamped = Mathf.Clamp(value, 0f, 100f);
+        foreach (ElectricalPanelInfo panel in panels) panel.SetGeneratorValue(clamped);
     }
 
     // ================================================================== called by React (through CommunicationManager)

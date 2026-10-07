@@ -24,6 +24,26 @@ public class ElectricalPanelInfo : MonoBehaviour
     [Header("Warning Light")]
     public GameObject Warninglight;
 
+    [Header("Thresholds (slider 0-100)")]
+    [Tooltip("From this value the red lamp is on.")]
+    [SerializeField, Range(0f, 100f)] private float redThreshold = 75f;
+    [Tooltip("From this value the warning light blinks and the alarm sounds.")]
+    [SerializeField, Range(0f, 100f)] private float warningThreshold = 80f;
+
+    [Header("Blinking (used when no Animator is assigned)")]
+    [Tooltip("Extra warning lights that blink with the Warninglight object (optional).")]
+    [SerializeField] private Light[] extraWarningLights;
+    [SerializeField, Min(0.1f)] private float blinksPerSecond = 2f;
+
+    private Light[] blinkLights;
+    private float[] blinkBaseIntensity;
+    private bool warningActive;
+
+    public float RedThreshold => redThreshold;
+    public float WarningThreshold => warningThreshold;
+    public bool IsWarningActive => warningActive;
+    public string AlarmLevel => generatorValue >= warningThreshold ? "warning" : generatorValue >= redThreshold ? "high" : "normal";
+
     private static readonly int EmissionColorProp = Shader.PropertyToID("_EmissionColor");
     private const string EmissionKeyword = "_EMISSION";
 
@@ -42,6 +62,8 @@ public class ElectricalPanelInfo : MonoBehaviour
 
     private void Start()
     {
+        CacheBlinkLights();
+
         if (Warninglight != null)
             Warninglight.SetActive(false);
 
@@ -183,7 +205,8 @@ public class ElectricalPanelInfo : MonoBehaviour
                 loading,
                 oilTemp,
                 windingTemp,
-                coolingFan
+                coolingFan,
+                AlarmLevel
             );
 
 
@@ -191,7 +214,7 @@ public class ElectricalPanelInfo : MonoBehaviour
         // LIGHT LOGIC
         // -----------------------------
 
-        if (value < 85f)
+        if (value < redThreshold)
         {
             // GREEN STATE
 
@@ -206,7 +229,7 @@ public class ElectricalPanelInfo : MonoBehaviour
             if (Warninglight != null)
                 Warninglight.SetActive(false);
         }
-        else if (value < 90f)
+        else if (value < warningThreshold)
         {
             // RED STATE
 
@@ -223,7 +246,7 @@ public class ElectricalPanelInfo : MonoBehaviour
         }
         else
         {
-            // WARNING STATE (>= 90%)
+            // WARNING STATE (>= warningThreshold, default 80)
             SetGreenLight(false);
             SetRedLight(true);
 
@@ -238,6 +261,64 @@ public class ElectricalPanelInfo : MonoBehaviour
                 if (animator != null)
                     animator.Play("FlickerLight");
             }
+        }
+
+        SetWarningBlink(value >= warningThreshold);
+    }
+
+    // =====================================================
+    // BLINKING (code, when there is no Animator)
+    // =====================================================
+
+    private void CacheBlinkLights()
+    {
+        var lights = new System.Collections.Generic.List<Light>();
+        if (Warninglight != null) lights.AddRange(Warninglight.GetComponentsInChildren<Light>(true));
+        if (extraWarningLights != null)
+            foreach (Light light in extraWarningLights)
+                if (light != null && !lights.Contains(light)) lights.Add(light);
+
+        blinkLights = lights.ToArray();
+        blinkBaseIntensity = new float[blinkLights.Length];
+        for (int i = 0; i < blinkLights.Length; i++)
+            blinkBaseIntensity[i] = blinkLights[i].intensity > 0f ? blinkLights[i].intensity : 3f;
+
+        // Extra warning lights stay off until the warning starts.
+        if (!warningActive && extraWarningLights != null)
+            foreach (Light light in extraWarningLights)
+                if (light != null) light.enabled = false;
+    }
+
+    private void SetWarningBlink(bool active)
+    {
+        if (warningActive == active) return;
+        warningActive = active;
+
+        if (blinkLights == null) CacheBlinkLights();
+        if (active) return; // Update blinks them
+
+        // Off: back to normal, extra lights off.
+        for (int i = 0; i < blinkLights.Length; i++)
+        {
+            if (blinkLights[i] == null) continue;
+            blinkLights[i].intensity = blinkBaseIntensity[i];
+            if (extraWarningLights != null && System.Array.IndexOf(extraWarningLights, blinkLights[i]) >= 0)
+                blinkLights[i].enabled = false;
+        }
+    }
+
+    private void Update()
+    {
+        if (!warningActive || animator != null || blinkLights == null) return;
+
+        // Hard on/off blink with a short fade, like a warning beacon.
+        float wave = Mathf.Sin(Time.time * blinksPerSecond * Mathf.PI * 2f);
+        float level = Mathf.Clamp01(wave * 3f + 0.5f);
+        for (int i = 0; i < blinkLights.Length; i++)
+        {
+            if (blinkLights[i] == null) continue;
+            blinkLights[i].enabled = true;
+            blinkLights[i].intensity = blinkBaseIntensity[i] * Mathf.Lerp(0.05f, 1f, level);
         }
     }
 

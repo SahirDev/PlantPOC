@@ -71,6 +71,12 @@ Near the boiler Unity sends `handleBoilerInRange` (show the boiler buttons); wal
 | `BoilerHideInfo_Extern` | – | Close the info panel + particles |
 | `SetBoilerBurnerPower_Extern` | `"0"`..`"100"` | Burner power slider; works any time in the boiler room |
 
+### Control room
+Walking into info point 1, 2 or 3 sends `handleControlRoomInfoEntered` { index, name, title }: show info panel `index`. Leaving sends `handleControlRoomInfoExited`.
+| Function | Value | Notes |
+|---|---|---|
+| `SetControlRoomSlider_Extern` | `"0"`..`"100"` | Works anywhere in the control room. From 80 the warning lights blink. Answer: `handleElectricalValues` (`alarmLevel`: normal / high / warning) |
+
 ### Turbines
 | Function | Value | Notes |
 |---|---|---|
@@ -112,6 +118,8 @@ Near the boiler Unity sends `handleBoilerInRange` (show the boiler buttons); wal
 | `handleOverviewObjectDeselected` | – | Overview selection cleared. |
 | `handleEquipmentInRange` | JSON `EquipmentInfo` | Worker reached a turbine / boiler / control room. |
 | `handleEquipmentOutOfRange` | JSON `EquipmentInfo` | Worker walked away. |
+| `handleControlRoomInfoEntered` | JSON `{index,name,title}` | Worker in control room info point 1/2/3: show that info panel. |
+| `handleControlRoomInfoExited` | JSON `{index,name,title}` | Worker left the info point: hide it. |
 | `handleBoilerInRange` | JSON `EquipmentInfo` | Worker is near the boiler: show the boiler buttons. |
 | `handleBoilerOutOfRange` | JSON `EquipmentInfo` | Worker left the boiler: hide the boiler buttons. |
 | `handleEquipmentState` | JSON `EquipmentState` | Full button state. Enable/disable React buttons from the can* flags. |

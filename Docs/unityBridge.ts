@@ -77,6 +77,8 @@ export interface UnityEvents {
   handleElectricalPanelOpened: number;
   handleElectricalValues: ElectricalValues;
   handleElectricalPanelClosed: void;
+  handleControlRoomInfoEntered: { index: number; name: string; title: string };
+  handleControlRoomInfoExited: { index: number; name: string; title: string };
 }
 
 // ---------------------------------------------------------------- React -> Unity functions (value type)
@@ -119,6 +121,7 @@ export interface UnityFunctions {
   CloseBoilerDashboard_Extern: void;
   GetBoilerDashboard_Extern: void;
   SetGeneratorValue_Extern: string;
+  SetControlRoomSlider_Extern: string;
 }
 
 // ---------------------------------------------------------------- helpers

@@ -91,6 +91,8 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     [DllImport("__Internal")] private static extern void handleElectricalPanelOpened(string data);
     [DllImport("__Internal")] private static extern void handleElectricalValues(string data);
     [DllImport("__Internal")] private static extern void handleElectricalPanelClosed();
+    [DllImport("__Internal")] private static extern void handleControlRoomInfoEntered(string data);
+    [DllImport("__Internal")] private static extern void handleControlRoomInfoExited(string data);
 
     // KeyboardFocus.jslib
     [DllImport("__Internal")] private static extern void KeyboardFocus_Setup(bool autoFocus);
@@ -523,6 +525,20 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
 
     #endregion
 
+    #region React -> Unity : Control room
+
+    /// <summary>Control room slider "0".."100". Works anywhere in the control room; from 80 (Warning Threshold
+    /// on ElectricalPanelInfo) the warning lights blink. Answer: handleElectricalValues (alarmLevel).</summary>
+    public void SetControlRoomSlider_Extern(string value)
+    {
+        LogIncoming(nameof(SetControlRoomSlider_Extern), value);
+        if (Available<HUDController>(nameof(SetControlRoomSlider_Extern), "Equipment controls") &&
+            TryParseFloat(value, out float slider, nameof(SetControlRoomSlider_Extern)))
+            HUDController.Instance.SetControlRoomSlider(slider);
+    }
+
+    #endregion
+
     #region React -> Unity : Electrical panel
 
     /// <summary>"0".."100" – only while the worker is at the panel.</summary>
@@ -705,6 +721,26 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     #endregion
 
     #region Unity -> React : Equipment
+
+    /// <summary>Worker walked into control room info point 1/2/3: show that info panel. → React: <c>handleControlRoomInfoEntered</c> { index, name, title }</summary>
+    public static void HandleControlRoomInfoEntered_Extern(ControlRoomInfoPayload data)
+    {
+        string json = ToJson(data);
+        Log(nameof(handleControlRoomInfoEntered), json);
+#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
+        handleControlRoomInfoEntered(json);
+#endif
+    }
+
+    /// <summary>Worker left the info point: hide that info panel. → React: <c>handleControlRoomInfoExited</c> { index, name, title }</summary>
+    public static void HandleControlRoomInfoExited_Extern(ControlRoomInfoPayload data)
+    {
+        string json = ToJson(data);
+        Log(nameof(handleControlRoomInfoExited), json);
+#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
+        handleControlRoomInfoExited(json);
+#endif
+    }
 
     /// <summary>Worker reached a turbine / boiler / control room. → React: <c>handleEquipmentInRange</c></summary>
     public static void HandleEquipmentInRange_Extern(EquipmentInfoPayload data)

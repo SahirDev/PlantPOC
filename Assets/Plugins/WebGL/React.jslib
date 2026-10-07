@@ -97,6 +97,12 @@ mergeInto(LibraryManager.library, {
   handleElectricalValues: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleElectricalValues", UTF8ToString(data));
   },
+  handleControlRoomInfoEntered: function (data) {
+    if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleControlRoomInfoEntered", UTF8ToString(data));
+  },
+  handleControlRoomInfoExited: function (data) {
+    if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleControlRoomInfoExited", UTF8ToString(data));
+  },
   handleElectricalPanelClosed: function () {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleElectricalPanelClosed");
   },
