@@ -35407,7 +35407,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9c232a6b2e7aee408f41037acbe6c6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExplodableViewNode
-  explosionOffset: {x: 0, y: 0, z: 2}
+  explosionOffset: {x: -3, y: 0, z: 0}
   shouldChildExplode: 0
   partName: Fire Extinguisher
   description: A Fire Extinguisher is a portable fire-suppression device used to
@@ -42449,7 +42449,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9c232a6b2e7aee408f41037acbe6c6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExplodableViewNode
-  explosionOffset: {x: 0, y: 0, z: 2}
+  explosionOffset: {x: 0, y: 0, z: 3}
   shouldChildExplode: 0
   partName: Boiler Pump System
   description: The Boiler Pump System supplies treated feedwater to the boiler at
@@ -132234,7 +132234,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9c232a6b2e7aee408f41037acbe6c6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExplodableViewNode
-  explosionOffset: {x: 1, y: 0, z: 0}
+  explosionOffset: {x: -1.5, y: 0, z: 0}
   shouldChildExplode: 0
   partName: Boiler Left Inspection Cover
   description: The Boiler Left Inspection Cover is a removable access cover located
@@ -220923,7 +220923,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9c232a6b2e7aee408f41037acbe6c6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExplodableViewNode
-  explosionOffset: {x: 1, y: 0, z: 0}
+  explosionOffset: {x: 2, y: 0, z: 0}
   shouldChildExplode: 0
   partName: Boiler Right Inspection Cover
   description: The Boiler Right Inspection Cover is a removable access cover located
@@ -223255,7 +223255,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9c232a6b2e7aee408f41037acbe6c6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExplodableViewNode
-  explosionOffset: {x: 2, y: 0, z: 0}
+  explosionOffset: {x: 0, y: 1, z: 0}
   shouldChildExplode: 0
   partName: Boiler Chamber
   description: The Boiler Chamber is the main heat-transfer area of the boiler where
