@@ -625,6 +625,16 @@ public class BoilerFluidController : MonoBehaviour
     // BURNER POWER & SPEED PUBLIC API
     // =========================================================
 
+    /// <summary>All warning lamps in the scene blink together (not only the assigned one).</summary>
+    private void SetWarningLamps(bool active)
+    {
+        BoilerWarningIndicator.SetAllWarnings(active);
+
+        // A lamp on an object that was inactive at load has not registered yet: switch it directly.
+        if (warningIndicator != null && warningIndicator.IsWarningActive != active)
+            warningIndicator.SetWarning(active, BoilerWarningIndicator.Count == 0);
+    }
+
     public float BurnerPower
     {
         get => burnerPower;
@@ -721,14 +731,7 @@ public class BoilerFluidController : MonoBehaviour
                 fireEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             }
 
-            if (warningIndicator != null)
-            {
-                warningIndicator.SetWarning(false);
-            }
-            else if (BoilerWarningIndicator.Instance != null)
-            {
-                BoilerWarningIndicator.Instance.SetWarning(false);
-            }
+            SetWarningLamps(false);
         }
     }
 
@@ -877,14 +880,7 @@ public class BoilerFluidController : MonoBehaviour
         if (shouldWarn != lastWarningState)
         {
             lastWarningState = shouldWarn;
-            if (warningIndicator != null)
-            {
-                warningIndicator.SetWarning(shouldWarn);
-            }
-            else if (BoilerWarningIndicator.Instance != null)
-            {
-                BoilerWarningIndicator.Instance.SetWarning(shouldWarn);
-            }
+            SetWarningLamps(shouldWarn);
         }
 
         // =====================================================

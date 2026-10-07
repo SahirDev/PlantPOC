@@ -1,8 +1,33 @@
+using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// One warning lamp. Every lamp in the scene registers itself; BoilerFluidController switches them all
+/// together with SetAllWarnings, so all lamps blink in sync. Only one alarm sound plays at a time.
+/// </summary>
 public class BoilerWarningIndicator : MonoBehaviour
 {
     public static BoilerWarningIndicator Instance { get; private set; }
+
+    private static readonly List<BoilerWarningIndicator> all = new List<BoilerWarningIndicator>();
+
+    /// <summary>Switches every warning lamp in the scene on / off. The alarm sound plays on one lamp only.</summary>
+    public static void SetAllWarnings(bool active)
+    {
+        bool soundPlaying = false;
+        for (int i = all.Count - 1; i >= 0; i--)
+        {
+            BoilerWarningIndicator indicator = all[i];
+            if (indicator == null) { all.RemoveAt(i); continue; }
+
+            bool withSound = active && !soundPlaying && indicator.alarmAudioSource != null;
+            indicator.SetWarning(active, withSound);
+            if (withSound) soundPlaying = true;
+        }
+    }
+
+    /// <summary>Number of lamps found (for checks).</summary>
+    public static int Count => all.Count;
 
     [Header("Warning Light & Beacon")]
     [SerializeField] private Light warningLight;
@@ -28,6 +53,7 @@ public class BoilerWarningIndicator : MonoBehaviour
     {
         if (Instance == null)
             Instance = this;
+        if (!all.Contains(this)) all.Add(this);
 
         if (lampRenderer != null)
         {
@@ -74,7 +100,9 @@ public class BoilerWarningIndicator : MonoBehaviour
         }
     }
 
-    public void SetWarning(bool active)
+    public void SetWarning(bool active) => SetWarning(active, true);
+
+    public void SetWarning(bool active, bool withSound)
     {
         if (isWarningActive == active)
             return;
@@ -88,7 +116,7 @@ public class BoilerWarningIndicator : MonoBehaviour
                 warningLight.enabled = true;
             }
 
-            if (alarmAudioSource != null)
+            if (alarmAudioSource != null && withSound)
             {
                 if (alarmClip != null && alarmAudioSource.clip == null)
                     alarmAudioSource.clip = alarmClip;
@@ -121,6 +149,7 @@ public class BoilerWarningIndicator : MonoBehaviour
     {
         if (Instance == this)
             Instance = null;
+        all.Remove(this);
 
         if (alarmAudioSource != null && alarmAudioSource.isPlaying)
             alarmAudioSource.Stop();
