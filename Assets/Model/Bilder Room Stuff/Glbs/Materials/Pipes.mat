@@ -166,7 +166,7 @@ Material:
     - baseColorTexture_texCoord: 0
     - emissiveExposureWeight: 0
     - emissiveTexture_texCoord: 0
-    - metallicFactor: 0.714
+    - metallicFactor: 0.6
     - metallicRoughnessTexture_texCoord: 0
     - normalTexture_scale: 1
     - normalTexture_texCoord: 0

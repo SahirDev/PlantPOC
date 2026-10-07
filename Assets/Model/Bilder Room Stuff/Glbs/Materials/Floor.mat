@@ -162,7 +162,7 @@ Material:
     - normalTexture_texCoord: 0
     - occlusionTexture_strength: 1
     - occlusionTexture_texCoord: 0
-    - roughnessFactor: 0.3
+    - roughnessFactor: 0.65
     - transmissionFactor: 0
     m_Colors:
     - _DoubleSidedConstants: {r: 1, g: 1, b: 1, a: 0}
