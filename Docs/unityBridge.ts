@@ -63,6 +63,7 @@ export interface UnityEvents {
   handleEquipmentInRange: EquipmentInfo;
   handleEquipmentOutOfRange: EquipmentInfo;
   handleTimeOfDayChanged: string; // "day" | "evening" | "night"
+  handleSmokeLevelChanged: { level: number; status: string; indication: string; color: string };
   handleTurbineInRange: TurbineData;
   handleTurbineOutOfRange: TurbineData;
   handleBoilerInRange: EquipmentInfo;
@@ -107,6 +108,8 @@ export interface UnityFunctions {
   ToggleOperation_Extern: void;
   StartBoilerInfo_Extern: void;
   SetTimeOfDay_Extern: string;
+  SetSmokeLevel_Extern: string;
+  GetSmokeLevel_Extern: void;
   TurbineExplodeAll_Extern: void;
   TurbineCollapseAll_Extern: void;
   TurbineStartOperation_Extern: void;

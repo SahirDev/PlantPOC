@@ -62,6 +62,8 @@ Walking up to equipment sends `handleEquipmentInRange` + `handleEquipmentState`.
 ### Main_Scene visuals
 | Function | Value | Notes |
 |---|---|---|
+| `SetSmokeLevel_Extern` | `"0"`..`"1"` (default 0.2) | Chimney smoke colour: 0 none, 0.2 white, 0.4 dark gray, 0.6 black, 0.8 yellow-brown, 1 blue-gray. Answer: `handleSmokeLevelChanged` |
+| `GetSmokeLevel_Extern` | – | Answer: `handleSmokeLevelChanged` |
 | `SetTimeOfDay_Extern` | `"day"` / `"evening"` / `"night"` | Answer: `handleTimeOfDayChanged`. Unity key: N |
 
 ### Turbine room (one function per button, acts on the turbine the worker is at)
@@ -134,6 +136,7 @@ Walking into info point 1, 2 or 3 sends `handleControlRoomInfoEntered` { index, 
 | `handleEquipmentOutOfRange` | JSON `EquipmentInfo` | Worker walked away. |
 | `handleControlRoomInfoEntered` | JSON `{index,name,title}` | Worker in control room info point 1/2/3: show that info panel. |
 | `handleControlRoomInfoExited` | JSON `{index,name,title}` | Worker left the info point: hide it. |
+| `handleSmokeLevelChanged` | JSON `{level,status,indication,color}` | Smoke level changed (also at Main_Scene start). status: none / normal / degrading / severe / nox_sox / contamination. |
 | `handleTimeOfDayChanged` | string | "day" / "evening" / "night" (also sent when Main_Scene starts). |
 | `handleTurbineInRange` | JSON `TurbineData` | Worker near turbine `id` 1-4: show its buttons. |
 | `handleTurbineOutOfRange` | JSON `TurbineData` | Worker left that turbine. |

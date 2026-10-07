@@ -103,6 +103,9 @@ mergeInto(LibraryManager.library, {
   handleElectricalValues: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleElectricalValues", UTF8ToString(data));
   },
+  handleSmokeLevelChanged: function (data) {
+    if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleSmokeLevelChanged", UTF8ToString(data));
+  },
   handleTimeOfDayChanged: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleTimeOfDayChanged", UTF8ToString(data));
   },

@@ -122,6 +122,16 @@ public class ElectricalValuesPayload
     public string alarmLevel;    // "normal" | "high" (red lamp) | "warning" (blinking, >= 80 by default)
 }
 
+/// <summary>Chimney smoke indication (Main_Scene).</summary>
+[Serializable]
+public class SmokeStatusPayload
+{
+    public float level;        // 0..1
+    public string status;      // "none" | "normal" | "degrading" | "severe" | "nox_sox" | "contamination"
+    public string indication;  // text for the UI, e.g. "Normal operation / steam-heavy exhaust"
+    public string color;       // current smoke colour, e.g. "#DBDBDB"
+}
+
 /// <summary>Control room info point the worker walked into / out of.</summary>
 [Serializable]
 public class ControlRoomInfoPayload

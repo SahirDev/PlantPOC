@@ -95,6 +95,7 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     [DllImport("__Internal")] private static extern void handleElectricalPanelClosed();
     [DllImport("__Internal")] private static extern void handleControlRoomInfoEntered(string data);
     [DllImport("__Internal")] private static extern void handleTimeOfDayChanged(string data);
+    [DllImport("__Internal")] private static extern void handleSmokeLevelChanged(string data);
     [DllImport("__Internal")] private static extern void handleControlRoomInfoExited(string data);
 
     // KeyboardFocus.jslib
@@ -579,6 +580,35 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
 
     #endregion
 
+    /// <summary>Chimney smoke slider "0".."1" (default 0.2). 0 = no smoke, 0.2 white, 0.4 dark gray, 0.6 black,
+    /// 0.8 yellow-brown, 1 blue-gray. Main_Scene only. Answer: handleSmokeLevelChanged.</summary>
+    public void SetSmokeLevel_Extern(string value)
+    {
+        LogIncoming(nameof(SetSmokeLevel_Extern), value);
+        if (SmokeColorController.Instance == null)
+        {
+            HandleError_Extern(nameof(SetSmokeLevel_Extern), "The smoke slider is only available in Main_Scene.");
+            return;
+        }
+
+        if (TryParseFloat(value, out float level, nameof(SetSmokeLevel_Extern))) SmokeColorController.Instance.SetLevel(level);
+    }
+
+    /// <summary>Answer: handleSmokeLevelChanged with the current level (e.g. to set the React slider).</summary>
+    public void GetSmokeLevel_Extern()
+    {
+        LogIncoming(nameof(GetSmokeLevel_Extern), null);
+        if (SmokeColorController.Instance == null)
+        {
+            HandleError_Extern(nameof(GetSmokeLevel_Extern), "The smoke slider is only available in Main_Scene.");
+            return;
+        }
+
+        HandleSmokeLevelChanged_Extern(SmokeColorController.Instance.BuildStatus());
+    }
+
+    #endregion
+
     #region React -> Unity : Control room
 
     /// <summary>Control room slider "0".."100". Works anywhere in the control room; from 80 (Warning Threshold
@@ -775,6 +805,17 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     #endregion
 
     #region Unity -> React : Equipment
+
+    /// <summary>Smoke level changed (also sent when Main_Scene starts). → React: <c>handleSmokeLevelChanged</c>
+    /// { level, status, indication, color }</summary>
+    public static void HandleSmokeLevelChanged_Extern(SmokeStatusPayload data)
+    {
+        string json = ToJson(data);
+        Log(nameof(handleSmokeLevelChanged), json);
+#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
+        handleSmokeLevelChanged(json);
+#endif
+    }
 
     /// <summary>Time of day changed (React button, N key or start). → React: <c>handleTimeOfDayChanged</c> "day" | "evening" | "night"</summary>
     public static void HandleTimeOfDayChanged_Extern(string value)
