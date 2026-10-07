@@ -15,6 +15,8 @@ using UnityEngine.SceneManagement;
 ///   - buildings: street lamps at the corners, warm floodlight glow on every wall and a soft light on the roof
 ///   - parking: lamps around the edge
 ///   - chimneys: uplight glow around the bottom of the chimney + a light pool at its base
+///   - every building box is also a "light volume": everything inside it is darkened much less at night,
+///     so the whole building stays visible (stencil, 2 invisible draws per box)
 /// Plus a lighter night tint ("moonlight") so unlit parts stay readable.
 /// Everything goes under PlantVisuals/Building Lights (replaced on every run). No real lights, no lightmaps.
 /// Also removes the old steam-cycle flow view if it is still in the scene.
@@ -24,6 +26,7 @@ public static partial class ThermalPlantTools
     private const string VisualsFolder = "Assets/Settings/PlantVisuals";
     private const string MultiplyShaderPath = "Assets/Shaders/PlantVisuals/ScreenMultiply.shader";
     private const string GlowShaderPath = "Assets/Shaders/PlantVisuals/AdditiveGlow.shader";
+    private const string VolumeShaderPath = "Assets/Shaders/PlantVisuals/StencilVolume.shader";
     private const string LampPrefabPath = "Assets/Prefabs/StreetLamp.prefab";
     private const string VisualsRootName = "PlantVisuals";
     private const string LightsRootName = "Building Lights";
@@ -61,7 +64,7 @@ public static partial class ThermalPlantTools
         lightsRoot.SetParent(root.transform, false);
 
         Mesh quad = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
-        int lamps = 0, washes = 0;
+        int lamps = 0, washes = 0, volumes = 0;
 
         var seen = new HashSet<GameObject>();
         foreach (ObjectInfo info in FindAllInScene<ObjectInfo>(scene))
@@ -105,6 +108,8 @@ public static partial class ThermalPlantTools
                     break;
             }
 
+            if (box != null && m.volumeBack != null) { CreateLightVolume(group, box, m); volumes++; }
+
             log.AppendLine($"+ {label} ({kind}): {lamps - l0} lamps, {washes - w0} glows");
         }
 
@@ -116,8 +121,10 @@ public static partial class ThermalPlantTools
         so.FindProperty("poolMaterial").objectReferenceValue = m.pool;
         so.FindProperty("washMaterial").objectReferenceValue = m.wash;
         so.FindProperty("roofMaterial").objectReferenceValue = m.roof;
-        so.FindProperty("nightTint").colorValue = new Color(0.27f, 0.31f, 0.47f, 1f); // a little "moonlight"
+        so.FindProperty("volumeMaterial").objectReferenceValue = m.volumeBack;
+        so.FindProperty("nightTint").colorValue = new Color(0.33f, 0.37f, 0.53f, 1f); // a little "moonlight"
         so.ApplyModifiedPropertiesWithoutUndo();
+        log.AppendLine($"+ {volumes} building light volumes (inside the boxes the night is lighter)");
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
@@ -240,6 +247,25 @@ public static partial class ThermalPlantTools
         r.reflectionProbeUsage = ReflectionProbeUsage.Off;
     }
 
+    // Invisible box = the building's selection box, slightly bigger. Two materials: back faces, then front faces.
+    private static void CreateLightVolume(Transform parent, BoxCollider box, Materials m)
+    {
+        Transform t = box.transform;
+        var go = new GameObject("Light Volume");
+        go.transform.SetParent(parent, false);
+        go.transform.SetPositionAndRotation(t.TransformPoint(box.center), t.rotation);
+        Vector3 size = Vector3.Scale(t.lossyScale, box.size);
+        go.transform.localScale = new Vector3(Mathf.Abs(size.x), Mathf.Abs(size.y), Mathf.Abs(size.z)) * 1.03f;
+
+        go.AddComponent<MeshFilter>().sharedMesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        var r = go.AddComponent<MeshRenderer>();
+        r.sharedMaterials = new[] { m.volumeBack, m.volumeFront };
+        r.shadowCastingMode = ShadowCastingMode.Off;
+        r.receiveShadows = false;
+        r.lightProbeUsage = LightProbeUsage.Off;
+        r.reflectionProbeUsage = ReflectionProbeUsage.Off;
+    }
+
     // ================================================================== cleanup
 
     private static void RemoveOldVisuals(GameObject root, StringBuilder log)
@@ -267,7 +293,7 @@ public static partial class ThermalPlantTools
 
     private class Materials
     {
-        public Material tint, bulb, pool, pole, wash, roof;
+        public Material tint, tintInside, bulb, pool, pole, wash, roof, volumeBack, volumeFront;
     }
 
     private static Scene OpenMainScene()
@@ -287,6 +313,7 @@ public static partial class ThermalPlantTools
     {
         var multiply = AssetDatabase.LoadAssetAtPath<Shader>(MultiplyShaderPath);
         var glow = AssetDatabase.LoadAssetAtPath<Shader>(GlowShaderPath);
+        var volume = AssetDatabase.LoadAssetAtPath<Shader>(VolumeShaderPath);
         if (multiply == null || glow == null)
         {
             EditorUtility.DisplayDialog("Shaders missing", $"Expected {MultiplyShaderPath} and {GlowShaderPath}.", "OK");
@@ -317,6 +344,7 @@ public static partial class ThermalPlantTools
         var m = new Materials
         {
             tint = EnsureMaterial("ScreenTint", multiply, log, mat => mat.SetColor("_Color", Color.white)),
+            tintInside = EnsureMaterial("ScreenTintInside", multiply, log, mat => mat.SetColor("_Color", Color.white)),
             bulb = EnsureMaterial("LampBulb", glow, log, mat =>
             {
                 mat.SetFloat("_ZTest", (float)CompareFunction.LessEqual);
@@ -350,6 +378,36 @@ public static partial class ThermalPlantTools
         };
 
         foreach (Material mat in new[] { m.bulb, m.pool, m.pole, m.wash, m.roof }) if (mat != null) mat.enableInstancing = true;
+
+        // Night tint: outside the light volumes (stencil 0) full, inside (stencil != 0) lighter.
+        // Set on every run, so an older ScreenTint.mat gets the stencil settings too.
+        m.tint.SetFloat("_StencilRef", 0f);
+        m.tint.SetFloat("_StencilComp", (float)CompareFunction.Equal);
+        m.tintInside.SetFloat("_StencilRef", 0f);
+        m.tintInside.SetFloat("_StencilComp", (float)CompareFunction.NotEqual);
+        m.tintInside.renderQueue = (int)RenderQueue.Transparent + 501;
+        EditorUtility.SetDirty(m.tint);
+        EditorUtility.SetDirty(m.tintInside);
+
+        if (volume != null)
+        {
+            m.volumeBack = EnsureMaterial("LightVolumeBack", volume, log, mat =>
+            {
+                mat.SetFloat("_Cull", (float)CullMode.Front);
+                mat.SetFloat("_StencilOp", (float)StencilOp.IncrementSaturate);
+                mat.renderQueue = (int)RenderQueue.Transparent + 490;
+            });
+            m.volumeFront = EnsureMaterial("LightVolumeFront", volume, log, mat =>
+            {
+                mat.SetFloat("_Cull", (float)CullMode.Back);
+                mat.SetFloat("_StencilOp", (float)StencilOp.DecrementSaturate);
+                mat.renderQueue = (int)RenderQueue.Transparent + 491;
+            });
+        }
+        else
+        {
+            log.AppendLine($"! {VolumeShaderPath} missing - no light volumes");
+        }
         AssetDatabase.SaveAssets();
         return m;
     }
@@ -469,6 +527,7 @@ public static partial class ThermalPlantTools
         if (overlay == null) overlay = root.AddComponent<ScreenTintOverlay>();
         var so = new SerializedObject(overlay);
         so.FindProperty("multiplyMaterial").objectReferenceValue = m.tint;
+        so.FindProperty("insideMultiplyMaterial").objectReferenceValue = m.volumeBack != null ? m.tintInside : null;
         so.ApplyModifiedPropertiesWithoutUndo();
         return root;
     }

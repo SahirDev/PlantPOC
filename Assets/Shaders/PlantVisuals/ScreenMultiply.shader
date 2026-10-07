@@ -1,10 +1,14 @@
-// Full-screen tint for Day / Evening / Night and the flow view: multiplies everything already drawn by _Color.
+// Full-screen tint for Day / Evening / Night: multiplies everything already drawn by _Color.
 // One quad in front of the camera = the cheapest possible "darken the whole scene" (no post-processing).
+// Stencil: the night quad only darkens pixels outside the building light volumes (stencil 0), a second
+// "inside" quad darkens the inside pixels less (see StencilVolume.shader). Default Always = everywhere.
 Shader "PlantPOC/ScreenMultiply"
 {
     Properties
     {
         _Color ("Tint", Color) = (1, 1, 1, 1)
+        [IntRange] _StencilRef ("Stencil Ref", Range(0, 255)) = 0
+        [Enum(UnityEngine.Rendering.CompareFunction)] _StencilComp ("Stencil Comp", Float) = 8
     }
     SubShader
     {
@@ -13,6 +17,12 @@ Shader "PlantPOC/ScreenMultiply"
         ZWrite Off
         ZTest Always
         Cull Off
+        Stencil
+        {
+            Ref [_StencilRef]
+            Comp [_StencilComp]
+            ReadMask 255
+        }
 
         Pass
         {

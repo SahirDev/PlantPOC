@@ -15,8 +15,12 @@ public class ScreenTintOverlay : MonoBehaviour
 {
     public static ScreenTintOverlay Instance { get; private set; }
 
-    [Tooltip("Material with the PlantPOC/ScreenMultiply shader.")]
+    [Tooltip("Material with the PlantPOC/ScreenMultiply shader (darkens everything outside the building light volumes).")]
     [SerializeField] private Material multiplyMaterial;
+    [Tooltip("Optional: ScreenMultiply material for the pixels INSIDE the building light volumes (stencil != 0).")]
+    [SerializeField] private Material insideMultiplyMaterial;
+    [Tooltip("How much lighter the inside of the building boxes stays (0 = as dark as outside, 1 = not darkened).")]
+    [SerializeField, Range(0f, 1f)] private float insideLight = 0.6f;
     [Tooltip("Seconds to fade between tints.")]
     [SerializeField, Min(0f)] private float fadeSeconds = 1.5f;
 
@@ -25,6 +29,7 @@ public class ScreenTintOverlay : MonoBehaviour
     private readonly Dictionary<string, Channel> channels = new Dictionary<string, Channel>();
     private MeshRenderer quadRenderer;
     private Material runtimeMaterial;
+    private Material insideRuntimeMaterial;
     private Transform quad;
     private static readonly int ColorId = Shader.PropertyToID("_Color");
 
@@ -46,7 +51,16 @@ public class ScreenTintOverlay : MonoBehaviour
         if (multiplyMaterial != null)
         {
             runtimeMaterial = new Material(multiplyMaterial);
-            quadRenderer.sharedMaterial = runtimeMaterial;
+            if (insideMultiplyMaterial != null)
+            {
+                // Same quad drawn twice: outside pixels with the full tint, inside pixels with the lighter one.
+                insideRuntimeMaterial = new Material(insideMultiplyMaterial);
+                quadRenderer.sharedMaterials = new[] { runtimeMaterial, insideRuntimeMaterial };
+            }
+            else
+            {
+                quadRenderer.sharedMaterial = runtimeMaterial;
+            }
         }
 
         quadRenderer.enabled = false;
@@ -59,6 +73,13 @@ public class ScreenTintOverlay : MonoBehaviour
     {
         if (Instance == this) Instance = null;
         if (runtimeMaterial != null) Destroy(runtimeMaterial);
+        if (insideRuntimeMaterial != null) Destroy(insideRuntimeMaterial);
+    }
+
+    public float InsideLight
+    {
+        get => insideLight;
+        set { insideLight = Mathf.Clamp01(value); Apply(); }
     }
 
     /// <summary>Sets the target tint of a channel (white = no tint). Fades unless instant.</summary>
@@ -99,6 +120,12 @@ public class ScreenTintOverlay : MonoBehaviour
         bool active = total.r < 0.999f || total.g < 0.999f || total.b < 0.999f;
         if (quadRenderer != null) quadRenderer.enabled = active && runtimeMaterial != null;
         if (runtimeMaterial != null) runtimeMaterial.SetColor(ColorId, total);
+        if (insideRuntimeMaterial != null)
+        {
+            Color inside = Color.Lerp(total, Color.white, insideLight);
+            inside.a = 1f;
+            insideRuntimeMaterial.SetColor(ColorId, inside);
+        }
     }
 
     private static Color MoveTowards(Color from, Color to, float step)

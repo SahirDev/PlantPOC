@@ -24,7 +24,7 @@ public class DayNightController : MonoBehaviour
     [Header("Look (multiplied over the whole view)")]
     [SerializeField] private Color eveningTint = new Color(1f, 0.72f, 0.52f, 1f);
     [Tooltip("Night darkness. Brighter = more 'moonlight' on the unlit parts of the plant.")]
-    [SerializeField] private Color nightTint = new Color(0.27f, 0.31f, 0.47f, 1f);
+    [SerializeField] private Color nightTint = new Color(0.33f, 0.37f, 0.53f, 1f);
 
     [Header("Street Lamps")]
     [Tooltip("Parent of all street lamps (bulb + light pool renderers are found under it).")]
@@ -35,6 +35,8 @@ public class DayNightController : MonoBehaviour
     [SerializeField] private Material poolMaterial;
     [Tooltip("Template material of the floodlight glow on building walls / chimney bases (PlantPOC/AdditiveGlow).")]
     [SerializeField] private Material washMaterial;
+    [Tooltip("Back-face material of the building light volumes (PlantPOC/StencilVolume). Volumes are only drawn at evening / night.")]
+    [SerializeField] private Material volumeMaterial;
     [Tooltip("Template material of the soft light on building roofs (PlantPOC/AdditiveGlow).")]
     [SerializeField] private Material roofMaterial;
     [SerializeField] private Color bulbColor = new Color(1f, 0.85f, 0.55f, 1f);
@@ -55,6 +57,7 @@ public class DayNightController : MonoBehaviour
     private readonly List<Renderer> poolRenderers = new List<Renderer>();
     private readonly List<Renderer> washRenderers = new List<Renderer>();
     private readonly List<Renderer> roofRenderers = new List<Renderer>();
+    private readonly List<Renderer> volumeRenderers = new List<Renderer>();
     private Material bulbInstance, poolInstance, washInstance, roofInstance;
     private float lampLevel, lampTarget;
     private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -77,6 +80,7 @@ public class DayNightController : MonoBehaviour
                 else if (poolMaterial != null && r.sharedMaterial == poolMaterial) { r.sharedMaterial = poolInstance; poolRenderers.Add(r); }
                 else if (washMaterial != null && r.sharedMaterial == washMaterial) { r.sharedMaterial = washInstance; washRenderers.Add(r); }
                 else if (roofMaterial != null && r.sharedMaterial == roofMaterial) { r.sharedMaterial = roofInstance; roofRenderers.Add(r); }
+                else if (volumeMaterial != null && r.sharedMaterial == volumeMaterial) volumeRenderers.Add(r);
             }
         }
     }
@@ -151,6 +155,7 @@ public class DayNightController : MonoBehaviour
         foreach (Renderer r in poolRenderers) if (r != null) r.enabled = on;
         foreach (Renderer r in washRenderers) if (r != null) r.enabled = on;
         foreach (Renderer r in roofRenderers) if (r != null) r.enabled = on;
+        foreach (Renderer r in volumeRenderers) if (r != null) r.enabled = on;
         if (!on) return;
 
         if (bulbInstance != null) bulbInstance.SetColor(ColorId, new Color(bulbColor.r, bulbColor.g, bulbColor.b, bulbColor.a * lampLevel));
