@@ -8,11 +8,15 @@ using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Tools > Thermal Plant, Main_Scene visuals:
-///   12. Create Day-Night + Street Lamps (Main_Scene)
-///   13. Create Steam-Cycle Flow View (Main_Scene)
-/// Both build everything from the real building positions, put it under "PlantVisuals" and save the scene.
-/// Run again to rebuild (the old lamps / flows are replaced). Move lamps or flow points freely afterwards.
+/// Tools > Thermal Plant > 12. Create Day-Night + Building Lights (Main_Scene)
+///
+/// Builds the night lighting from the real building positions and rotations:
+///   - buildings (boiler rooms, turbine room, control room, accommodation, surveillance room):
+///       street lamps at the corners + warm floodlight glow on every wall, so the building is visible at night
+///   - parking: lamps around the edge
+///   - chimneys: uplight glow around the bottom of the chimney + a light pool at its base
+/// Everything goes under PlantVisuals/Building Lights (replaced on every run). No real lights, no lightmaps.
+/// Also removes the old steam-cycle flow view if it is still in the scene.
 /// </summary>
 public static partial class ThermalPlantTools
 {
@@ -21,19 +25,33 @@ public static partial class ThermalPlantTools
     private const string GlowShaderPath = "Assets/Shaders/PlantVisuals/AdditiveGlow.shader";
     private const string LampPrefabPath = "Assets/Prefabs/StreetLamp.prefab";
     private const string VisualsRootName = "PlantVisuals";
+    private const string LightsRootName = "Building Lights";
 
-    // Buildings that get street lamps (direct children of MainScene_Parent). Others are skipped.
-    private static readonly string[] LampSkipNames = { "Environment", "PlantSupporting assets", "pipe_pieces", "High Power Lines" };
+    private enum LightKind { Building, Area, Chimney }
 
-    // ================================================================== 12. day / night + lamps
-
-    [MenuItem(MenuRoot + "12. Create Day-Night + Street Lamps (Main_Scene)", priority = 12)]
-    private static void CreateDayNightAndLamps()
+    // What gets lit. First name found (active) is used; add / rename entries here if the scene changes.
+    private static readonly (string label, LightKind kind, string[] names)[] LitPlaces =
     {
-        if (!EditorUtility.DisplayDialog("Day / Night + street lamps",
-                "In Main_Scene this creates:\n\n" +
-                "- PlantVisuals with Screen Tint Overlay + Day Night Controller (N key cycles Day / Evening / Night)\n" +
-                "- a StreetLamp prefab and lamps at the corners of the main buildings (old ones are replaced)\n\n" +
+        ("Boiler Room 01", LightKind.Building, new[] { "Boiler Room 01" }),
+        ("Boiler Room 02", LightKind.Building, new[] { "Boiler Room 02" }),
+        ("Turbine Room", LightKind.Building, new[] { "Turbine Room" }),
+        ("Control Room", LightKind.Building, new[] { "Monitor Room", "control_room", "Control Room" }),
+        ("Accommodation", LightKind.Building, new[] { "Accomadation Room", "Accommodation" }),
+        ("Surveillance Room", LightKind.Building, new[] { "SurvailanceRoom" }),
+        ("Parking", LightKind.Area, new[] { "Car Parking", "Parking Lot" }),
+        ("Chimney 01", LightKind.Chimney, new[] { "Chimney 01" }),
+        ("Chimney 02", LightKind.Chimney, new[] { "Chimney 02" })
+    };
+
+    [MenuItem(MenuRoot + "12. Create Day-Night + Building Lights (Main_Scene)", priority = 12)]
+    private static void CreateDayNightAndLights()
+    {
+        if (!EditorUtility.DisplayDialog("Day / Night + building lights",
+                "In Main_Scene this creates / rebuilds:\n\n" +
+                "- PlantVisuals with Screen Tint Overlay + Day Night Controller (N key: Day / Evening / Night)\n" +
+                "- lights for the boiler rooms, turbine room, control room, accommodation, surveillance room, " +
+                "parking and the bottom of the chimneys (lamps + glow on the walls)\n" +
+                "- removes the old steam-cycle flow view if it is there\n\n" +
                 "No real lights and no extra lightmaps (cheap on WebGL). The scene is saved. Continue?", "Create", "Cancel"))
             return;
 
@@ -47,164 +65,199 @@ public static partial class ThermalPlantTools
 
         GameObject lampPrefab = EnsureLampPrefab(m, log);
         GameObject root = EnsureVisualsRoot(scene, m);
+        RemoveOldVisuals(root, log);
 
-        // Lamps
-        Transform old = root.transform.Find("Street Lamps");
-        if (old != null) Object.DestroyImmediate(old.gameObject);
-        var lampsRoot = new GameObject("Street Lamps").transform;
-        lampsRoot.SetParent(root.transform, false);
+        var lightsRoot = new GameObject(LightsRootName).transform;
+        lightsRoot.SetParent(root.transform, false);
 
-        int count = 0;
-        var placed = new List<Vector3>();
-        foreach (GameObject building in LampBuildings(scene))
+        Mesh quad = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
+        int lamps = 0, washes = 0;
+
+        foreach (var place in LitPlaces)
         {
-            if (!TryGetBounds(building, out Bounds b)) continue;
-            Vector3 size = b.size;
-            if (Mathf.Max(size.x, size.z) < 6f || Mathf.Max(size.x, size.z) > 160f) continue;
-
-            const float margin = 2.5f;
-            var corners = new[]
+            GameObject target = FindFirstActive(scene, place.names);
+            if (target == null)
             {
-                new Vector3(b.min.x - margin, 0f, b.min.z - margin), new Vector3(b.max.x + margin, 0f, b.min.z - margin),
-                new Vector3(b.min.x - margin, 0f, b.max.z + margin), new Vector3(b.max.x + margin, 0f, b.max.z + margin)
-            };
-
-            foreach (Vector3 corner in corners)
-            {
-                Vector3 p = corner;
-                p.y = GroundHeight(p, b);
-                if (placed.Exists(q => (q - p).sqrMagnitude < 10f * 10f)) continue;
-
-                var lamp = (GameObject)PrefabUtility.InstantiatePrefab(lampPrefab, scene);
-                lamp.transform.SetParent(lampsRoot, true);
-                Vector3 toCenter = b.center - p; toCenter.y = 0f;
-                lamp.transform.SetPositionAndRotation(p, toCenter.sqrMagnitude > 0.01f
-                    ? Quaternion.FromToRotation(Vector3.right, toCenter.normalized) : Quaternion.identity);
-                lamp.name = $"StreetLamp {building.name} {count + 1}";
-
-                Transform body = lamp.transform.Find("Body");
-                if (body != null) GameObjectUtility.SetStaticEditorFlags(body.gameObject, StaticEditorFlags.BatchingStatic);
-
-                placed.Add(p);
-                count++;
+                log.AppendLine($"! {place.label}: not found ({string.Join(" / ", place.names)}) - skipped");
+                continue;
             }
+
+            if (!TryGetOrientedBounds(target, out Bounds local, out Matrix4x4 toWorld, out Quaternion rotation))
+            {
+                log.AppendLine($"! {place.label}: '{target.name}' has no visible mesh - skipped");
+                continue;
+            }
+
+            var group = new GameObject(place.label).transform;
+            group.SetParent(lightsRoot, false);
+            int l0 = lamps, w0 = washes;
+
+            switch (place.kind)
+            {
+                case LightKind.Building:
+                    lamps += PlaceCornerLamps(lampPrefab, scene, group, local, toWorld, 2.5f, false);
+                    washes += PlaceWallWashes(group, quad, m.wash, local, toWorld, rotation);
+                    break;
+                case LightKind.Area:
+                    lamps += PlaceCornerLamps(lampPrefab, scene, group, local, toWorld, 1.5f, true);
+                    break;
+                case LightKind.Chimney:
+                    washes += PlaceChimneyUplights(group, quad, m.wash, m.pool, local, toWorld);
+                    break;
+            }
+
+            log.AppendLine($"+ {place.label} ('{target.name}'): {lamps - l0} lamps, {washes - w0} wall glows");
         }
 
-        // Controller
         var dayNight = root.GetComponent<DayNightController>();
         if (dayNight == null) dayNight = root.AddComponent<DayNightController>();
         var so = new SerializedObject(dayNight);
-        so.FindProperty("lampsRoot").objectReferenceValue = lampsRoot;
+        so.FindProperty("lampsRoot").objectReferenceValue = lightsRoot;
         so.FindProperty("bulbMaterial").objectReferenceValue = m.bulb;
         so.FindProperty("poolMaterial").objectReferenceValue = m.pool;
+        so.FindProperty("washMaterial").objectReferenceValue = m.wash;
         so.ApplyModifiedPropertiesWithoutUndo();
-
-        log.AppendLine($"+ {count} street lamps under PlantVisuals/Street Lamps");
-        log.AppendLine("+ PlantVisuals: Screen Tint Overlay + Day Night Controller");
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
-        Report("Day / Night + street lamps", log,
-            "Press Play and press N (Day -> Evening -> Night). Move / delete lamps freely, change colours on Day Night Controller. " +
-            "React: SetTimeOfDay_Extern(\"day\" | \"evening\" | \"night\").");
+        Report("Day / Night + building lights", log,
+            "Press Play, press N for Evening / Night. Move or delete any lamp / glow under PlantVisuals/Building Lights; " +
+            "colours and brightness are on Day Night Controller. React: SetTimeOfDay_Extern(\"day\" | \"evening\" | \"night\").");
     }
 
-    // ================================================================== 13. steam-cycle flow view
+    // ================================================================== placing lights
 
-    [MenuItem(MenuRoot + "13. Create Steam-Cycle Flow View (Main_Scene)", priority = 13)]
-    private static void CreateSteamCycleFlowView()
+    // Lamps at the 4 corners (and edge middles for areas), turned towards the middle of the building.
+    private static int PlaceCornerLamps(GameObject prefab, Scene scene, Transform parent, Bounds local, Matrix4x4 toWorld,
+        float margin, bool edgeMiddles)
     {
-        if (!EditorUtility.DisplayDialog("Steam-cycle flow view",
-                "In Main_Scene this creates glowing flow lines (visible through the buildings) and labels:\n\n" +
-                "  Boiler -> Turbine (steam, white)\n  Turbine -> Condenser / Cooling (exhaust steam)\n" +
-                "  Condenser -> Boiler (water, blue)\n  Turbine -> Power lines (electricity, yellow)\n\n" +
-                "F key toggles it. Old flow view is replaced, the scene is saved. Continue?", "Create", "Cancel"))
-            return;
-
-        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
-        Scene scene = OpenMainScene();
-        if (!scene.IsValid()) return;
-
-        var log = new StringBuilder();
-        Materials m = EnsureVisualAssets(log);
-        if (m == null) return;
-
-        GameObject root = EnsureVisualsRoot(scene, m);
-
-        GameObject boiler = FindByName(scene, "Boiler Room");
-        GameObject turbine = FindByName(scene, "Turbine Room");
-        GameObject cooling = FindByName(scene, "Cooling_Unit");
-        GameObject grid = FindByName(scene, "High Power Lines");
-
-        foreach (var (go, n) in new[] { (boiler, "Boiler Room"), (turbine, "Turbine Room"), (cooling, "Cooling_Unit"), (grid, "High Power Lines") })
-            log.AppendLine(go != null ? $"= found {n}" : $"! {n} not found - its flow / label is skipped");
-
-        Transform old = root.transform.Find("Steam Cycle Flows");
-        if (old != null) Object.DestroyImmediate(old.gameObject);
-        Transform oldAnchors = root.transform.Find("Flow Labels");
-        if (oldAnchors != null) Object.DestroyImmediate(oldAnchors.gameObject);
-
-        var flowsRoot = new GameObject("Steam Cycle Flows");
-        flowsRoot.transform.SetParent(root.transform, false);
-        var anchorsRoot = new GameObject("Flow Labels").transform;
-        anchorsRoot.SetParent(root.transform, false);
-
-        Texture2D steamTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Material/SplineFlow/Tex_SteamFlow.png");
-        Texture2D arrowTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Material/SplineFlow/Tex_ArrowFlow.png");
-        Texture2D electricTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Material/SplineFlow/Tex_ElectricFlow.png");
-
-        int flows = 0;
-        if (AddFlow(flowsRoot.transform, "1 Steam (Boiler -> Turbine)", boiler, turbine, 0f, steamTex, new Color(0.95f, 0.97f, 1f, 0.95f), 1.4f, 1.6f, 3f, m.flow)) flows++;
-        if (AddFlow(flowsRoot.transform, "2 Exhaust Steam (Turbine -> Condenser)", turbine, cooling, 0f, steamTex, new Color(0.65f, 0.85f, 1f, 0.9f), 1.1f, 1.3f, 3f, m.flow)) flows++;
-        if (AddFlow(flowsRoot.transform, "3 Water (Condenser -> Boiler)", cooling, boiler, 7f, arrowTex, new Color(0.15f, 0.55f, 1f, 1f), 1.0f, 2.5f, 6f, m.flow)) flows++;
-        if (AddFlow(flowsRoot.transform, "4 Power (Generator -> Grid)", turbine, grid, -6f, electricTex, new Color(1f, 0.85f, 0.2f, 1f), 0.9f, 4f, 5f, m.flow)) flows++;
-
-        var stations = new List<(string title, string subtitle, GameObject go, Color color)>
+        var spots = new List<Vector3>
         {
-            ("Boiler", "Fuel heats water into high-pressure steam", boiler, new Color(1f, 0.6f, 0.3f)),
-            ("Steam Turbine", "Steam spins the turbine and generator", turbine, Color.white),
-            ("Condenser / Cooling", "Used steam is cooled back into water", cooling, new Color(0.5f, 0.8f, 1f)),
-            ("Power Grid", "Electricity leaves the plant", grid, new Color(1f, 0.85f, 0.2f))
+            new Vector3(local.min.x - margin, local.min.y, local.min.z - margin), new Vector3(local.max.x + margin, local.min.y, local.min.z - margin),
+            new Vector3(local.min.x - margin, local.min.y, local.max.z + margin), new Vector3(local.max.x + margin, local.min.y, local.max.z + margin)
+        };
+        if (edgeMiddles)
+        {
+            spots.Add(new Vector3(local.center.x, local.min.y, local.min.z - margin));
+            spots.Add(new Vector3(local.center.x, local.min.y, local.max.z + margin));
+            spots.Add(new Vector3(local.min.x - margin, local.min.y, local.center.z));
+            spots.Add(new Vector3(local.max.x + margin, local.min.y, local.center.z));
+        }
+
+        Vector3 center = toWorld.MultiplyPoint3x4(local.center);
+        int count = 0;
+        foreach (Vector3 spot in spots)
+        {
+            Vector3 p = toWorld.MultiplyPoint3x4(spot);
+            p.y = GroundHeight(p, center, toWorld.MultiplyPoint3x4(local.min).y);
+
+            var lamp = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
+            lamp.transform.SetParent(parent, true);
+            Vector3 toCenter = center - p; toCenter.y = 0f;
+            lamp.transform.SetPositionAndRotation(p, toCenter.sqrMagnitude > 0.01f
+                ? Quaternion.FromToRotation(Vector3.right, toCenter.normalized) : Quaternion.identity);
+            lamp.name = $"Lamp {count + 1}";
+
+            Transform body = lamp.transform.Find("Body");
+            if (body != null) GameObjectUtility.SetStaticEditorFlags(body.gameObject, StaticEditorFlags.BatchingStatic);
+            count++;
+        }
+        return count;
+    }
+
+    // A warm glow on each of the 4 walls, from the ground up (like floodlights shining on the building).
+    private static int PlaceWallWashes(Transform parent, Mesh quad, Material wash, Bounds local, Matrix4x4 toWorld, Quaternion rotation)
+    {
+        float height = Mathf.Clamp(local.size.y * 0.75f, 3f, 14f);
+        float y = local.min.y + height * 0.5f;
+        const float offset = 0.25f;
+
+        var walls = new[]
+        {
+            (pos: new Vector3(local.center.x, y, local.max.z + offset), width: local.size.x, normal: Vector3.forward),
+            (pos: new Vector3(local.center.x, y, local.min.z - offset), width: local.size.x, normal: Vector3.back),
+            (pos: new Vector3(local.max.x + offset, y, local.center.z), width: local.size.z, normal: Vector3.right),
+            (pos: new Vector3(local.min.x - offset, y, local.center.z), width: local.size.z, normal: Vector3.left)
         };
 
-        var view = root.GetComponent<SteamCycleFlowView>();
-        if (view == null) view = root.AddComponent<SteamCycleFlowView>();
-        var so = new SerializedObject(view);
-        so.FindProperty("flowsRoot").objectReferenceValue = flowsRoot;
-        SerializedProperty list = so.FindProperty("stations");
-        list.arraySize = 0;
-        foreach (var s in stations)
+        int count = 0;
+        foreach (var wall in walls)
         {
-            if (s.go == null || !TryGetBounds(s.go, out Bounds b)) continue;
-
-            var anchor = new GameObject("Label " + s.title).transform;
-            anchor.SetParent(anchorsRoot, false);
-            anchor.position = new Vector3(b.center.x, b.max.y + 4f, b.center.z);
-
-            int i = list.arraySize;
-            list.arraySize++;
-            SerializedProperty item = list.GetArrayElementAtIndex(i);
-            item.FindPropertyRelative("title").stringValue = s.title;
-            item.FindPropertyRelative("subtitle").stringValue = s.subtitle;
-            item.FindPropertyRelative("anchor").objectReferenceValue = anchor;
-            item.FindPropertyRelative("color").colorValue = s.color;
+            Vector3 worldNormal = rotation * wall.normal;
+            CreateGlowQuad(parent, $"Wall Glow {count + 1}", quad, wash, toWorld.MultiplyPoint3x4(wall.pos),
+                Quaternion.LookRotation(-worldNormal, Vector3.up), new Vector3(wall.width * 0.95f, height, 1f));
+            count++;
         }
-        so.ApplyModifiedPropertiesWithoutUndo();
-
-        log.AppendLine($"+ {flows} flow lines under PlantVisuals/Steam Cycle Flows, {list.arraySize} labels");
-
-        EditorSceneManager.MarkSceneDirty(scene);
-        EditorSceneManager.SaveScene(scene);
-        Report("Steam-cycle flow view", log,
-            "Press Play and press F. Adjust a line by moving its Start / Bend / End children (the lines are visible in the " +
-            "Scene view while PlantVisuals/Steam Cycle Flows is active). React: SetFlowView_Extern(\"true\" | \"false\").");
+        return count;
     }
 
-    // ================================================================== helpers
+    // Glow around the bottom of the chimney (6 panels round it) + a light pool on the ground.
+    private static int PlaceChimneyUplights(Transform parent, Mesh quad, Material wash, Material pool, Bounds local, Matrix4x4 toWorld)
+    {
+        float radius = Mathf.Min(local.extents.x, local.extents.z);
+        float height = Mathf.Clamp(local.size.y * 0.18f, 4f, 18f);
+        Vector3 baseCenter = toWorld.MultiplyPoint3x4(new Vector3(local.center.x, local.min.y, local.center.z));
+        const int panels = 6;
+        float panelWidth = 2f * Mathf.PI * radius / panels * 1.05f;
+
+        for (int i = 0; i < panels; i++)
+        {
+            float angle = i * Mathf.PI * 2f / panels;
+            var outward = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+            Vector3 pos = baseCenter + outward * (radius + 0.3f) + Vector3.up * (height * 0.5f);
+            CreateGlowQuad(parent, $"Chimney Glow {i + 1}", quad, wash, pos, Quaternion.LookRotation(-outward, Vector3.up),
+                new Vector3(panelWidth, height, 1f));
+        }
+
+        float poolSize = radius * 2f + 10f;
+        CreateGlowQuad(parent, "Base Light Pool", quad, pool, baseCenter + Vector3.up * 0.08f, Quaternion.Euler(90f, 0f, 0f),
+            new Vector3(poolSize, poolSize, 1f));
+        return panels + 1;
+    }
+
+    private static void CreateGlowQuad(Transform parent, string name, Mesh quad, Material material, Vector3 position, Quaternion rotation, Vector3 scale)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.SetPositionAndRotation(position, rotation);
+        go.transform.localScale = scale;
+        go.AddComponent<MeshFilter>().sharedMesh = quad;
+        var r = go.AddComponent<MeshRenderer>();
+        r.sharedMaterial = material;
+        r.shadowCastingMode = ShadowCastingMode.Off;
+        r.receiveShadows = false;
+        r.lightProbeUsage = LightProbeUsage.Off;
+        r.reflectionProbeUsage = ReflectionProbeUsage.Off;
+    }
+
+    // ================================================================== cleanup
+
+    private static void RemoveOldVisuals(GameObject root, StringBuilder log)
+    {
+        foreach (string child in new[] { LightsRootName, "Street Lamps", "Steam Cycle Flows", "Flow Labels" })
+        {
+            Transform t = root.transform.Find(child);
+            if (t == null) continue;
+            Object.DestroyImmediate(t.gameObject);
+            if (child != LightsRootName) log.AppendLine($"- removed old '{child}'");
+        }
+
+        // The flow view script was deleted: its component is now a missing script on PlantVisuals.
+        int missing = GameObjectUtility.RemoveMonoBehavioursWithMissingScript(root);
+        if (missing > 0) log.AppendLine($"- removed {missing} missing script(s) from PlantVisuals (old flow view)");
+
+        if (AssetDatabase.LoadAssetAtPath<Material>($"{VisualsFolder}/FlowOnTop.mat") != null)
+        {
+            AssetDatabase.DeleteAsset($"{VisualsFolder}/FlowOnTop.mat");
+            log.AppendLine($"- removed {VisualsFolder}/FlowOnTop.mat");
+        }
+    }
+
+    // ================================================================== assets
 
     private class Materials
     {
-        public Material tint, bulb, pool, pole, flow;
+        public Material tint, bulb, pool, pole, wash;
     }
 
     private static Scene OpenMainScene()
@@ -233,7 +286,19 @@ public static partial class ThermalPlantTools
         if (!AssetDatabase.IsValidFolder("Assets/Settings")) AssetDatabase.CreateFolder("Assets", "Settings");
         if (!AssetDatabase.IsValidFolder(VisualsFolder)) AssetDatabase.CreateFolder("Assets/Settings", "PlantVisuals");
 
-        Texture2D poolTexture = EnsurePoolTexture(log);
+        Texture2D poolTexture = EnsureGlowTexture("LightPool.png", log, (u, v) =>
+        {
+            float dx = u * 2f - 1f, dy = v * 2f - 1f;
+            return Mathf.Pow(1f - Mathf.Clamp01(Mathf.Sqrt(dx * dx + dy * dy)), 2.2f);
+        });
+
+        // Bright at the bottom, fading up; soft at the left / right edges.
+        Texture2D washTexture = EnsureGlowTexture("WallWash.png", log, (u, v) =>
+        {
+            float vertical = Mathf.Pow(1f - v, 1.6f);
+            float edges = Mathf.SmoothStep(0f, 1f, Mathf.Min(u, 1f - u) * 6f);
+            return vertical * edges;
+        });
 
         var m = new Materials
         {
@@ -250,11 +315,11 @@ public static partial class ThermalPlantTools
                 mat.SetFloat("_ZTest", (float)CompareFunction.LessEqual);
                 mat.renderQueue = (int)RenderQueue.Transparent + 600;
             }),
-            flow = EnsureMaterial("FlowOnTop", glow, log, mat =>
+            wash = EnsureMaterial("WallWash", glow, log, mat =>
             {
-                mat.SetFloat("_ZTest", (float)CompareFunction.Always); // visible through buildings
-                mat.SetFloat("_Intensity", 1.3f);
-                mat.renderQueue = (int)RenderQueue.Transparent + 700;
+                mat.SetTexture("_MainTex", washTexture);
+                mat.SetFloat("_ZTest", (float)CompareFunction.LessEqual);
+                mat.renderQueue = (int)RenderQueue.Transparent + 600;
             }),
             pole = EnsureMaterial("LampPole", Shader.Find("Universal Render Pipeline/Lit"), log, mat =>
             {
@@ -264,7 +329,7 @@ public static partial class ThermalPlantTools
             })
         };
 
-        foreach (Material mat in new[] { m.bulb, m.pool, m.pole }) if (mat != null) mat.enableInstancing = true;
+        foreach (Material mat in new[] { m.bulb, m.pool, m.pole, m.wash }) if (mat != null) mat.enableInstancing = true;
         AssetDatabase.SaveAssets();
         return m;
     }
@@ -282,10 +347,10 @@ public static partial class ThermalPlantTools
         return mat;
     }
 
-    // Soft round light spot for the ground under each lamp.
-    private static Texture2D EnsurePoolTexture(StringBuilder log)
+    // White texture whose alpha comes from the function (u, v in 0..1).
+    private static Texture2D EnsureGlowTexture(string fileName, StringBuilder log, System.Func<float, float, float> alpha)
     {
-        string path = $"{VisualsFolder}/LightPool.png";
+        string path = $"{VisualsFolder}/{fileName}";
         var existing = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         if (existing != null) return existing;
 
@@ -293,12 +358,7 @@ public static partial class ThermalPlantTools
         var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
         for (int y = 0; y < size; y++)
         for (int x = 0; x < size; x++)
-        {
-            float dx = (x + 0.5f) / size * 2f - 1f, dy = (y + 0.5f) / size * 2f - 1f;
-            float d = Mathf.Clamp01(Mathf.Sqrt(dx * dx + dy * dy));
-            float a = Mathf.Pow(1f - d, 2.2f);
-            tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
-        }
+            tex.SetPixel(x, y, new Color(1f, 1f, 1f, Mathf.Clamp01(alpha((x + 0.5f) / size, (y + 0.5f) / size))));
         File.WriteAllBytes(path, tex.EncodeToPNG());
         Object.DestroyImmediate(tex);
         AssetDatabase.ImportAsset(path);
@@ -393,102 +453,56 @@ public static partial class ThermalPlantTools
         return root;
     }
 
-    private static IEnumerable<GameObject> LampBuildings(Scene scene)
-    {
-        GameObject parent = FindByName(scene, "MainScene_Parent");
-        if (parent == null) yield break;
+    // ================================================================== scene helpers
 
-        foreach (Transform child in parent.transform)
-        {
-            if (!child.gameObject.activeInHierarchy) continue;
-            if (System.Array.IndexOf(LampSkipNames, child.name) >= 0) continue;
-            yield return child.gameObject;
-        }
-    }
-
-    private static GameObject FindByName(Scene scene, string name)
+    private static GameObject FindFirstActive(Scene scene, string[] names)
     {
-        foreach (GameObject root in scene.GetRootGameObjects())
-        {
-            if (root.name == name) return root;
-            foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
-                if (t.name == name) return t.gameObject;
-        }
+        foreach (string name in names)
+            foreach (GameObject root in scene.GetRootGameObjects())
+                foreach (Transform t in root.GetComponentsInChildren<Transform>(false))
+                    if (t.name == name) return t.gameObject;
         return null;
     }
 
-    private static bool TryGetBounds(GameObject go, out Bounds bounds)
+    /// <summary>
+    /// Bounds of the object in its own (rotated) space, so lamps and wall glows follow buildings that are
+    /// turned at an angle. toWorld converts those local points to world space (rotation + position, no scale).
+    /// </summary>
+    private static bool TryGetOrientedBounds(GameObject go, out Bounds local, out Matrix4x4 toWorld, out Quaternion rotation)
     {
-        bounds = default;
+        rotation = Quaternion.Euler(0f, go.transform.eulerAngles.y, 0f); // upright, only the turn around Y
+        toWorld = Matrix4x4.TRS(go.transform.position, rotation, Vector3.one);
+        Matrix4x4 toLocal = toWorld.inverse;
+
+        local = default;
         bool any = false;
-        foreach (Renderer r in go.GetComponentsInChildren<Renderer>())
+        foreach (MeshRenderer r in go.GetComponentsInChildren<MeshRenderer>())
         {
-            if (!r.enabled || r is ParticleSystemRenderer || r is LineRenderer) continue;
-            if (!any) { bounds = r.bounds; any = true; }
-            else bounds.Encapsulate(r.bounds);
+            if (!r.enabled) continue;
+            MeshFilter filter = r.GetComponent<MeshFilter>();
+            if (filter == null || filter.sharedMesh == null) continue;
+
+            Bounds mb = filter.sharedMesh.bounds;
+            Matrix4x4 meshToLocal = toLocal * r.localToWorldMatrix;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 corner = mb.center + Vector3.Scale(mb.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                Vector3 p = meshToLocal.MultiplyPoint3x4(corner);
+                if (!any) { local = new Bounds(p, Vector3.zero); any = true; }
+                else local.Encapsulate(p);
+            }
         }
         return any;
     }
 
-    private static float GroundHeight(Vector3 p, Bounds building)
+    private static float GroundHeight(Vector3 p, Vector3 buildingCenter, float buildingBottom)
     {
         Physics.SyncTransforms();
-        var origin = new Vector3(p.x, building.max.y + 30f, p.z);
-        RaycastHit[] hits = Physics.RaycastAll(origin, Vector3.down, building.size.y + 80f, ~0, QueryTriggerInteraction.Ignore);
+        var origin = new Vector3(p.x, buildingBottom + 60f, p.z);
+        RaycastHit[] hits = Physics.RaycastAll(origin, Vector3.down, 140f, ~0, QueryTriggerInteraction.Ignore);
         float best = float.NegativeInfinity;
         foreach (RaycastHit hit in hits)
-            if (hit.point.y <= building.min.y + 1.5f && hit.point.y > best) best = hit.point.y; // ground, not a roof
-        return float.IsNegativeInfinity(best) ? building.min.y : best;
-    }
-
-    private static bool AddFlow(Transform parent, string name, GameObject from, GameObject to, float sideOffset,
-        Texture2D texture, Color color, float size, float speed, float density, Material material)
-    {
-        if (from == null || to == null || !TryGetBounds(from, out Bounds a) || !TryGetBounds(to, out Bounds b)) return false;
-
-        Vector3 start = new Vector3(a.center.x, a.max.y + 1.5f, a.center.z);
-        Vector3 end = new Vector3(b.center.x, b.max.y + 1.5f, b.center.z);
-        float arc = Mathf.Max(start.y, end.y) + 6f;
-
-        Vector3 flat = end - start; flat.y = 0f;
-        Vector3 side = flat.sqrMagnitude > 0.01f ? Vector3.Cross(Vector3.up, flat.normalized) * sideOffset : Vector3.zero;
-
-        var go = new GameObject(name);
-        go.SetActive(false);
-        go.transform.SetParent(parent, false);
-
-        var positions = new[]
-        {
-            start + side * 0.5f,
-            Vector3.Lerp(start, end, 0.25f) + side + Vector3.up * (arc - Mathf.Lerp(start.y, end.y, 0.25f)),
-            Vector3.Lerp(start, end, 0.75f) + side + Vector3.up * (arc - Mathf.Lerp(start.y, end.y, 0.75f)),
-            end + side * 0.5f
-        };
-        string[] names = { "Start (0)", "Bend (1)", "Bend (2)", "End (3)" };
-
-        var pointTransforms = new List<Transform>();
-        for (int i = 0; i < positions.Length; i++)
-        {
-            var point = new GameObject(names[i]).transform;
-            point.SetParent(go.transform, false);
-            point.position = positions[i];
-            pointTransforms.Add(point);
-        }
-
-        var flow = go.AddComponent<SplineParticleFlow>();
-        var so = new SerializedObject(flow);
-        so.FindProperty("flowTexture").objectReferenceValue = texture;
-        so.FindProperty("color").colorValue = color;
-        so.FindProperty("size").floatValue = size;
-        so.FindProperty("speed").floatValue = speed;
-        so.FindProperty("density").floatValue = density;
-        so.FindProperty("materialTemplate").objectReferenceValue = material;
-        SerializedProperty points = so.FindProperty("points");
-        points.arraySize = pointTransforms.Count;
-        for (int i = 0; i < pointTransforms.Count; i++) points.GetArrayElementAtIndex(i).objectReferenceValue = pointTransforms[i];
-        so.ApplyModifiedPropertiesWithoutUndo();
-
-        go.SetActive(true);
-        return true;
+            if (hit.point.y <= buildingBottom + 1.5f && hit.point.y > best) best = hit.point.y; // ground, not a roof
+        return float.IsNegativeInfinity(best) ? buildingBottom : best;
     }
 }

@@ -106,9 +106,6 @@ mergeInto(LibraryManager.library, {
   handleTimeOfDayChanged: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleTimeOfDayChanged", UTF8ToString(data));
   },
-  handleFlowViewChanged: function (data) {
-    if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleFlowViewChanged", UTF8ToString(data));
-  },
   handleControlRoomInfoEntered: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleControlRoomInfoEntered", UTF8ToString(data));
   },

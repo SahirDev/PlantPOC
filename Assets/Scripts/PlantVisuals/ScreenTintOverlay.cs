@@ -7,8 +7,8 @@ using UnityEngine.Rendering;
 /// (overview or worker), using the PlantPOC/ScreenMultiply shader. This is how night works even though
 /// Main_Scene's daylight is baked into lightmaps: no second lightmap set, no post-processing.
 ///
-/// Several features can tint at the same time through named channels, e.g. "time" (DayNightController)
-/// and "flow" (SteamCycleFlowView); the final tint is their product. All white = the quad is switched off
+/// Several features can tint at the same time through named channels (e.g. "time" from DayNightController);
+/// the final tint is their product. All white = the quad is switched off
 /// (zero cost in daylight).
 /// </summary>
 public class ScreenTintOverlay : MonoBehaviour
