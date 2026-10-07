@@ -22,6 +22,9 @@ public class SplineParticleFlow : MonoBehaviour
     [SerializeField] private Color color = new Color(0.2f, 0.95f, 1f, 1f);
     [Tooltip("Size / Thickness of the line")]
     [SerializeField, Min(0.01f)] private float size = 0.35f;
+    [Tooltip("Optional: material to copy instead of the default URP Unlit additive one " +
+             "(e.g. PlantPOC/AdditiveGlow with ZTest Always to draw through buildings). Empty = unchanged behaviour.")]
+    [SerializeField] private Material materialTemplate;
 
     [Header("Motion & Density")]
     [Tooltip("Speed at which the texture moves from start to end")]
@@ -97,6 +100,11 @@ public class SplineParticleFlow : MonoBehaviour
 
     private void EnsureMaterial()
     {
+        if (runtimeMaterial == null && materialTemplate != null)
+        {
+            runtimeMaterial = new Material(materialTemplate) { name = "SplineFlow_RuntimeMat (" + materialTemplate.name + ")" };
+        }
+
         if (runtimeMaterial == null)
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Unlit");

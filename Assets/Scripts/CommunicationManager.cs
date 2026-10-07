@@ -94,6 +94,8 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     [DllImport("__Internal")] private static extern void handleElectricalValues(string data);
     [DllImport("__Internal")] private static extern void handleElectricalPanelClosed();
     [DllImport("__Internal")] private static extern void handleControlRoomInfoEntered(string data);
+    [DllImport("__Internal")] private static extern void handleTimeOfDayChanged(string data);
+    [DllImport("__Internal")] private static extern void handleFlowViewChanged(string data);
     [DllImport("__Internal")] private static extern void handleControlRoomInfoExited(string data);
 
     // KeyboardFocus.jslib
@@ -559,6 +561,37 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
 
     #endregion
 
+    #region React -> Unity : Main_Scene visuals
+
+    /// <summary>"day" | "evening" | "night". Main_Scene only. Answer: handleTimeOfDayChanged.</summary>
+    public void SetTimeOfDay_Extern(string value)
+    {
+        LogIncoming(nameof(SetTimeOfDay_Extern), value);
+        if (DayNightController.Instance == null)
+        {
+            HandleError_Extern(nameof(SetTimeOfDay_Extern), "Day / night is only available in Main_Scene.");
+            return;
+        }
+
+        if (!DayNightController.Instance.SetTime(value))
+            HandleError_Extern(nameof(SetTimeOfDay_Extern), $"Unknown time '{value}'. Use \"day\", \"evening\" or \"night\".");
+    }
+
+    /// <summary>"true" / "false": steam-cycle flow view on / off. Main_Scene only. Answer: handleFlowViewChanged.</summary>
+    public void SetFlowView_Extern(string visible)
+    {
+        LogIncoming(nameof(SetFlowView_Extern), visible);
+        if (SteamCycleFlowView.Instance == null)
+        {
+            HandleError_Extern(nameof(SetFlowView_Extern), "The flow view is only available in Main_Scene.");
+            return;
+        }
+
+        SteamCycleFlowView.Instance.SetVisible(ParseBool(visible));
+    }
+
+    #endregion
+
     #region React -> Unity : Control room
 
     /// <summary>Control room slider "0".."100". Works anywhere in the control room; from 80 (Warning Threshold
@@ -755,6 +788,25 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     #endregion
 
     #region Unity -> React : Equipment
+
+    /// <summary>Time of day changed (React button, N key or start). → React: <c>handleTimeOfDayChanged</c> "day" | "evening" | "night"</summary>
+    public static void HandleTimeOfDayChanged_Extern(string value)
+    {
+        Log(nameof(handleTimeOfDayChanged), value);
+#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
+        handleTimeOfDayChanged(value);
+#endif
+    }
+
+    /// <summary>Flow view switched on / off. → React: <c>handleFlowViewChanged</c> "true" | "false"</summary>
+    public static void HandleFlowViewChanged_Extern(bool visible)
+    {
+        string value = visible ? "true" : "false";
+        Log(nameof(handleFlowViewChanged), value);
+#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
+        handleFlowViewChanged(value);
+#endif
+    }
 
     /// <summary>Worker walked into control room info point 1/2/3: show that info panel. → React: <c>handleControlRoomInfoEntered</c> { index, name, title }</summary>
     public static void HandleControlRoomInfoEntered_Extern(ControlRoomInfoPayload data)

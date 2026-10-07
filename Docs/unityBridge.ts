@@ -62,6 +62,8 @@ export interface UnityEvents {
   handleOverviewObjectDeselected: void;
   handleEquipmentInRange: EquipmentInfo;
   handleEquipmentOutOfRange: EquipmentInfo;
+  handleTimeOfDayChanged: string; // "day" | "evening" | "night"
+  handleFlowViewChanged: string;  // "true" | "false"
   handleTurbineInRange: TurbineData;
   handleTurbineOutOfRange: TurbineData;
   handleBoilerInRange: EquipmentInfo;
@@ -105,6 +107,8 @@ export interface UnityFunctions {
   ToggleExplodeAll_Extern: void;
   ToggleOperation_Extern: void;
   StartBoilerInfo_Extern: void;
+  SetTimeOfDay_Extern: string;
+  SetFlowView_Extern: string;
   TurbineExplodeAll_Extern: void;
   TurbineCollapseAll_Extern: void;
   TurbineStartOperation_Extern: void;

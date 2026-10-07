@@ -103,6 +103,12 @@ mergeInto(LibraryManager.library, {
   handleElectricalValues: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleElectricalValues", UTF8ToString(data));
   },
+  handleTimeOfDayChanged: function (data) {
+    if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleTimeOfDayChanged", UTF8ToString(data));
+  },
+  handleFlowViewChanged: function (data) {
+    if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleFlowViewChanged", UTF8ToString(data));
+  },
   handleControlRoomInfoEntered: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleControlRoomInfoEntered", UTF8ToString(data));
   },
