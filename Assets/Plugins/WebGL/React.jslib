@@ -109,6 +109,9 @@ mergeInto(LibraryManager.library, {
   handleSmokeLevelChanged: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleSmokeLevelChanged", UTF8ToString(data));
   },
+  handleTourChanged: function (data) {
+    if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleTourChanged", UTF8ToString(data));
+  },
   handleTimeOfDayChanged: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleTimeOfDayChanged", UTF8ToString(data));
   },

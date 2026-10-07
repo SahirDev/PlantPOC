@@ -64,6 +64,12 @@ Walking up to equipment sends `handleEquipmentInRange` + `handleEquipmentState`.
 |---|---|---|
 | `SetSmokeLevel_Extern` | `"0"`..`"1"` (default 0.2) | Chimney smoke colour: 0 none, 0.2 white, 0.4 dark gray, 0.6 black, 0.8 yellow-brown, 1 blue-gray. Answer: `handleSmokeLevelChanged` |
 | `GetSmokeLevel_Extern` | – | Answer: `handleSmokeLevelChanged` |
+| `SetSoundVolume_Extern` | `"0"`..`"1"` | Master volume of all sounds (boiler boiling, turbine hum, alarms). |
+| `StartControlRoomTour_Extern` | – | Control room: starts the 6-step voltage control + safety tour. Answer: `handleTourChanged` |
+| `TourNext_Extern` / `TourBack_Extern` | – | Next / previous step (Next only when the step is done; on the last screen it closes the tour). |
+| `StopControlRoomTour_Extern` | – | Ends the tour. |
+| `GetTourState_Extern` | – | Answer: `handleTourChanged` |
+| `SetTourUnityUI_Extern` | `"true"` / `"false"` | `false`: Unity hides its START GUIDED TOUR button and step panel (React draws the tour). |
 | `SetTimeOfDay_Extern` | `"day"` / `"evening"` / `"night"` | Answer: `handleTimeOfDayChanged`. Unity key: N |
 
 ### Turbine room (one function per button, acts on the turbine the worker is at)
@@ -137,6 +143,7 @@ Walking into info point 1, 2 or 3 sends `handleControlRoomInfoEntered` { index, 
 | `handleControlRoomInfoEntered` | JSON `{index,name,title}` | Worker in control room info point 1/2/3: show that info panel. |
 | `handleControlRoomInfoExited` | JSON `{index,name,title}` | Worker left the info point: hide it. |
 | `handlePartMaintenance` | JSON `MaintenanceInfo` | Maintenance sheet of the part clicked in the explosion view (Unity also shows it bottom-right). Fields: partName, partId, equipment, lastMaintenanceDate, maintenanceType, condition (Good / Warning / Critical), runningHours, nextMaintenanceDue, technician, issueFound, actionTaken, sparePartUsed, remarks, description. Sent again with the typed values when the user edits the sheet in Unity and presses DONE (Part Name, Part ID and Equipment are not editable; Description is hidden while editing. Edits are not stored; PRINT REPORT (always on the sheet) downloads the sheet without Description + a part picture as .xlsx in the browser). |
+| `handleTourChanged` | JSON `TourStatePayload` | Tour started / step changed / live progress / done / stopped: active, completed, step, total, title, instruction, status, stepDone, canNext, canBack, target. |
 | `handleSmokeLevelChanged` | JSON `{level,status,indication,color}` | Smoke level changed (also at Main_Scene start). status: none / normal / degrading / severe / nox_sox / contamination. |
 | `handleTimeOfDayChanged` | string | "day" / "evening" / "night" (also sent when Main_Scene starts). |
 | `handleTurbineInRange` | JSON `TurbineData` | Worker near turbine `id` 1-4: show its buttons. |

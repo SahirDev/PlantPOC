@@ -69,6 +69,10 @@ export interface UnityEvents {
     actionTaken: string; sparePartUsed: string; remarks: string; description: string;
   };
   handleSmokeLevelChanged: { level: number; status: string; indication: string; color: string };
+  handleTourChanged: {
+    active: boolean; completed: boolean; step: number; total: number; title: string; instruction: string;
+    status: string; stepDone: boolean; canNext: boolean; canBack: boolean; target: string;
+  };
   handleTurbineInRange: TurbineData;
   handleTurbineOutOfRange: TurbineData;
   handleBoilerInRange: EquipmentInfo;
@@ -115,6 +119,13 @@ export interface UnityFunctions {
   SetTimeOfDay_Extern: string;
   SetSmokeLevel_Extern: string;
   GetSmokeLevel_Extern: void;
+  SetSoundVolume_Extern: string;
+  StartControlRoomTour_Extern: void;
+  TourNext_Extern: void;
+  TourBack_Extern: void;
+  StopControlRoomTour_Extern: void;
+  GetTourState_Extern: void;
+  SetTourUnityUI_Extern: string;
   TurbineExplodeAll_Extern: void;
   TurbineCollapseAll_Extern: void;
   TurbineStartOperation_Extern: void;

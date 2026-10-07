@@ -97,6 +97,7 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     [DllImport("__Internal")] private static extern void handleControlRoomInfoEntered(string data);
     [DllImport("__Internal")] private static extern void handleTimeOfDayChanged(string data);
     [DllImport("__Internal")] private static extern void handleSmokeLevelChanged(string data);
+    [DllImport("__Internal")] private static extern void handleTourChanged(string data);
     [DllImport("__Internal")] private static extern void handleControlRoomInfoExited(string data);
 
     // KeyboardFocus.jslib
@@ -605,6 +606,65 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         HandleSmokeLevelChanged_Extern(SmokeColorController.Instance.BuildStatus());
     }
 
+    /// <summary>Master volume of all sounds (boiling water, turbines, alarms): "0".."1" (or "0".."100").</summary>
+    public void SetSoundVolume_Extern(string value)
+    {
+        LogIncoming(nameof(SetSoundVolume_Extern), value);
+        if (TryParseFloat(value, out float volume, nameof(SetSoundVolume_Extern))) PlantSounds.SetMasterVolume(volume);
+    }
+
+    #endregion
+
+    #region React -> Unity : Control room guided tour
+
+    /// <summary>Starts the voltage-control + safety tour (Control_Room). Answer: handleTourChanged.</summary>
+    public void StartControlRoomTour_Extern()
+    {
+        LogIncoming(nameof(StartControlRoomTour_Extern), null);
+        if (TourAvailable(nameof(StartControlRoomTour_Extern))) ControlRoomTour.Instance.StartTour();
+    }
+
+    /// <summary>Next step (only when the current one is done; on the last screen: closes the tour).</summary>
+    public void TourNext_Extern()
+    {
+        LogIncoming(nameof(TourNext_Extern), null);
+        if (TourAvailable(nameof(TourNext_Extern))) ControlRoomTour.Instance.Next();
+    }
+
+    public void TourBack_Extern()
+    {
+        LogIncoming(nameof(TourBack_Extern), null);
+        if (TourAvailable(nameof(TourBack_Extern))) ControlRoomTour.Instance.Back();
+    }
+
+    public void StopControlRoomTour_Extern()
+    {
+        LogIncoming(nameof(StopControlRoomTour_Extern), null);
+        if (TourAvailable(nameof(StopControlRoomTour_Extern))) ControlRoomTour.Instance.StopTour();
+    }
+
+    /// <summary>Answer: handleTourChanged with the current state.</summary>
+    public void GetTourState_Extern()
+    {
+        LogIncoming(nameof(GetTourState_Extern), null);
+        if (TourAvailable(nameof(GetTourState_Extern))) HandleTourChanged_Extern(ControlRoomTour.Instance.BuildState());
+    }
+
+    /// <summary>"true" (default): Unity shows the start button + step panel. "false": React draws the tour.</summary>
+    public void SetTourUnityUI_Extern(string value)
+    {
+        LogIncoming(nameof(SetTourUnityUI_Extern), value);
+        if (TourAvailable(nameof(SetTourUnityUI_Extern)))
+            ControlRoomTour.Instance.SetUnityUI(!string.Equals(value, "false", System.StringComparison.OrdinalIgnoreCase) && value != "0");
+    }
+
+    private static bool TourAvailable(string command)
+    {
+        if (ControlRoomTour.Instance != null) return true;
+        HandleError_Extern(command, "The guided tour is only available in the control room.");
+        return false;
+    }
+
     #endregion
 
     #region React -> Unity : Control room
@@ -812,6 +872,16 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         Log(nameof(handleSmokeLevelChanged), json);
 #if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
         handleSmokeLevelChanged(json);
+#endif
+    }
+
+    /// <summary>Control room tour changed (start, step, live progress, done, stop). → React: <c>handleTourChanged</c></summary>
+    public static void HandleTourChanged_Extern(TourStatePayload data)
+    {
+        string json = ToJson(data);
+        Log(nameof(handleTourChanged), json);
+#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
+        handleTourChanged(json);
 #endif
     }
 

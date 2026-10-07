@@ -132,6 +132,23 @@ public class SmokeStatusPayload
     public string color;       // current smoke colour, e.g. "#DBDBDB"
 }
 
+/// <summary>Control room guided tour state (handleTourChanged).</summary>
+[Serializable]
+public class TourStatePayload
+{
+    public bool active;        // tour running
+    public bool completed;     // last step done (Finish shown)
+    public int step;           // 1..total (0 = not running)
+    public int total;
+    public string title;
+    public string instruction; // what to do (may contain line breaks)
+    public string status;      // live progress, e.g. "Voltage 52 %" / "Distance: 3.4 m"
+    public bool stepDone;      // the action of this step is done
+    public bool canNext;
+    public bool canBack;
+    public string target;      // object marked in the room ("" = none)
+}
+
 /// <summary>Control room info point the worker walked into / out of.</summary>
 [Serializable]
 public class ControlRoomInfoPayload

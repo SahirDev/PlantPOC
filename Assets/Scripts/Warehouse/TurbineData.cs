@@ -46,6 +46,8 @@ public class TurbineData : MonoBehaviour
     private bool workerInRange;
     private bool operating;
 
+    public bool IsOperating => operating;
+
     private void Awake()
     {
         cachedSpinObject = GetComponentInChildren<SpinObjects>();
