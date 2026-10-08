@@ -84,24 +84,49 @@ public class ControlRoomTour : MonoBehaviour
     {
         if (!scene.isLoaded || (Instance != null && Instance.gameObject.scene == scene)) return;
 
-        ElectricalPanelInfo found = null;
-        Transform helmetFound = null;
+        // Control_Room has three electrical panels, each with its trigger box (floor pad) in front:
+        // "1st / 2nd / 3rd info position" (ElectricalPanelInfo). Their parent "Info Pointing Position" is switched
+        // off in the scene, so no panel received the voltage: it is switched on here.
+        var panels = new System.Collections.Generic.List<ElectricalPanelInfo>();
+        Transform panelSpot = null, helmetFound = null;
         foreach (GameObject root in scene.GetRootGameObjects())
         {
-            if (found == null) found = root.GetComponentInChildren<ElectricalPanelInfo>(true);
-            if (helmetFound == null)
-                foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
-                    if (t.name.IndexOf("helmet", StringComparison.OrdinalIgnoreCase) >= 0 &&
-                        t.GetComponentInParent<CharacterController>(true) == null) // not the worker's own helmet
-                    { helmetFound = t; break; }
+            panels.AddRange(root.GetComponentsInChildren<ElectricalPanelInfo>(true));
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+            {
+                string n = t.name.ToLowerInvariant();
+                if (panelSpot == null && n.Contains("panel") && n.Contains("trigger") && t.gameObject.activeInHierarchy) panelSpot = t;
+                if (helmetFound == null && n.Contains("helmet") && t.GetComponentInParent<CharacterController>(true) == null) helmetFound = t;
+            }
         }
-        if (found == null) return;
+        if (panels.Count == 0 && panelSpot == null) return; // not the control room
+
+        foreach (ElectricalPanelInfo p in panels)
+            for (Transform t = p.transform; t != null; t = t.parent)
+                if (!t.gameObject.activeSelf)
+                {
+                    Debug.Log($"[ControlRoomTour] Switching on '{t.name}' (electrical panel '{p.name}' was inactive).");
+                    t.gameObject.SetActive(true);
+                }
+
+        // 1st, 2nd, 3rd by the number in the name.
+        panels.Sort((x, y) => PanelNumber(x.name).CompareTo(PanelNumber(y.name)));
+        if (panels.Count == 0) panels.Add(panelSpot.gameObject.AddComponent<ElectricalPanelInfo>()); // no panel at all: make one
 
         var go = new GameObject("Control Room Tour");
         SceneManager.MoveGameObjectToScene(go, scene); // unloads with the control room
         var tour = go.AddComponent<ControlRoomTour>();
-        tour.panel = found;
+        tour.panel = panels[0];   // the tour walks to the 1st panel; the voltage drives all of them
         tour.helmet = helmetFound;
+
+        // Status lamps (green / amber / red alarm beacon + siren) on the wall at the 3rd panel.
+        ControlRoomStatusLamps.Create(panels[0], panels[panels.Count - 1].transform);
+    }
+
+    private static int PanelNumber(string name)
+    {
+        foreach (char c in name) if (char.IsDigit(c)) return c - '0';
+        return 99;
     }
 
     private void Awake()
@@ -127,15 +152,15 @@ public class ControlRoomTour : MonoBehaviour
                 "Follow the glowing arrows on the floor to the electrical panel (orange ring).\n" +
                 "The step completes when you are standing in front of it." },
             new Step { title = "Read the Panel Status", goal = Goal.Read, target = () => panel != null ? panel.transform : null, instruction =
-                "•  Green lamp ON  =  normal operation\n" +
-                "•  Red lamp  =  high voltage (75 % and above)\n" +
-                "•  Flashing warning light + alarm  =  over-voltage (80 % and above)\n" +
-                "Look at the lamps on the panel now: green = all normal." },
+                "Find the GENERATOR STATUS lamps on the wall:\n" +
+                "•  Green  NORMAL  =  normal operation\n" +
+                "•  Amber  HIGH  =  high voltage (75 % and above)\n" +
+                "•  Red flashing  ALARM + siren  =  over-voltage (80 % and above)" },
             new Step { title = "Raise the Voltage Gradually", goal = Goal.VoltageInRange, target = () => panel != null ? panel.transform : null, instruction =
                 $"Drag the VOLTAGE slider on this card to bring the generator to {normalRange.x:F0}–{normalRange.y:F0} %.\n" +
-                "Raise it slowly - watch the lamps: the red lamp comes on at 75 %." },
+                "Raise it slowly and watch the wall lamps: amber comes on at 75 %." },
             new Step { title = "Over-voltage Drill", goal = Goal.OverVoltageDrill, target = () => panel != null ? panel.transform : null, instruction =
-                "Push the slider above 80 %: the alarm sounds and the warning light flashes.\n" +
+                "Push the slider above 80 %: the red ALARM lamp flashes and the siren sounds.\n" +
                 "Then bring it back below 75 % straight away - that is the correct response to an over-voltage alarm." },
         };
 

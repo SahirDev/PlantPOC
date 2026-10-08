@@ -22,7 +22,7 @@ internal class TourVisuals
     private static readonly Color TextColor = new Color(0.86f, 0.89f, 0.95f, 1f);
     private static readonly Color Muted = new Color(0.55f, 0.6f, 0.72f, 1f);
 
-    private const float CardWidth = 720f, CardHeight = 470f, CardScale = 0.0015f; // 1.08 m x 0.7 m
+    private const float CardWidth = 720f, CardHeight = 470f, CardScale = 0.00125f; // 0.9 m x 0.59 m
 
     private readonly ControlRoomTour tour;
     private readonly Scene scene;
@@ -264,25 +264,18 @@ internal class TourVisuals
             if (!startAnchorValid) { startAnchor = tour.StartSignPosition(out _); startAnchorValid = worker != null; }
             anchor = startAnchor;
         }
-        else if (atTarget && target != null)
-        {
-            // Beside the object, on the worker's side, at eye height.
-            Vector3 from = worker != null ? worker.position : (cam != null ? cam.transform.position : targetBounds.center);
-            Vector3 side = Vector3.ProjectOnPlane(from - targetBounds.center, Vector3.up);
-            if (side.sqrMagnitude < 0.01f) side = Vector3.forward;
-            side.Normalize();
-            Vector3 right = Vector3.Cross(Vector3.up, side);
-            float reach = Mathf.Max(targetBounds.extents.x, targetBounds.extents.z);
-            anchor = targetBounds.center + side * Mathf.Min(reach + 0.35f, 2.5f) + right * 0.9f;
-            anchor.y = floor + 1.6f;
-        }
         else if (cam != null)
         {
-            // Floating ahead of the worker, a bit to the right (does not block the way).
+            // Always in view, never inside a wall or the panel: ahead of the camera, to the right (more to the
+            // right at the panel so the panel itself stays visible), pulled closer when something is in the way.
             Vector3 forward = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized;
+            if (forward.sqrMagnitude < 0.01f) forward = Vector3.ProjectOnPlane(cam.transform.up, Vector3.up).normalized;
             Vector3 right = Vector3.Cross(Vector3.up, forward);
-            anchor = cam.transform.position + forward * 2.3f + right * 0.75f;
-            anchor.y = Mathf.Max(floor + 1.2f, cam.transform.position.y - 0.15f);
+            float ahead = atTarget ? 1.7f : 2.1f, side = atTarget ? 0.95f : 0.7f;
+            Vector3 eye = cam.transform.position;
+            anchor = eye + forward * ahead + right * side;
+            anchor.y = Mathf.Max(floor + 1.1f, eye.y - 0.12f);
+            anchor = KeepClear(eye, anchor);
         }
         else return;
 
@@ -299,6 +292,20 @@ internal class TourVisuals
             if (look.sqrMagnitude > 0.0001f)
                 t.rotation = first ? Quaternion.LookRotation(look) : Quaternion.Slerp(t.rotation, Quaternion.LookRotation(look), Mathf.Clamp01(follow * 1.5f));
         }
+    }
+
+    // Moves the point towards the eye until nothing (wall, panel) is between them and around it.
+    private static Vector3 KeepClear(Vector3 eye, Vector3 point)
+    {
+        Vector3 dir = point - eye;
+        float distance = dir.magnitude;
+        if (distance < 0.01f) return point;
+        dir /= distance;
+        const float cardRadius = 0.45f; // half the card width + margin
+        int mask = ~((1 << 3) | (1 << 5)); // not the worker (Player) or UI
+        if (Physics.SphereCast(eye, 0.2f, dir, out RaycastHit hit, distance + cardRadius, mask, QueryTriggerInteraction.Ignore))
+            return eye + dir * Mathf.Max(0.7f, hit.distance - cardRadius);
+        return point;
     }
 
     private void UpdateRingAndMarker(Transform target, float floor)
