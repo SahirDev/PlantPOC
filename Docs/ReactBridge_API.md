@@ -25,7 +25,7 @@ The WebGL build contains only a tiny **Bootstrap** scene. Main_Scene and every r
 | `SetKeyboardCapture_Extern` | `"true"`/`"false"` | Default false, so React text fields get the keyboard |
 | `SetCursorLocked_Extern` | `"true"`/`"false"` | Unlock before showing a panel in worker mode. A lock may need one click on the canvas (browser rule). |
 | `SetWorkerTracking_Extern` | `"true"`, `"false"`, `"true/0.2"` | Streams `handleWorkerTransform` every 0.2 s (for a React minimap) |
-| `SetVolume_Extern` | `"0"`..`"1"` | Master volume |
+| `SetVolume_Extern` | `"0"`..`"1"` | Master volume of all sounds (boiler boiling, turbine hum, alarms) |
 | `SetMiniMapVisible_Extern` | `"true"`/`"false"` | Show/hide the Unity minimap (bottom-right). It also hides by itself in overview and explosion view. |
 
 ### Scenes
@@ -64,13 +64,13 @@ Walking up to equipment sends `handleEquipmentInRange` + `handleEquipmentState`.
 |---|---|---|
 | `SetSmokeLevel_Extern` | `"0"`..`"1"` (default 0.2) | Chimney smoke colour: 0 none, 0.2 white, 0.4 dark gray, 0.6 black, 0.8 yellow-brown, 1 blue-gray. Answer: `handleSmokeLevelChanged` |
 | `GetSmokeLevel_Extern` | – | Answer: `handleSmokeLevelChanged` |
-| `SetSoundVolume_Extern` | `"0"`..`"1"` | Master volume of all sounds (boiler boiling, turbine hum, alarms). |
 | `StartControlRoomTour_Extern` | – | Control room: starts the 6-step voltage control + safety tour. Answer: `handleTourChanged` |
 | `TourNext_Extern` / `TourBack_Extern` | – | Next / previous step (Next only when the step is done; on the last screen it closes the tour). |
 | `StopControlRoomTour_Extern` | – | Ends the tour. |
 | `GetTourState_Extern` | – | Answer: `handleTourChanged` |
 | `SetTourUnityUI_Extern` | `"true"` / `"false"` | `false`: Unity hides its START GUIDED TOUR button and step panel (React draws the tour). |
 | `SetTimeOfDay_Extern` | `"day"` / `"evening"` / `"night"` | Answer: `handleTimeOfDayChanged`. Unity key: N |
+| `GetTimeOfDay_Extern` | – | Main_Scene: answer `handleTimeOfDayChanged` with the current time (to set the toggle). |
 
 ### Turbine room (one function per button, acts on the turbine the worker is at)
 Near turbine 1-4 Unity sends `handleTurbineInRange` { id: "1".."4", name: "Turbine-1", operating, ... }; walking away sends `handleTurbineOutOfRange`.

@@ -257,11 +257,11 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         nextTrackTime = 0f;
     }
 
-    /// <summary>Master volume "0".."1".</summary>
+    /// <summary>Master volume of all sounds (boiler boiling, turbine hum, alarms): "0".."1" (or "0".."100").</summary>
     public void SetVolume_Extern(string volume)
     {
         LogIncoming(nameof(SetVolume_Extern), volume);
-        if (TryParseFloat(volume, out float value, nameof(SetVolume_Extern))) AudioListener.volume = Mathf.Clamp01(value);
+        if (TryParseFloat(volume, out float value, nameof(SetVolume_Extern))) PlantSounds.SetMasterVolume(value);
     }
 
     /// <summary>"true" / "false". Shows / hides the Unity minimap panel (it also hides by itself in
@@ -579,6 +579,20 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
             HandleError_Extern(nameof(SetTimeOfDay_Extern), $"Unknown time '{value}'. Use \"day\", \"evening\" or \"night\".");
     }
 
+    /// <summary>Answer: handleTimeOfDayChanged with the current time ("day" | "evening" | "night"), e.g. to set
+    /// the React toggle when Main_Scene opens. Main_Scene only.</summary>
+    public void GetTimeOfDay_Extern()
+    {
+        LogIncoming(nameof(GetTimeOfDay_Extern), null);
+        if (DayNightController.Instance == null)
+        {
+            HandleError_Extern(nameof(GetTimeOfDay_Extern), "Day / night is only available in Main_Scene.");
+            return;
+        }
+
+        HandleTimeOfDayChanged_Extern(DayNightController.Name(DayNightController.Instance.Current));
+    }
+
     /// <summary>Chimney smoke slider "0".."1" (default 0.2). 0 = no smoke, 0.2 white, 0.4 dark gray, 0.6 black,
     /// 0.8 yellow-brown, 1 blue-gray. Main_Scene only. Answer: handleSmokeLevelChanged.</summary>
     public void SetSmokeLevel_Extern(string value)
@@ -604,13 +618,6 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         }
 
         HandleSmokeLevelChanged_Extern(SmokeColorController.Instance.BuildStatus());
-    }
-
-    /// <summary>Master volume of all sounds (boiling water, turbines, alarms): "0".."1" (or "0".."100").</summary>
-    public void SetSoundVolume_Extern(string value)
-    {
-        LogIncoming(nameof(SetSoundVolume_Extern), value);
-        if (TryParseFloat(value, out float volume, nameof(SetSoundVolume_Extern))) PlantSounds.SetMasterVolume(volume);
     }
 
     #endregion

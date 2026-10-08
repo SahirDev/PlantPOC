@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 ///   BoilerRoom  -> BoilerSound on the boiler: water boiling, louder and faster with the burner power.
 ///   TurbineRoom -> TurbineSound on every turbine: 3D hum, louder as the worker gets closer (and when running).
 /// Clips: Assets/Resources/Audio/BoilerBoiling.wav and TurbineHum.wav (replace them to change the sound,
-/// or assign another clip on the component). Master volume: SetSoundVolume_Extern / PlantSounds.SetMasterVolume.
+/// or assign another clip on the component). Master volume: SetVolume_Extern / PlantSounds.SetMasterVolume.
 /// </summary>
 public static class PlantSounds
 {

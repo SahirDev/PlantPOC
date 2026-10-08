@@ -366,8 +366,8 @@ public class CharacterMovementController : MonoBehaviour
 
         float verticalInput = 0f;
 
-        if (inputReader.JumpHeld) verticalInput += 1f;
-        if (inputReader.CrouchHeld) verticalInput -= 1f;
+        if (inputReader.FlyUpHeld) verticalInput += 1f;   // Q or Space
+        if (inputReader.FlyDownHeld) verticalInput -= 1f; // E or Z
 
         Vector3 movement = forward * input.y + right * input.x + Vector3.up * verticalInput;
 

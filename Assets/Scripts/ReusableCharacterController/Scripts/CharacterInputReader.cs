@@ -30,6 +30,16 @@ public class CharacterInputReader : MonoBehaviour
     public bool JumpPressed => !ControlBlocked && jump != null && jump.WasPressedThisFrame();
     public bool CrouchHeld => !ControlBlocked && crouch != null && crouch.IsPressed();
 
+    // Fly mode: Q / Space = up, E / Z = down.
+    public bool FlyUpHeld => !ControlBlocked && ((jump != null && jump.IsPressed()) || KeyHeld(Key.Q));
+    public bool FlyDownHeld => !ControlBlocked && ((crouch != null && crouch.IsPressed()) || KeyHeld(Key.E));
+
+    private static bool KeyHeld(Key key)
+    {
+        Keyboard keyboard = Keyboard.current;
+        return keyboard != null && keyboard[key].isPressed;
+    }
+
     public bool IsOrbiting => !ControlBlocked && orbitAction != null && orbitAction.action.IsPressed();
     public bool IsPanning => !ControlBlocked && panAction != null && panAction.action.IsPressed();
     public Vector2 ZoomInput => !ControlBlocked && zoomAction != null ? zoomAction.action.ReadValue<Vector2>() : Vector2.zero;

@@ -117,9 +117,9 @@ export interface UnityFunctions {
   ToggleOperation_Extern: void;
   StartBoilerInfo_Extern: void;
   SetTimeOfDay_Extern: string;
+  GetTimeOfDay_Extern: void;
   SetSmokeLevel_Extern: string;
   GetSmokeLevel_Extern: void;
-  SetSoundVolume_Extern: string;
   StartControlRoomTour_Extern: void;
   TourNext_Extern: void;
   TourBack_Extern: void;
