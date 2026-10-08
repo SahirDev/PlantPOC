@@ -163,6 +163,13 @@ public static partial class ThermalPlantTools
         }
 
         // ---- Plant Status panel + (i) button beside Day / Night
+        var oldStatus = so.FindProperty("statusPanel").objectReferenceValue as PlantStatusPanel;
+        if (oldStatus != null && oldStatus.transform.Find("Backdrop") != null) // first version (centred, blocking)
+        {
+            Object.DestroyImmediate(oldStatus.gameObject);
+            so.FindProperty("statusPanel").objectReferenceValue = null;
+            log.AppendLine("- old centred Plant Status panel removed (rebuilt 900 x 900 top-left)");
+        }
         if (so.FindProperty("statusPanel").objectReferenceValue == null)
         {
             so.FindProperty("statusPanel").objectReferenceValue = BuildPlantStatusPanel(root.transform);

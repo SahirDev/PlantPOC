@@ -6,7 +6,8 @@ using UnityEngine.UI;
 /// <summary>
 /// Tools > Thermal Plant > 18 (part): the "Thermal Power Plant Status Panel" (observation only) and the (i) button
 /// beside Day / Night that opens it. Tabs: Boiler Room (2), Turbine Room (4), Electrical Info Panel (3),
-/// Condenser (2), Chimney (smoke cases 0 / 0.2 / 0.4 / 0.6 / 0.8 / 1.0).
+/// Condenser (2), Chimney (smoke cases 0 / 0.2 / 0.4 / 0.6 / 0.8 / 1.0). 900 x 900 window at the top-left; no
+/// backdrop, so the plant stays visible and clickable next to it.
 /// </summary>
 public static partial class ThermalPlantTools
 {
@@ -36,31 +37,25 @@ public static partial class ThermalPlantTools
         Anchor(overlay, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         PlantStatusPanel panel = overlay.gameObject.AddComponent<PlantStatusPanel>();
 
-        // Dark backdrop: click outside the window closes it (and the world does not get the click).
-        RectTransform backdrop = NewUI("Backdrop", overlay);
-        Anchor(backdrop, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        Image backdropImage = backdrop.gameObject.AddComponent<Image>();
-        backdropImage.color = new Color(0f, 0f, 0f, 0.45f);
-        Button backdropButton = backdrop.gameObject.AddComponent<Button>();
-        backdropButton.transition = Selectable.Transition.None;
-        backdropButton.targetGraphic = backdropImage;
+        // No backdrop: the rest of the screen stays free - the plant can be viewed and clicked while it is open.
+        // The overlay itself has no graphic, so it never catches clicks.
+        Button backdropButton = null;
 
-        // Window: centred, full height (above the nav bar).
+        // Window: 900 x 900, top-left.
         RectTransform window = NewUI("Window", overlay);
-        window.anchorMin = new Vector2(0.5f, 0f);
-        window.anchorMax = new Vector2(0.5f, 1f);
-        window.pivot = new Vector2(0.5f, 0.5f);
-        window.offsetMin = new Vector2(-590f, 104f);
-        window.offsetMax = new Vector2(590f, -16f);
+        window.anchorMin = window.anchorMax = window.pivot = new Vector2(0f, 1f);
+        window.anchoredPosition = new Vector2(24f, -24f);
+        window.sizeDelta = new Vector2(900f, 900f);
         AddImage(window, new Color(styPanel.r, styPanel.g, styPanel.b, 0.98f), PuiSprite("rounded"));
         Outline outline = window.gameObject.AddComponent<Outline>();
         outline.effectColor = PuiBorder;
         outline.effectDistance = new Vector2(1f, -1f);
-        PuiVertical(window, 16, new RectOffset(24, 24, 22, 24));
+        PuiVertical(window, 14, new RectOffset(20, 20, 18, 20));
 
         // ---- header
         RectTransform header = NewUI("Header", window);
         PuiHorizontal(header, 16, new RectOffset(0, 0, 0, 0));
+        header.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.UpperLeft;
         RectTransform logo = NewUI("Logo", header);
         AddImage(logo, new Color(1f, 1f, 1f, 0.08f), PuiSprite("rounded")).raycastTarget = false;
         LayoutElement logoSize = logo.gameObject.AddComponent<LayoutElement>();
@@ -71,17 +66,17 @@ public static partial class ThermalPlantTools
         RectTransform titles = NewUI("Titles", header);
         PuiVertical(titles, 2, new RectOffset(0, 0, 0, 0));
         PuiFlexible(titles);
-        PuiText(titles, "Title", "Thermal Power Plant Status Panel", 28, true, Color.white, TextAlignmentOptions.Left);
-        PuiText(titles, "Subtitle", "Real-time monitoring of critical equipment and operating parameters.", 15, false, PuiMuted, TextAlignmentOptions.Left);
+        PuiText(titles, "Title", "Thermal Power Plant Status Panel", 24, true, Color.white, TextAlignmentOptions.Left);
+        PuiText(titles, "Subtitle", "Real-time monitoring of critical equipment and operating parameters.", 13, false, PuiMuted, TextAlignmentOptions.Left);
 
-        RectTransform online = NewUI("Online", header);
+        RectTransform online = NewUI("Online", titles);
         PuiHorizontal(online, 8, new RectOffset(0, 0, 0, 0));
         PuiIcon(online, "Dot", "dot", 10f, StGreen);
-        PuiText(online, "Text", "Plant Online", 15, false, styText, TextAlignmentOptions.Left);
-        PuiText(online, "Sep1", "|", 15, false, PuiMuted, TextAlignmentOptions.Left);
-        TextMeshProUGUI date = PuiText(online, "Date", "Wed, 16 Apr 2025", 15, false, styText, TextAlignmentOptions.Left);
-        PuiText(online, "Sep2", "|", 15, false, PuiMuted, TextAlignmentOptions.Left);
-        TextMeshProUGUI time = PuiText(online, "Time", "14:28:32", 15, true, styText, TextAlignmentOptions.Left);
+        PuiText(online, "Text", "Plant Online", 14, false, styText, TextAlignmentOptions.Left);
+        PuiText(online, "Sep1", "|", 14, false, PuiMuted, TextAlignmentOptions.Left);
+        TextMeshProUGUI date = PuiText(online, "Date", "Wed, 16 Apr 2025", 14, false, styText, TextAlignmentOptions.Left);
+        PuiText(online, "Sep2", "|", 14, false, PuiMuted, TextAlignmentOptions.Left);
+        TextMeshProUGUI time = PuiText(online, "Time", "14:28:32", 14, true, styText, TextAlignmentOptions.Left);
         Button close = PuiIconButton(header, "Close", "close", 36f, 16f, PuiButton, out _);
 
         // ---- tabs
@@ -92,9 +87,9 @@ public static partial class ThermalPlantTools
 
         (string label, string icon, string count)[] tabInfo =
         {
-            ("Boiler Room", "tp_boiler", "2"),
-            ("Turbine Room", "tp_turbine", "4"),
-            ("Electrical Info Panel", "tp_electrical", "3"),
+            ("Boiler", "tp_boiler", "2"),
+            ("Turbine", "tp_turbine", "4"),
+            ("Electrical", "tp_electrical", "3"),
             ("Condenser", "condenser", "2"),
             ("Chimney", "chimney", "1"),
         };
@@ -116,16 +111,16 @@ public static partial class ThermalPlantTools
             Image highlight = AddImage(tab, new Color(0.17f, 0.32f, 0.85f, 0f), PuiSprite("rounded"));
             Button button = tab.gameObject.AddComponent<Button>();
             button.targetGraphic = highlight;
-            PuiHorizontal(tab, 10, new RectOffset(14, 14, 10, 10));
+            PuiHorizontal(tab, 8, new RectOffset(10, 10, 8, 8));
             tab.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
             tab.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-            Image icon = PuiIcon(tab, "Icon", tabInfo[i].icon, 26f, styText);
-            TextMeshProUGUI label = PuiText(tab, "Label", tabInfo[i].label, 17, true, styText, TextAlignmentOptions.Left);
+            Image icon = PuiIcon(tab, "Icon", tabInfo[i].icon, 22f, styText);
+            TextMeshProUGUI label = PuiText(tab, "Label", tabInfo[i].label, 15, true, styText, TextAlignmentOptions.Left);
             RectTransform badge = NewUI("Count", tab);
             Image badgeImage = AddImage(badge, new Color(1f, 1f, 1f, 0.14f), PuiSprite("rounded"));
             badgeImage.raycastTarget = false;
             PuiHorizontal(badge, 0, new RectOffset(10, 10, 2, 2));
-            PuiText(badge, "Text", tabInfo[i].count, 15, true, Color.white, TextAlignmentOptions.Center);
+            PuiText(badge, "Text", tabInfo[i].count, 13, true, Color.white, TextAlignmentOptions.Center);
 
             GameObject page = BuildScrollPage(pages, tabInfo[i].label.Replace(" ", "") + "Page", out pageContents[i]);
             page.SetActive(i == 1);
@@ -217,19 +212,8 @@ public static partial class ThermalPlantTools
             boilers[i] = BuildStatusCard(pageContents[0], $"Boiler {i + 1:00}", "tp_boiler", boilerLeft, boilerRight, "tp_load", "Load", false);
 
         var turbines = new Object[4];
-        for (int row = 0; row < 2; row++)
-        {
-            RectTransform line = NewUI("Row" + (row + 1), pageContents[1]);
-            PuiHorizontal(line, 16, new RectOffset(0, 0, 0, 0));
-            HorizontalLayoutGroup lineGroup = line.GetComponent<HorizontalLayoutGroup>();
-            lineGroup.childForceExpandWidth = true;
-            lineGroup.childAlignment = TextAnchor.UpperLeft;
-            for (int col = 0; col < 2; col++)
-            {
-                int i = row * 2 + col;
-                turbines[i] = BuildStatusCard(line, $"Turbine {i + 1:00}", "tp_turbine", turbineLeft, turbineRight, "tp_load", "Load", true);
-            }
-        }
+        for (int i = 0; i < turbines.Length; i++)
+            turbines[i] = BuildStatusCard(pageContents[1], $"Turbine {i + 1:00}", "tp_turbine", turbineLeft, turbineRight, "tp_load", "Load", false);
 
         var electricals = new Object[3];
         for (int i = 0; i < electricals.Length; i++)
@@ -321,14 +305,14 @@ public static partial class ThermalPlantTools
         Outline outline = card.gameObject.AddComponent<Outline>();
         outline.effectColor = PuiBorder;
         outline.effectDistance = new Vector2(1f, -1f);
-        PuiVertical(card, 12, new RectOffset(20, 20, 16, 18));
+        PuiVertical(card, 10, new RectOffset(16, 16, 12, 14));
         card.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
         PlantStatusCard script = card.gameObject.AddComponent<PlantStatusCard>();
 
         // header
         RectTransform header = NewUI("Header", card);
         PuiHorizontal(header, 10, new RectOffset(0, 0, 0, 0));
-        TextMeshProUGUI title = PuiText(header, "Title", titleText, compact ? 22 : 24, true, Color.white, TextAlignmentOptions.Left);
+        TextMeshProUGUI title = PuiText(header, "Title", titleText, 21, true, Color.white, TextAlignmentOptions.Left);
         Image dot = PuiIcon(header, "Dot", "dot", 10f, StCyan);
         TextMeshProUGUI status = PuiText(header, "Status", "Running", 16, false, StCyan, TextAlignmentOptions.Left);
         RectTransform space = NewUI("Space", header);
@@ -349,16 +333,16 @@ public static partial class ThermalPlantTools
         }
 
         RectTransform main = NewUI("Values", body);
-        PuiHorizontal(main, compact ? 12 : 18, new RectOffset(0, 0, 0, 0));
+        PuiHorizontal(main, 14, new RectOffset(0, 0, 0, 0));
         main.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.UpperLeft;
         if (!compact)
         {
             RectTransform tile = NewUI("Picture", main);
             AddImage(tile, StTile, PuiSprite("rounded")).raycastTarget = false;
             LayoutElement size = tile.gameObject.AddComponent<LayoutElement>();
-            size.minWidth = size.preferredWidth = 170f;
-            size.minHeight = size.preferredHeight = 170f;
-            CenterIcon(tile, art, 120f, StArt);
+            size.minWidth = size.preferredWidth = 110f;
+            size.minHeight = size.preferredHeight = 110f;
+            CenterIcon(tile, art, 80f, StArt);
         }
 
         var values = new Object[left.Length + right.Length];
@@ -431,16 +415,16 @@ public static partial class ThermalPlantTools
         for (int i = 0; i < rows.Length; i++)
         {
             RectTransform row = NewUI(StripTags(rows[i].label), column);
-            PuiHorizontal(row, compact ? 8 : 12, new RectOffset(0, 0, 4, 4));
-            row.gameObject.AddComponent<LayoutElement>().minHeight = compact ? 40f : 44f;
-            PuiIcon(row, "Icon", rows[i].icon, compact ? 22f : 26f, rows[i].color);
-            TextMeshProUGUI label = PuiText(row, "Label", rows[i].label, compact ? 14 : 16, false, styText, TextAlignmentOptions.Left);
+            PuiHorizontal(row, 8, new RectOffset(0, 0, 3, 3));
+            row.gameObject.AddComponent<LayoutElement>().minHeight = 38f;
+            PuiIcon(row, "Icon", rows[i].icon, 22f, rows[i].color);
+            TextMeshProUGUI label = PuiText(row, "Label", rows[i].label, 14, false, styText, TextAlignmentOptions.Left);
             label.enableAutoSizing = true;
             label.fontSizeMin = 11f;
-            label.fontSizeMax = compact ? 14f : 16f;
+            label.fontSizeMax = 14f;
             label.textWrappingMode = TextWrappingModes.NoWrap;
             PuiFlexible(label.rectTransform);
-            TextMeshProUGUI value = PuiText(row, "Value", "--", compact ? 17 : 20, true, rows[i].color, TextAlignmentOptions.Right);
+            TextMeshProUGUI value = PuiText(row, "Value", "--", 17, true, rows[i].color, TextAlignmentOptions.Right);
             value.textWrappingMode = TextWrappingModes.NoWrap;
             values[offset + i] = value;
             if (i < rows.Length - 1) PuiSeparatorLine(column);
@@ -458,7 +442,7 @@ public static partial class ThermalPlantTools
         PuiText(box, "Title", "Smoke Level Cases", 22, true, Color.white, TextAlignmentOptions.Left);
 
         RectTransform strip = NewUI("Cases", box);
-        PuiHorizontal(strip, 12, new RectOffset(0, 0, 0, 0));
+        PuiHorizontal(strip, 8, new RectOffset(0, 0, 0, 0));
         strip.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = true;
 
         string[] names = { "No Smoke", "Normal", "Degrading", "Severe", "NOx / SOx", "Contamination" };
@@ -469,15 +453,18 @@ public static partial class ThermalPlantTools
             RectTransform tile = NewUI("Case" + i, strip);
             Image frame = AddImage(tile, new Color(1f, 1f, 1f, 0.05f), PuiSprite("rounded"));
             frame.raycastTarget = false;
-            PuiVertical(tile, 6, new RectOffset(10, 10, 12, 12));
+            PuiVertical(tile, 4, new RectOffset(6, 6, 10, 10));
             tile.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.UpperCenter;
             tile.GetComponent<VerticalLayoutGroup>().childForceExpandWidth = false;
             LayoutElement size = tile.gameObject.AddComponent<LayoutElement>();
             size.flexibleWidth = 1f;
-            size.minHeight = 120f;
-            Image swatch = PuiIcon(tile, "Swatch", "dot", 40f, Color.gray);
-            PuiText(tile, "Level", (i * 0.2f).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture), 20, true, Color.white, TextAlignmentOptions.Center);
-            PuiText(tile, "Name", names[i], 14, false, PuiMuted, TextAlignmentOptions.Center);
+            size.minHeight = 104f;
+            Image swatch = PuiIcon(tile, "Swatch", "dot", 32f, Color.gray);
+            PuiText(tile, "Level", (i * 0.2f).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture), 18, true, Color.white, TextAlignmentOptions.Center);
+            TextMeshProUGUI caseName = PuiText(tile, "Name", names[i], 12, false, PuiMuted, TextAlignmentOptions.Center);
+            caseName.enableAutoSizing = true;
+            caseName.fontSizeMin = 9f;
+            caseName.fontSizeMax = 12f;
             frames[i] = frame;
             swatches[i] = swatch;
         }
