@@ -241,7 +241,7 @@ internal class TourVisuals
 
     public void Tick(Transform worker, Transform target, bool walking, bool cardAtTarget)
     {
-        Camera cam = Camera.main;
+        Camera cam = ViewCamera();
         if (cam != null && cardCanvas.worldCamera != cam) cardCanvas.worldCamera = cam; // clicks on the card
 
         if (target != currentTarget)
@@ -318,7 +318,7 @@ internal class TourVisuals
 
         float bob = Mathf.Sin(Time.time * 2.5f) * 0.1f;
         marker.transform.position = new Vector3(targetBounds.center.x, Mathf.Max(targetBounds.max.y, floor + 1.4f) + 0.45f + bob, targetBounds.center.z);
-        Camera cam = Camera.main;
+        Camera cam = ViewCamera();
         if (cam != null)
         {
             Vector3 look = Vector3.ProjectOnPlane(marker.transform.position - cam.transform.position, Vector3.up);
@@ -369,6 +369,31 @@ internal class TourVisuals
             c.a = 0.9f * fade;
             chevronImages[i].color = c;
         }
+    }
+
+    // ------------------------------------------------------------------ camera
+
+    // The camera the user looks through. Not Camera.main: the worker cameras are not tagged MainCamera
+    // (Control_Room has none), so clicks on the card went nowhere.
+    private Camera viewCamera;
+    private float nextCameraSearch;
+
+    private Camera ViewCamera()
+    {
+        if (viewCamera != null && viewCamera.isActiveAndEnabled) return viewCamera;
+        if (Time.unscaledTime < nextCameraSearch) return viewCamera;
+        nextCameraSearch = Time.unscaledTime + 0.5f;
+
+        CharacterCameraController worker = Object.FindAnyObjectByType<CharacterCameraController>();
+        if (worker != null && worker.PlayerCamera != null && worker.PlayerCamera.isActiveAndEnabled) viewCamera = worker.PlayerCamera;
+        else if (Camera.main != null) viewCamera = Camera.main;
+        else
+        {
+            viewCamera = null;
+            foreach (Camera c in Camera.allCameras)
+                if (c.targetTexture == null && (viewCamera == null || c.depth > viewCamera.depth)) viewCamera = c;
+        }
+        return viewCamera;
     }
 
     // ------------------------------------------------------------------ chime
