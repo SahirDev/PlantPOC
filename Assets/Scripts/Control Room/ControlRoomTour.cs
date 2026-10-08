@@ -30,6 +30,7 @@ public class ControlRoomTour : MonoBehaviour
     private class Step
     {
         public string title, instruction;
+        public string instructionWithoutTarget; // walking step whose target is missing: read + Next instead
         public Goal goal;
         public Func<Transform> target;
     }
@@ -62,6 +63,10 @@ public class ControlRoomTour : MonoBehaviour
     private GameObject canvasObject, panelObject, startButton;
     private TMP_Text stepLabel, titleLabel, bodyLabel, statusLabel, nextLabel;
     private Button backButton, nextButton;
+    private GameObject voltageRow;
+    private Slider voltageSlider;
+    private TMP_Text voltageValue;
+    private const int VoltageSliderFromStep = 3; // 0-based: "Read the Panel Status"
     private Beacon beacon;
     private string lastSentState;
     private float nextSendTime;
@@ -89,7 +94,9 @@ public class ControlRoomTour : MonoBehaviour
             if (found == null) found = root.GetComponentInChildren<ElectricalPanelInfo>(true);
             if (helmetFound == null)
                 foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
-                    if (t.name.IndexOf("helmet", StringComparison.OrdinalIgnoreCase) >= 0) { helmetFound = t; break; }
+                    if (t.name.IndexOf("helmet", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                        t.GetComponentInParent<CharacterController>(true) == null) // not the worker's own helmet
+                    { helmetFound = t; break; }
         }
         if (found == null) return;
 
@@ -113,18 +120,23 @@ public class ControlRoomTour : MonoBehaviour
                 "•  Report every alarm to the shift engineer" },
             new Step { title = "Wear Your PPE", goal = Goal.Reach, target = () => helmet, instruction =
                 "Walk to the highlighted helmet (PPE station).\n" +
-                "Check that your helmet, gloves and shoes are undamaged before you go near the panel." },
+                "Check that your helmet, gloves and shoes are undamaged before you go near the panel.",
+                instructionWithoutTarget =
+                "Check your PPE before going near the panel:\n" +
+                "•  Helmet on and strapped\n" +
+                "•  Insulated (electrical) gloves, no cuts or holes\n" +
+                "•  Safety shoes, dry hands, no metal jewellery" },
             new Step { title = "Go to the Electrical Panel", goal = Goal.Reach, target = () => panel != null ? panel.transform : null, instruction =
                 "Walk to the highlighted electrical panel.\n" +
-                "Stand in front of it: the panel values open and the voltage slider becomes active." },
+                "Stand in front of it and look at its lamps - the voltage control appears in this panel." },
             new Step { title = "Read the Panel Status", goal = Goal.Read, target = () => panel != null ? panel.transform : null, instruction =
                 "•  Green lamp ON  =  normal operation\n" +
                 "•  Red lamp  =  high voltage (75 % and above)\n" +
                 "•  Flashing warning light + alarm  =  over-voltage (80 % and above)\n" +
-                "Check Generator kV, Loading and the oil / winding temperatures." },
+                "Look at the lamps on the panel now: green = all normal." },
             new Step { title = "Raise the Voltage Gradually", goal = Goal.VoltageInRange, target = () => panel != null ? panel.transform : null, instruction =
-                $"Use the voltage slider to bring the generator to {normalRange.x:F0}–{normalRange.y:F0} %.\n" +
-                "Raise it slowly and watch Loading and Winding Temperature as it climbs." },
+                $"Drag the VOLTAGE slider below to bring the generator to {normalRange.x:F0}–{normalRange.y:F0} %.\n" +
+                "Raise it slowly - watch the lamps: the red lamp comes on at 75 %." },
             new Step { title = "Over-voltage Drill", goal = Goal.OverVoltageDrill, target = () => panel != null ? panel.transform : null, instruction =
                 "Push the slider above 80 %: the alarm sounds and the warning light flashes.\n" +
                 "Then bring it back below 75 % straight away - that is the correct response to an over-voltage alarm." },
@@ -193,7 +205,7 @@ public class ControlRoomTour : MonoBehaviour
         step = active ? (completed ? steps.Length : index + 1) : 0,
         total = steps.Length,
         title = !active ? "" : completed ? "Tour Complete" : steps[index].title,
-        instruction = !active ? "" : completed ? CompletedText : steps[index].instruction,
+        instruction = !active ? "" : completed ? CompletedText : InstructionOf(steps[index]),
         status = active ? status : "",
         stepDone = active && (completed || stepDone),
         canNext = active && (completed || CanNext()),
@@ -207,15 +219,19 @@ public class ControlRoomTour : MonoBehaviour
 
     // ------------------------------------------------------------------ steps
 
-    // direction +1 / -1: a walking step without a target (no helmet in the scene) is skipped that way.
+    // A walking step without a target (e.g. no PPE station in the scene) becomes a read step with its own text.
+    private bool IsRead(Step step) => step.goal == Goal.Read || (step.goal == Goal.Reach && (step.target == null || step.target() == null));
+
+    private string InstructionOf(Step step) =>
+        step.goal == Goal.Reach && !string.IsNullOrEmpty(step.instructionWithoutTarget) && (step.target == null || step.target() == null)
+            ? step.instructionWithoutTarget : step.instruction;
+
+    // direction is kept for Back / Next callers (no steps are skipped any more).
     private void GoTo(int stepIndex, int direction)
     {
         index = Mathf.Clamp(stepIndex, 0, steps.Length - 1);
-        while (steps[index].goal == Goal.Reach && steps[index].target() == null &&
-               index + direction >= 0 && index + direction < steps.Length)
-            index += direction;
 
-        stepDone = steps[index].goal == Goal.Read;
+        stepDone = IsRead(steps[index]);
         holdStart = -1f;
         drillAlarmSeen = false;
         status = "";
@@ -233,7 +249,7 @@ public class ControlRoomTour : MonoBehaviour
         Send(true);
     }
 
-    private bool CanNext() => steps[index].goal == Goal.Read || stepDone;
+    private bool CanNext() => IsRead(steps[index]) || stepDone;
 
     private void Update()
     {
@@ -246,6 +262,7 @@ public class ControlRoomTour : MonoBehaviour
         {
             case Goal.Reach:
             {
+                if (IsRead(step)) break;
                 float distance = DistanceToWorker(step.target());
                 if (distance < 0f) { status = "Walk with the worker (not in this view)"; break; }
                 if (distance <= arriveDistance) { stepDone = true; status = "Arrived"; }
@@ -277,7 +294,7 @@ public class ControlRoomTour : MonoBehaviour
         }
 
         if (stepDone && !wasDone) doneTime = Time.time;
-        if (stepDone && step.goal != Goal.Read && Time.time - doneTime >= autoAdvanceDelay) { Next(); return; }
+        if (stepDone && !IsRead(step) && Time.time - doneTime >= autoAdvanceDelay) { Next(); return; }
 
         RefreshDynamicUI();
         Send(false);
@@ -425,7 +442,7 @@ public class ControlRoomTour : MonoBehaviour
         var panelRect = (RectTransform)panelObject.transform;
         panelRect.anchorMin = panelRect.anchorMax = panelRect.pivot = new Vector2(0f, 1f);
         panelRect.anchoredPosition = new Vector2(40f, -40f);
-        panelRect.sizeDelta = new Vector2(500f, 330f);
+        panelRect.sizeDelta = new Vector2(500f, 380f);
 
         var bar = NewImage("Accent", panelObject.transform, Accent);
         Anchor(bar.rectTransform, 0f, 1f, 1f, 1f, 0f, -6f, 0f, 0f);
@@ -443,7 +460,7 @@ public class ControlRoomTour : MonoBehaviour
         bodyLabel = NewText("Instruction", panelObject.transform, "", 15f, FontStyles.Normal, new Color(0.85f, 0.88f, 0.94f));
         bodyLabel.alignment = TextAlignmentOptions.TopLeft;
         bodyLabel.lineSpacing = 8f;
-        Anchor(bodyLabel.rectTransform, 0f, 0f, 1f, 1f, 22f, 100f, -22f, -88f);
+        Anchor(bodyLabel.rectTransform, 0f, 0f, 1f, 1f, 22f, 150f, -22f, -88f);
 
         statusLabel = NewText("Status", panelObject.transform, "", 15f, FontStyles.Bold, Accent);
         Anchor(statusLabel.rectTransform, 0f, 0f, 1f, 0f, 22f, 66f, -22f, 94f);
@@ -453,6 +470,64 @@ public class ControlRoomTour : MonoBehaviour
 
         nextButton = NewButton("Next", panelObject.transform, "NEXT", Accent, Next, out nextLabel);
         Anchor((RectTransform)nextButton.transform, 1f, 0f, 1f, 0f, -162f, 16f, -22f, 56f);
+
+        BuildVoltageSlider();
+    }
+
+    // VOLTAGE [=======o-----] 52 %  - the same control as React's control room slider.
+    private void BuildVoltageSlider()
+    {
+        voltageRow = new GameObject("Voltage", typeof(RectTransform));
+        voltageRow.transform.SetParent(panelObject.transform, false);
+        Anchor((RectTransform)voltageRow.transform, 0f, 0f, 1f, 0f, 22f, 104f, -22f, 140f);
+
+        TMP_Text label = NewText("Label", voltageRow.transform, "VOLTAGE", 13f, FontStyles.Bold, new Color(0.68f, 0.73f, 0.84f));
+        label.characterSpacing = 2f;
+        Anchor(label.rectTransform, 0f, 0f, 0f, 1f, 0f, 0f, 90f, 0f);
+
+        voltageValue = NewText("Value", voltageRow.transform, "0 %", 16f, FontStyles.Bold, Done);
+        voltageValue.alignment = TextAlignmentOptions.MidlineRight;
+        Anchor(voltageValue.rectTransform, 1f, 0f, 1f, 1f, -64f, 0f, 0f, 0f);
+
+        var sliderObject = new GameObject("Slider", typeof(RectTransform));
+        sliderObject.transform.SetParent(voltageRow.transform, false);
+        Anchor((RectTransform)sliderObject.transform, 0f, 0f, 1f, 1f, 96f, 8f, -74f, -8f);
+
+        Image track = NewImage("Track", sliderObject.transform, new Color(1f, 1f, 1f, 0.12f));
+        Anchor(track.rectTransform, 0f, 0.3f, 1f, 0.7f, 0f, 0f, 0f, 0f);
+
+        var fillArea = new GameObject("Fill Area", typeof(RectTransform));
+        fillArea.transform.SetParent(sliderObject.transform, false);
+        Anchor((RectTransform)fillArea.transform, 0f, 0.3f, 1f, 0.7f, 0f, 0f, 0f, 0f);
+        Image fill = NewImage("Fill", fillArea.transform, Accent);
+        Anchor(fill.rectTransform, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f);
+
+        var handleArea = new GameObject("Handle Area", typeof(RectTransform));
+        handleArea.transform.SetParent(sliderObject.transform, false);
+        Anchor((RectTransform)handleArea.transform, 0f, 0f, 1f, 1f, 8f, 0f, -8f, 0f);
+        Image handle = NewImage("Handle", handleArea.transform, Color.white);
+        handle.raycastTarget = true;
+        handle.rectTransform.sizeDelta = new Vector2(16f, 0f);
+
+        voltageSlider = sliderObject.AddComponent<Slider>();
+        voltageSlider.fillRect = fill.rectTransform;
+        voltageSlider.handleRect = handle.rectTransform;
+        voltageSlider.targetGraphic = handle;
+        voltageSlider.direction = Slider.Direction.LeftToRight;
+        voltageSlider.minValue = 0f;
+        voltageSlider.maxValue = 100f;
+        voltageSlider.wholeNumbers = true;
+        voltageSlider.onValueChanged.AddListener(SetVoltage);
+
+        // The whole bar is clickable / draggable, not only the handle.
+        track.raycastTarget = true;
+        voltageRow.SetActive(false);
+    }
+
+    private void SetVoltage(float value)
+    {
+        if (HUDController.Instance != null) HUDController.Instance.SetControlRoomSlider(value); // same path as React
+        else if (panel != null) panel.SetGeneratorValue(value);
     }
 
     private void RefreshUI()
@@ -465,7 +540,7 @@ public class ControlRoomTour : MonoBehaviour
 
         stepLabel.text = completed ? "GUIDED TOUR  ·  COMPLETE" : $"GUIDED TOUR  ·  STEP {index + 1} / {steps.Length}";
         titleLabel.text = completed ? "Tour Complete" : steps[index].title;
-        bodyLabel.text = completed ? CompletedText : steps[index].instruction;
+        bodyLabel.text = completed ? CompletedText : InstructionOf(steps[index]);
         nextLabel.text = completed ? "FINISH" : index + 1 >= steps.Length ? "COMPLETE" : "NEXT";
         backButton.gameObject.SetActive(!completed && index > 0);
         RefreshDynamicUI();
@@ -474,9 +549,20 @@ public class ControlRoomTour : MonoBehaviour
     private void RefreshDynamicUI()
     {
         if (!unityUI || statusLabel == null || !active) return;
-        statusLabel.text = completed ? "" : (stepDone && steps[index].goal != Goal.Read ? "DONE  -  " : "") + status;
+        statusLabel.text = completed ? "" : (stepDone && !IsRead(steps[index]) ? "DONE  -  " : "") + status;
         statusLabel.color = stepDone ? Done : Accent;
         nextButton.interactable = completed || CanNext();
+
+        // Voltage slider: from "Read the panel status" on (React may also move it - follow the panel).
+        bool showSlider = !completed && index >= VoltageSliderFromStep && panel != null;
+        if (voltageRow.activeSelf != showSlider) voltageRow.SetActive(showSlider);
+        if (showSlider)
+        {
+            float v = Voltage();
+            if (!Mathf.Approximately(voltageSlider.value, v)) voltageSlider.SetValueWithoutNotify(v);
+            voltageValue.text = $"{v:F0} %";
+            voltageValue.color = v >= panel.WarningThreshold ? new Color(1f, 0.38f, 0.32f) : v >= panel.RedThreshold ? Accent : Done;
+        }
     }
 
     private static Image NewImage(string name, Transform parent, Color color)
