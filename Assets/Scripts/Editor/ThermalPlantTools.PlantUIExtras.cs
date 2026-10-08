@@ -178,6 +178,13 @@ public static partial class ThermalPlantTools
         PlantToolbar toolbar = root.GetComponentInChildren<PlantToolbar>(true);
         if (toolbar != null && AddInfoButton(root.transform, toolbar)) log.AppendLine("+ (i) Plant Status button beside Day / Night");
 
+        // ---- Door prompt ("Go to Boiler Room" + ENTER) for the scene change triggers
+        if (so.FindProperty("scenePrompt").objectReferenceValue == null)
+        {
+            so.FindProperty("scenePrompt").objectReferenceValue = BuildScenePrompt(root.transform);
+            log.AppendLine("+ Door prompt 'Go to <room>' (bottom, above the nav bar)");
+        }
+
         so.ApplyModifiedPropertiesWithoutUndo();
 
         // The maintenance sheet stays on top of everything.
@@ -285,6 +292,61 @@ public static partial class ThermalPlantTools
         button.objectReferenceValue = explode;
         so.ApplyModifiedPropertiesWithoutUndo();
         return true;
+    }
+
+    // ------------------------------------------------------------------ door prompt
+
+    private static ScenePromptPanel BuildScenePrompt(Transform parent)
+    {
+        RectTransform holder = NewUI("ScenePrompt", parent);
+        Anchor(holder, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        ScenePromptPanel script = holder.gameObject.AddComponent<ScenePromptPanel>();
+
+        RectTransform pill = NewUI("Prompt", holder);
+        pill.anchorMin = pill.anchorMax = pill.pivot = new Vector2(0.5f, 0f);
+        pill.anchoredPosition = new Vector2(0f, 110f);
+        AddImage(pill, styPanel, PuiSprite("rounded"));
+        Outline outline = pill.gameObject.AddComponent<Outline>();
+        outline.effectColor = PuiBorder;
+        outline.effectDistance = new Vector2(1f, -1f);
+        PuiHorizontal(pill, 14, new RectOffset(18, 12, 10, 10));
+        ContentSizeFitter fit = pill.gameObject.AddComponent<ContentSizeFitter>();
+        fit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        RectTransform badge = NewUI("Icon", pill);
+        AddImage(badge, new Color(styAccent.r, styAccent.g, styAccent.b, 0.35f), PuiSprite("rounded")).raycastTarget = false;
+        LayoutElement badgeSize = badge.gameObject.AddComponent<LayoutElement>();
+        badgeSize.minWidth = badgeSize.preferredWidth = 44f;
+        badgeSize.minHeight = badgeSize.preferredHeight = 44f;
+        RectTransform glyph = NewUI("Glyph", badge);
+        glyph.anchorMin = glyph.anchorMax = new Vector2(0.5f, 0.5f);
+        glyph.sizeDelta = new Vector2(26f, 26f);
+        Image icon = glyph.gameObject.AddComponent<Image>();
+        icon.sprite = PuiSprite("plant");
+        icon.preserveAspect = true;
+        icon.raycastTarget = false;
+
+        RectTransform text = NewUI("Text", pill);
+        PuiVertical(text, 2, new RectOffset(0, 0, 0, 0));
+        TextMeshProUGUI title = PuiText(text, "Title", "Go to Boiler Room", 19, true, Color.white, TextAlignmentOptions.Left);
+        TextMeshProUGUI hint = PuiText(text, "Hint", "Press Y or click Enter", 14, false, PuiMuted, TextAlignmentOptions.Left);
+
+        Button enter = PuiTextButton(pill, "Enter", "ENTER", styAccent, Color.white, 120f, 44f, out _);
+        pill.gameObject.SetActive(false);
+
+        var so = new SerializedObject(script);
+        so.FindProperty("prompt").objectReferenceValue = pill.gameObject;
+        so.FindProperty("title").objectReferenceValue = title;
+        so.FindProperty("hint").objectReferenceValue = hint;
+        so.FindProperty("icon").objectReferenceValue = icon;
+        so.FindProperty("enterButton").objectReferenceValue = enter;
+        SerializedProperty icons = so.FindProperty("sceneIcons");
+        string[] names = { "plant", "fire", "fan", "monitor" };
+        icons.arraySize = names.Length;
+        for (int i = 0; i < names.Length; i++) icons.GetArrayElementAtIndex(i).objectReferenceValue = PuiSprite(names[i]);
+        so.ApplyModifiedPropertiesWithoutUndo();
+        return script;
     }
 
     // ------------------------------------------------------------------ minimap

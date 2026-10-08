@@ -35,6 +35,8 @@ public class PlantUI : MonoBehaviour
     [SerializeField] private TourPanel tourPanel;
     [Tooltip("Plant Status overview (Power Plant Area, (i) button beside Day / Night).")]
     [SerializeField] private PlantStatusPanel statusPanel;
+    [Tooltip("'Go to <room>' prompt while the worker stands in a door trigger (SceneChangeCol).")]
+    [SerializeField] private ScenePromptPanel scenePrompt;
     [SerializeField] private Button explodeAllButton;
     [SerializeField] private Button collapseAllButton;
     [Tooltip("The maintenance sheet is placed here (explosion view).")]
@@ -284,6 +286,7 @@ public class PlantUI : MonoBehaviour
         SetActive(collapseAllButton != null ? collapseAllButton.gameObject : null, exploded && !collapsing);
 
         if (statusPanel != null && statusPanel.IsOpen && !StatusPanelAllowed()) statusPanel.Close();
+        if (scenePrompt != null) scenePrompt.Refresh(!hidden && !exploded && workerActive);
 
         ControlRoomTour tour = ControlRoomTour.Instance;
         if (tourPanel != null) tourPanel.SetVisible(!hidden && !exploded && workerActive && tour != null && tour.UnityUI);

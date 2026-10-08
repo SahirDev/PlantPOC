@@ -21,6 +21,25 @@ public class SceneChangeCol : MonoBehaviour
 
     private bool canChangeScene;
 
+    /// <summary>The door the worker is standing in (Unity prompt in the Plant UI), or null.</summary>
+    public static SceneChangeCol Current { get; private set; }
+
+    /// <summary>Readable room name of the target ("Boiler Room").</summary>
+    public string TargetDisplayName
+    {
+        get
+        {
+            switch (selectScene)
+            {
+                case PlantScene.Main_Scene: return "Power Plant Area";
+                case PlantScene.BoilerRoom: return "Boiler Room";
+                case PlantScene.TurbineRoom: return "Turbine Room";
+                case PlantScene.Control_Room: return "Control Room";
+                default: return TargetSceneName;
+            }
+        }
+    }
+
     private static readonly string[] SceneNames =
     {
         "Main_Scene",
@@ -43,6 +62,7 @@ public class SceneChangeCol : MonoBehaviour
         if (!other.CompareTag("Player")) return;
 
         canChangeScene = true;
+        Current = this;
         CommunicationManager.HandleSceneTriggerEntered_Extern(new SceneTriggerPayload { targetScene = TargetSceneName, text = Text });
     }
 
@@ -51,12 +71,14 @@ public class SceneChangeCol : MonoBehaviour
         if (!other.CompareTag("Player")) return;
 
         canChangeScene = false;
+        if (Current == this) Current = null;
         CommunicationManager.HandleSceneTriggerExited_Extern(new SceneTriggerPayload { targetScene = TargetSceneName, text = Text });
     }
 
     private void OnDisable()
     {
         canChangeScene = false;
+        if (Current == this) Current = null;
     }
 
     private void Update()
@@ -70,6 +92,7 @@ public class SceneChangeCol : MonoBehaviour
     public void LoadScene()
     {
         canChangeScene = false;
+        if (Current == this) Current = null;
         CommunicationManager.HandleSceneTriggerExited_Extern(new SceneTriggerPayload { targetScene = TargetSceneName, text = Text });
 
         if (SceneController.Instance != null)
