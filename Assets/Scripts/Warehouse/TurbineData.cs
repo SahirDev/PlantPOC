@@ -48,6 +48,25 @@ public class TurbineData : MonoBehaviour
 
     public bool IsOperating => operating;
 
+    /// <summary>Steam admission / load 0..1 (Unity UI slider): values sit at this point of their ranges
+    /// (0 = bottom, 1 = top) with small live variation; stopped turbines run down to the bottom.</summary>
+    public float Load => load;
+    private float load = 0.5f;
+
+    public void SetLoad(float value)
+    {
+        load = Mathf.Clamp01(value > 1f ? value / 100f : value);
+        SimulateData(); // the panel sees the change straight away
+    }
+
+    // Value at the current load in a range, with +-4 % of the range as live variation.
+    private float AtLoad(Vector2 range)
+    {
+        float level = operating ? load : load * 0.25f;
+        float spread = (range.y - range.x) * 0.04f;
+        return Mathf.Clamp(Mathf.Lerp(range.x, range.y, level) + Random.Range(-spread, spread), Mathf.Min(range.x, range.y), Mathf.Max(range.x, range.y));
+    }
+
     private void Awake()
     {
         cachedSpinObject = GetComponentInChildren<SpinObjects>();
@@ -101,14 +120,15 @@ public class TurbineData : MonoBehaviour
     {
         if (data == null) return;
 
-        float temp = Random.Range(TemperatureRange.x, TemperatureRange.y);
+        // More load (steam admission) -> higher temperature, pressure, speed, flow and vibration.
+        float temp = AtLoad(TemperatureRange);
         data.Temperature = temp.ToString("F2", Invariant);
         data.TemperatureF = (temp * 1.8f + 32f).ToString("F2", Invariant);
 
-        data.SteamPressure = Random.Range(PressureRange.x, PressureRange.y).ToString("F2", Invariant);
-        data.RPM = Random.Range(RPMRange.x, RPMRange.y).ToString("F2", Invariant);
-        data.SteamMassFlowRate = Random.Range(FlowRateRange.x, FlowRateRange.y).ToString("F2", Invariant);
-        data.Vibration = Random.Range(VibrationRange.x, VibrationRange.y).ToString("F2", Invariant);
+        data.SteamPressure = AtLoad(PressureRange).ToString("F2", Invariant);
+        data.RPM = AtLoad(RPMRange).ToString("F2", Invariant);
+        data.SteamMassFlowRate = AtLoad(FlowRateRange).ToString("F2", Invariant);
+        data.Vibration = AtLoad(VibrationRange).ToString("F2", Invariant);
 
         // Only stream while someone can see it; React can always ask with "turbine.get(All)".
         if (workerInRange || operating) SendData();

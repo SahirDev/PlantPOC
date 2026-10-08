@@ -54,6 +54,12 @@ public class HUDController : SingletonMono<HUDController>
     // Read-only state (Editor test panel, debugging).
     public EquipmentType CurrentEquipmentType => currentContextObject != null ? currentType : EquipmentType.None;
     public string CurrentEquipmentName => currentContextObject != null ? currentContextObject.name : "";
+    /// <summary>Equipment the worker is at (boiler / turbine object), or null.</summary>
+    public GameObject CurrentEquipmentObject => currentContextObject;
+    /// <summary>Electrical panel the worker stands at (its trigger), or null.</summary>
+    public ElectricalPanelInfo CurrentElectricalPanel => currentElectricalPanel;
+    /// <summary>Last electrical values sent (generator kV, grid kV, loading, temperatures) - for the Unity UI.</summary>
+    public ElectricalValuesPayload LastElectricalValues { get; private set; }
     public bool IsExplodedView => IsExploded;
     public bool IsOperatingEquipment => isOperating;
     public bool IsBoilerInfoOpen => IsBoilerInfoActive;
@@ -229,7 +235,10 @@ public class HUDController : SingletonMono<HUDController>
 
         if (maintenanceSheetPrefab != null)
         {
-            GameObject instance = Instantiate(maintenanceSheetPrefab, transform);
+            // One canvas for the whole UI: inside the Plant UI canvas when it exists (nested canvas, own batch).
+            Transform parent = PlantUI.Instance != null && PlantUI.Instance.SheetParent != null ? PlantUI.Instance.SheetParent : transform;
+            GameObject instance = Instantiate(maintenanceSheetPrefab, parent);
+            if (parent != transform) PlantUI.FitNestedCanvas(instance, 30);
             instance.name = "MaintenanceSheet";
             maintenanceSheet = instance.GetComponent<MaintenanceSheetPanel>();
             if (maintenanceSheet == null)
@@ -339,7 +348,7 @@ public class HUDController : SingletonMono<HUDController>
     public void UpdateElectricalPanelValues(float generatorValue, float generatorKV, float gridKV, float loading,
         float oilTemp, float windingTemp, bool coolingFan, string alarmLevel = null)
     {
-        CommunicationManager.HandleElectricalValues_Extern(new ElectricalValuesPayload
+        LastElectricalValues = new ElectricalValuesPayload
         {
             generatorValue = generatorValue,
             generatorKV = generatorKV,
@@ -349,7 +358,8 @@ public class HUDController : SingletonMono<HUDController>
             windingTemp = windingTemp,
             coolingFan = coolingFan,
             alarmLevel = alarmLevel ?? (generatorValue >= 80f ? "warning" : generatorValue >= 75f ? "high" : "normal")
-        });
+        };
+        CommunicationManager.HandleElectricalValues_Extern(LastElectricalValues);
     }
 
     /// <summary>Control room slider 0..100 from React. Works anywhere in the control room (not only at the

@@ -400,7 +400,9 @@ public static class BoilerMonitorValues
         else
         {
             // Heats towards a burner-dependent temperature while operating, cools to ambient otherwise.
-            float target = v.operating ? 25f + v.burner * 1.15f : 25.8f;
+            // More burner power -> hotter (fully while operating, a little while idle); water level falls with
+            // the burner on its own (BoilerFluidController).
+            float target = v.operating ? 25f + v.burner * 1.15f : 25.8f + v.burner * 0.25f;
             temperature = Mathf.Lerp(temperature, target, 0.35f) + Random.Range(-0.3f, 0.3f);
             v.temperature = temperature;
             v.pressure = Mathf.Clamp((temperature - 100f) / 5f, 0f, 10f);
