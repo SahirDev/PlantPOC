@@ -58,8 +58,6 @@ public class MaintenanceSheetPanel : MonoBehaviour
     [SerializeField] private TMP_Text editButtonLabel;
     [Tooltip("Bottom button: downloads the sheet + part picture as Excel (.xlsx).")]
     [SerializeField] private Button exportButton;
-    [Tooltip("Off (default): PRINT REPORT shows whenever the sheet is open. On: only while editing.")]
-    [SerializeField] private bool exportOnlyWhileEditing = false;
     [SerializeField] private Color inputBackground = new Color(1f, 1f, 1f, 0.1f);
 
     private bool collapsed, editing, wired;
@@ -289,7 +287,14 @@ public class MaintenanceSheetPanel : MonoBehaviour
     private void RefreshEditControls()
     {
         if (editButtonLabel != null) editButtonLabel.text = editing ? "DONE" : "EDIT";
-        if (exportArea != null) exportArea.SetActive(editing || !exportOnlyWhileEditing);
+        // PRINT REPORT is always there while the sheet is open (the old "only while editing" option was
+        // removed: a prefab saved with it switched on kept hiding the footer).
+        if (exportArea != null && !exportArea.activeSelf) exportArea.SetActive(true);
+        if (exportButton != null)
+        {
+            if (!exportButton.gameObject.activeSelf) exportButton.gameObject.SetActive(true);
+            exportButton.interactable = true;
+        }
     }
 
     // ================================================================== edit controls (runtime-built when missing)
