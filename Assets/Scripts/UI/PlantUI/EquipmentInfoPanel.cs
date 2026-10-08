@@ -39,6 +39,11 @@ public class EquipmentInfoPanel : MonoBehaviour
     [SerializeField] private Color startColor = new Color(0.12f, 0.36f, 0.28f, 1f);
     [SerializeField] private Color stopColor = new Color(0.45f, 0.14f, 0.14f, 1f);
 
+    [Header("Explosion view (boiler / turbine)")]
+    [Tooltip("Row with the Explode All button - shown when this equipment has an explosion view.")]
+    [SerializeField] private GameObject explodeRow;
+    [SerializeField] private Button explodeButton;
+
     [Header("Values (in row order)")]
     [SerializeField] private TMP_Text[] values = new TMP_Text[0];
 
@@ -67,6 +72,7 @@ public class EquipmentInfoPanel : MonoBehaviour
     {
         if (collapseButton != null) collapseButton.onClick.AddListener(ToggleCollapsed);
         if (operationButton != null) operationButton.onClick.AddListener(ToggleOperation);
+        if (explodeButton != null) explodeButton.onClick.AddListener(() => { if (PlantUI.Instance != null) PlantUI.Instance.ExplodeAll(); });
         if (slider != null)
         {
             slider.minValue = 0f;
@@ -159,6 +165,14 @@ public class EquipmentInfoPanel : MonoBehaviour
                 color = alarm ? alarmColor : high ? highColor : v > 0.5f ? runningColor : standbyColor;
                 if (alarm) color.a = Mathf.PingPong(Time.unscaledTime * 3f, 1f) > 0.5f ? 1f : 0.35f;
                 break;
+        }
+
+        if (explodeRow != null)
+        {
+            HUDController hud = HUDController.HasInstance ? HUDController.Instance : null;
+            bool hasView = hud != null && hud.HasExplodedView;
+            if (explodeRow.activeSelf != hasView) explodeRow.SetActive(hasView);
+            if (explodeButton != null) explodeButton.interactable = hasView && hud.CanExplodeAll; // not while operating
         }
 
         if (statusText != null) { statusText.text = text; statusText.color = color; }

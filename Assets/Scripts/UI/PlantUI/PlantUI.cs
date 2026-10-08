@@ -11,7 +11,7 @@ using UnityEngine.UI;
 ///   - Navigation bar (bottom): Home, Power Plant Area, Boiler Room, Turbine Room, Control Room.
 ///   - Toolbar (right): TPP / FPP / Fly (worker mode only), overview / worker (plant area), hide UI.
 ///   - Day / Night button (plant area only).
-///   - Explode All (at a boiler / turbine) / Collapse All (explosion view) buttons.
+///   - Explode All (row in the Boiler / Turbine card) / Collapse All (top-left, explosion view only).
 ///   - Minimap (bottom-right, MiniMapPanel) and the control room guided tour card (TourPanel).
 ///   - Maintenance sheet: HUDController creates it inside <see cref="SheetParent"/> (same canvas).
 /// Explosion view: everything is off except Collapse All and the maintenance sheet (click a part).

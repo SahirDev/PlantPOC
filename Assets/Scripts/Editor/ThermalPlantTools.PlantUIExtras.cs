@@ -13,7 +13,7 @@ using UnityEngine.UI;
 ///       in the colours / font you gave it (sampled from the nav bar), without rebuilding anything:
 ///         - Minimap inside the Plant UI canvas (bottom-right) – the old separate MiniMapCanvas is removed
 ///         - Control room guided tour card (top-right) + "Guided Tour" start pill
-///         - Explode All (at a boiler / turbine) and Collapse All (explosion view) buttons
+///         - Explode All row in the Boiler / Turbine card, Collapse All top-left (only button in the explosion view)
 ///         - Home button removed from the nav bar
 ///       Every part is only added when it is missing, so running it again is safe.
 /// </summary>
@@ -79,7 +79,7 @@ public static partial class ThermalPlantTools
 
         Report("Plant UI updated", log,
             "Your colours / layout are kept. New parts start hidden (the script shows them while playing): tick them on " +
-            "to restyle - MiniMap/Panel, TourPanel/Card, ExplodeAllButton, CollapseAllButton.");
+            "to restyle - MiniMap/Panel, TourPanel/Card, CollapseAllButton (Explode All is a row in the Boiler / Turbine cards).");
     }
 
     private static void RemoveOldMiniMapCanvas(Scene scene, StringBuilder log)
@@ -122,16 +122,30 @@ public static partial class ThermalPlantTools
             }
         }
 
-        // ---- Explode All / Collapse All
-        if (so.FindProperty("explodeAllButton").objectReferenceValue == null)
+        // ---- Explode All: a row in the Boiler / Turbine info card (not a button in the middle of the screen)
+        SerializedProperty bottomExplode = so.FindProperty("explodeAllButton");
+        if (bottomExplode.objectReferenceValue != null)
         {
-            so.FindProperty("explodeAllButton").objectReferenceValue = BuildActionPill(root.transform, "ExplodeAllButton", "explode", "Explode All", 104f);
-            log.AppendLine("+ Explode All button (bottom, above the nav bar - shown at a boiler / turbine)");
+            Object.DestroyImmediate(((Component)bottomExplode.objectReferenceValue).gameObject);
+            bottomExplode.objectReferenceValue = null;
+            log.AppendLine("- Explode All button removed from the bottom of the screen");
         }
-        if (so.FindProperty("collapseAllButton").objectReferenceValue == null)
+        foreach (EquipmentInfoPanel panel in root.GetComponentsInChildren<EquipmentInfoPanel>(true))
+            if (AddExplodeRow(panel)) log.AppendLine("+ Explode All row in the '" + panel.name + "' card (under Operation)");
+
+        // ---- Collapse All: top-left (where the card was), the only button in the explosion view
+        SerializedProperty collapse = so.FindProperty("collapseAllButton");
+        if (collapse.objectReferenceValue == null)
         {
-            so.FindProperty("collapseAllButton").objectReferenceValue = BuildActionPill(root.transform, "CollapseAllButton", "implode", "Collapse All", 24f);
-            log.AppendLine("+ Collapse All button (bottom - the only button in the explosion view)");
+            collapse.objectReferenceValue = BuildActionPill(root.transform, "CollapseAllButton", "implode", "Collapse All", 0f);
+            log.AppendLine("+ Collapse All button (top-left - the only button in the explosion view)");
+        }
+        var collapseRect = (RectTransform)((Component)collapse.objectReferenceValue).transform;
+        if (collapseRect.anchorMin.y < 0.5f) // still at the bottom (older version) -> top-left
+        {
+            collapseRect.anchorMin = collapseRect.anchorMax = collapseRect.pivot = new Vector2(0f, 1f);
+            collapseRect.anchoredPosition = new Vector2(24f, -24f);
+            log.AppendLine("~ Collapse All moved to the top-left");
         }
 
         // ---- Minimap
@@ -183,8 +197,8 @@ public static partial class ThermalPlantTools
     private static Button BuildActionPill(Transform parent, string name, string icon, string label, float y)
     {
         RectTransform rect = NewUI(name, parent);
-        rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0f);
-        rect.anchoredPosition = new Vector2(0f, y);
+        rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = new Vector2(24f, -24f - y);
         Image image = AddImage(rect, styAccent, PuiSprite("rounded"));
         Button button = rect.gameObject.AddComponent<Button>();
         button.targetGraphic = image;
@@ -196,6 +210,65 @@ public static partial class ThermalPlantTools
         PuiText(rect, "Label", label, 19, true, Color.white, TextAlignmentOptions.Left);
         rect.gameObject.SetActive(false);
         return button;
+    }
+
+    private static TMP_Text FindText(Transform parent, string path)
+    {
+        Transform t = parent.Find(path);
+        return t != null ? t.GetComponent<TMP_Text>() : null;
+    }
+
+    // Row "Explosion View  [Explode All]" under the Operation row of a Boiler / Turbine card. False if not needed.
+    private static bool AddExplodeRow(EquipmentInfoPanel panel)
+    {
+        var so = new SerializedObject(panel);
+        SerializedProperty kind = so.FindProperty("kind");
+        SerializedProperty button = so.FindProperty("explodeButton");
+        if (kind == null || button == null || button.objectReferenceValue != null) return false;
+        if (kind.enumValueIndex == (int)EquipmentInfoPanel.Kind.Electrical) return false;
+
+        var body = so.FindProperty("body").objectReferenceValue as GameObject;
+        var operation = so.FindProperty("operationButton").objectReferenceValue as Button;
+        Transform parent = body != null ? body.transform : panel.transform;
+
+        // Copy the look of the Operation row (font, colours) where possible.
+        Transform opRow = operation != null ? operation.transform.parent : null;
+        TMP_Text opLabel = opRow != null ? FindText(opRow, "Text/Label") : null;
+        TMP_Text opHint = opRow != null ? FindText(opRow, "Text/Hint") : null;
+
+        RectTransform row = NewUI("ExplosionView", parent);
+        PuiHorizontal(row, 10, new RectOffset(0, 0, 0, 0));
+        RectTransform text = NewUI("Text", row);
+        PuiVertical(text, 2, new RectOffset(0, 0, 0, 0));
+        PuiFlexible(text);
+        TextMeshProUGUI label = PuiText(text, "Label", "Explosion View", 19, true, styText, TextAlignmentOptions.Left);
+        TextMeshProUGUI hint = PuiText(text, "Hint", "See every part - click one for its sheet", 14, false, PuiMuted, TextAlignmentOptions.Left);
+        if (opLabel != null) { label.font = opLabel.font; label.fontSize = opLabel.fontSize; label.color = opLabel.color; }
+        if (opHint != null) { hint.font = opHint.font; hint.fontSize = opHint.fontSize; hint.color = opHint.color; }
+
+        RectTransform buttonRect = NewUI("ExplodeButton", row);
+        Image image = AddImage(buttonRect, styAccent, PuiSprite("rounded"));
+        Button explode = buttonRect.gameObject.AddComponent<Button>();
+        explode.targetGraphic = image;
+        PuiHorizontal(buttonRect, 8, new RectOffset(14, 16, 9, 9));
+        PuiIcon(buttonRect, "Icon", "explode", 18f, Color.white);
+        TextMeshProUGUI buttonLabel = PuiText(buttonRect, "Label", "Explode All", 17, true, Color.white, TextAlignmentOptions.Left);
+
+        // Both buttons the same width, one under the other.
+        if (operation != null)
+        {
+            RectTransform opButton = (RectTransform)operation.transform;
+            if (opButton.GetComponent<LayoutElement>() == null) opButton.gameObject.AddComponent<LayoutElement>().minWidth = 196f;
+            TMP_Text opButtonLabel = opButton.GetComponentInChildren<TMP_Text>(true);
+            if (opButtonLabel != null) { buttonLabel.font = opButtonLabel.font; buttonLabel.fontSize = opButtonLabel.fontSize; }
+            row.SetSiblingIndex(opRow != null && opRow.parent == parent ? opRow.GetSiblingIndex() + 1 : parent.childCount - 1);
+        }
+        buttonRect.gameObject.AddComponent<LayoutElement>().minWidth = 196f;
+
+        so.FindProperty("explodeRow").objectReferenceValue = row.gameObject;
+        button.objectReferenceValue = explode;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        return true;
     }
 
     // ------------------------------------------------------------------ minimap

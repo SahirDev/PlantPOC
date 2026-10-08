@@ -64,6 +64,7 @@ public class HUDController : SingletonMono<HUDController>
     /// <summary>Parts are still sliding back after Collapse (worker comes back when done).</summary>
     public bool IsCollapsing => isCollapsing;
     /// <summary>The worker is at a boiler / turbine that has an explosion view and nothing else is running.</summary>
+    public bool HasExplodedView => GetExplodedView() != null;
     public bool CanExplodeAll => activeAction == ActiveAction.None && !IsExploded && IsAllowed(ActiveAction.ExplodeAll) && GetExplodedView() != null;
     public bool IsOperatingEquipment => isOperating;
     public bool IsBoilerInfoOpen => IsBoilerInfoActive;
