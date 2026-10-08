@@ -380,8 +380,8 @@ public static partial class ThermalPlantTools
     private static PlantToolbar BuildToolbar(Transform parent)
     {
         RectTransform bar = NewUI("Toolbar", parent);
-        bar.anchorMin = bar.anchorMax = bar.pivot = new Vector2(1f, 0.5f);
-        bar.anchoredPosition = new Vector2(-20f, 0f);
+        bar.anchorMin = bar.anchorMax = bar.pivot = new Vector2(1f, 1f);
+        bar.anchoredPosition = new Vector2(-20f, -80f); // under Day / Night (PlantToolbar keeps it there)
         AddImage(bar, PuiPanel, PuiSprite("rounded"));
         PuiVertical(bar, 6, new RectOffset(8, 8, 8, 8));
         ContentSizeFitter fitter = bar.gameObject.AddComponent<ContentSizeFitter>();

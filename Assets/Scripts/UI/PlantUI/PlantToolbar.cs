@@ -34,6 +34,14 @@ public class PlantToolbar : MonoBehaviour
 
     [SerializeField] private Color highlightColor = new Color(0.17f, 0.27f, 0.6f, 1f);
 
+    [Header("Placement")]
+    [Tooltip("Keep the toolbar right under the Day / Night button (where that button is when it is hidden), " +
+             "growing downwards. Off = the toolbar stays where you put it.")]
+    [SerializeField] private bool stackUnderDayNight = true;
+    [SerializeField, Min(0f)] private float gapBelowDayNight = 12f;
+
+    private readonly Vector3[] corners = new Vector3[4];
+
     private void Awake()
     {
         if (tppButton != null) tppButton.onClick.AddListener(() => SetView(CommunicationManager.WorkerViewTPP));
@@ -47,6 +55,8 @@ public class PlantToolbar : MonoBehaviour
     /// <summary>Called by PlantUI a few times per second.</summary>
     public void Refresh(bool workerActive, bool uiHidden, bool explosionView = false)
     {
+        PlaceUnderDayNight();
+
         // Explosion view: the whole toolbar and the day / night button are off (only Collapse All is shown).
         SetActive(gameObject, !explosionView);
         if (explosionView)
@@ -72,6 +82,27 @@ public class PlantToolbar : MonoBehaviour
         bool dayNight = DayNightController.Instance != null;
         SetActive(dayNightButton != null ? dayNightButton.gameObject : null, dayNight && !uiHidden);
         if (dayNight) ShowTimeOfDay(DayNightController.Instance.Current);
+    }
+
+    // Top-right corner of the toolbar = bottom-right corner of the Day / Night button (+ gap); when that button is
+    // hidden (rooms without day / night) the toolbar moves up into its place. Pivot at the top: it opens downwards.
+    private void PlaceUnderDayNight()
+    {
+        if (!stackUnderDayNight || dayNightButton == null) return;
+        var toolbar = (RectTransform)transform;
+        var dayNight = (RectTransform)dayNightButton.transform;
+
+        if (toolbar.pivot != Vector2.one)
+        {
+            toolbar.anchorMin = toolbar.anchorMax = Vector2.one;
+            toolbar.pivot = Vector2.one;
+        }
+
+        dayNight.GetWorldCorners(corners); // 0 bottom-left, 1 top-left, 2 top-right, 3 bottom-right
+        Vector3 target = dayNightButton.gameObject.activeInHierarchy
+            ? corners[3] - new Vector3(0f, gapBelowDayNight * toolbar.lossyScale.y, 0f)
+            : corners[2];
+        if ((toolbar.position - target).sqrMagnitude > 0.01f) toolbar.position = target;
     }
 
     private void SetView(string view)
