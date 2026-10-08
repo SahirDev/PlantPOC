@@ -250,6 +250,22 @@ public class BoilerFluidController : MonoBehaviour
     [SerializeField, Min(0f)]
     private float fireDelayAfterFull = 3f;
 
+    [Header("Flame vs Burner Power")]
+    [Tooltip("Flame size (thickness) at burner power 0 / 100 %, times the effect's own size.")]
+    [SerializeField] private Vector2 flameSizeRange = new Vector2(0.35f, 1.25f);
+    [Tooltip("Flame length (particle lifetime) at burner power 0 / 100 %.")]
+    [SerializeField] private Vector2 flameLengthRange = new Vector2(0.35f, 1.2f);
+    [Tooltip("Flame density (particles per second) at burner power 0 / 100 %.")]
+    [SerializeField] private Vector2 flameDensityRange = new Vector2(0.3f, 1.3f);
+    [Tooltip("Seconds for the flame to follow a burner power change.")]
+    [SerializeField, Min(0.05f)] private float flameEaseSeconds = 1f;
+
+    private ParticleSystem[] flameSystems;
+    private float[] flameBaseSize, flameBaseLifetime, flameBaseRate;
+    private Light[] flameLights;
+    private float[] flameBaseLight;
+    private float flameLevel = -1f;
+
 
     // =========================================================
     // BURNER POWER (0-1) & SIMULATION SPEED CONTROLS
@@ -836,6 +852,53 @@ public class BoilerFluidController : MonoBehaviour
         }
     }
 
+    // Burner flame follows the burner power: low power = small, short, thin flame; high = big, long, dense.
+    // Scales the effect's own values (cached once), so the look of the effect stays the artist's.
+    private void UpdateFlameSize()
+    {
+        if (fireEffect == null) return;
+
+        if (flameSystems == null)
+        {
+            flameSystems = fireEffect.GetComponentsInChildren<ParticleSystem>(true);
+            flameBaseSize = new float[flameSystems.Length];
+            flameBaseLifetime = new float[flameSystems.Length];
+            flameBaseRate = new float[flameSystems.Length];
+            for (int i = 0; i < flameSystems.Length; i++)
+            {
+                ParticleSystem.MainModule main = flameSystems[i].main;
+                flameBaseSize[i] = main.startSizeMultiplier;
+                flameBaseLifetime[i] = main.startLifetimeMultiplier;
+                flameBaseRate[i] = flameSystems[i].emission.rateOverTimeMultiplier;
+            }
+            flameLights = fireEffect.GetComponentsInChildren<Light>(true);
+            flameBaseLight = new float[flameLights.Length];
+            for (int i = 0; i < flameLights.Length; i++) flameBaseLight[i] = flameLights[i].intensity;
+        }
+
+        float target = Mathf.Clamp01(burnerPower);
+        if (flameLevel < 0f) flameLevel = target;
+        else if (Mathf.Approximately(flameLevel, target)) return;
+        else flameLevel = Mathf.MoveTowards(flameLevel, target, Time.deltaTime / flameEaseSeconds);
+
+        float size = Mathf.Lerp(flameSizeRange.x, flameSizeRange.y, flameLevel);
+        float length = Mathf.Lerp(flameLengthRange.x, flameLengthRange.y, flameLevel);
+        float density = Mathf.Lerp(flameDensityRange.x, flameDensityRange.y, flameLevel);
+
+        for (int i = 0; i < flameSystems.Length; i++)
+        {
+            if (flameSystems[i] == null) continue;
+            ParticleSystem.MainModule main = flameSystems[i].main;
+            main.startSizeMultiplier = flameBaseSize[i] * size;
+            main.startLifetimeMultiplier = flameBaseLifetime[i] * length;
+            ParticleSystem.EmissionModule emission = flameSystems[i].emission;
+            emission.rateOverTimeMultiplier = flameBaseRate[i] * density;
+        }
+
+        for (int i = 0; i < flameLights.Length; i++)
+            if (flameLights[i] != null) flameLights[i].intensity = flameBaseLight[i] * Mathf.Lerp(0.4f, 1.3f, flameLevel);
+    }
+
     private static void ApplyParticleSpeed(ParticleSystem ps, float speed)
     {
         if (ps != null)
@@ -861,6 +924,8 @@ public class BoilerFluidController : MonoBehaviour
 
     private void Update()
     {
+        UpdateFlameSize();
+
         // Check for runtime changes to burner power slider
         if (!Mathf.Approximately(burnerPower, lastBurnerPower))
         {
