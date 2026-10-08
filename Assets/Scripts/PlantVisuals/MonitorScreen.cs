@@ -20,7 +20,8 @@ public class MonitorScreen : MonoBehaviour
     [SerializeField] private Source source = Source.Auto;
     [Tooltip("Turbine shown (Source = Turbine). Empty = the nearest one.")]
     [SerializeField] private TurbineData turbine;
-    [SerializeField, Min(1f)] private float refreshSeconds = 5f;
+    [Tooltip("How often the screen checks for a new reading (s). Readings themselves come every 5 s (PlantDataClock).")]
+    [SerializeField, Min(0.05f)] private float pollSeconds = 0.25f;
     [Tooltip("Panel on the other face of the screen mesh.")]
     [SerializeField] private bool flipSide;
     [Tooltip("Free border around the panel, as a fraction of the screen size.")]
@@ -72,6 +73,7 @@ public class MonitorScreen : MonoBehaviour
     private TMP_Text[] values;
     private Image statusDot;
     private float nextRefresh, refreshedAt = -10f;
+    private int shownVersion = int.MinValue;
     private bool built;
     private const float FlashSeconds = 0.6f;
 
@@ -137,7 +139,12 @@ public class MonitorScreen : MonoBehaviour
     private void Update()
     {
         if (!built) return;
-        if (Time.unscaledTime >= nextRefresh) Refresh();
+        if (Time.unscaledTime >= nextRefresh)
+        {
+            nextRefresh = Time.unscaledTime + pollSeconds;
+            int version = CurrentVersion();
+            if (version != shownVersion) Refresh();
+        }
 
         // Short flash after each update, so a refresh is visible even when a value stays the same.
         float t = (Time.unscaledTime - refreshedAt) / FlashSeconds;
@@ -163,10 +170,18 @@ public class MonitorScreen : MonoBehaviour
 
     // ------------------------------------------------------------------ values
 
+    // Version of the reading shown: boiler -> BoilerMonitorValues, turbine -> TurbineData (reading taken first).
+    private int CurrentVersion()
+    {
+        if (source == Source.Turbine) return turbine != null ? turbine.Version : 0;
+        BoilerMonitorValues.Current();
+        return BoilerMonitorValues.Version;
+    }
+
     private void Refresh()
     {
-        nextRefresh = Time.unscaledTime + refreshSeconds;
         if (!built) return;
+        shownVersion = CurrentVersion();
         refreshedAt = Time.unscaledTime;
 
         if (source == Source.Turbine) ShowTurbine();
@@ -370,13 +385,24 @@ public static class BoilerMonitorValues
     }
 
     private static float temperature = 25.8f;
-    private static int lastFrame = -1;
+    private static int lastTick = int.MinValue;
+    private static bool dirty;
     private static Values last;
 
+    /// <summary>Goes up with every new reading - displays redraw when it changes.</summary>
+    public static int Version { get; private set; }
+
+    /// <summary>Take a new reading at the next Current() (burner slider moved).</summary>
+    public static void Invalidate() => dirty = true;
+
+    /// <summary>The current reading - the same for every monitor and the Plant UI until the next 5 s tick.</summary>
     public static Values Current()
     {
-        if (lastFrame == Time.frameCount) return last; // several monitors, one calculation
-        lastFrame = Time.frameCount;
+        int tick = PlantDataClock.Tick;
+        if (tick == lastTick && !dirty) return last;
+        lastTick = tick;
+        dirty = false;
+        Version++;
 
         BoilerFluidController fluid = BoilerFluidController.instance;
         var v = new Values

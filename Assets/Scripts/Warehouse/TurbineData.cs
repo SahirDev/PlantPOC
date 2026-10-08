@@ -5,7 +5,7 @@ using Random = UnityEngine.Random;
 /// <summary>
 /// One turbine: mock live data + operation effects.
 /// React (through CommunicationManager):
-///   - handleTurbineData every UpdateRate seconds while the worker is at this turbine or it is operating.
+///   - handleTurbineData every 5 s (PlantDataClock) while the worker is at this turbine or it is operating.
 ///   - GetAllTurbineData_Extern / GetTurbineData_Extern(id) ask for the values at any time.
 /// The old UI Toolkit monitor is gone; React draws it from this data.
 /// </summary>
@@ -16,8 +16,10 @@ public class TurbineData : MonoBehaviour
 
     [Header("Mock Data Simulation")]
     [Space]
+#pragma warning disable 0414 // kept for old scenes: readings now follow PlantDataClock (5 s, shared)
     [SerializeField]
-    private float UpdateRate = 3;
+    private float UpdateRate = 5;
+#pragma warning restore 0414
 
     [Space]
     [SerializeField]
@@ -45,6 +47,10 @@ public class TurbineData : MonoBehaviour
     private SpinObjects cachedSpinObject;
     private bool workerInRange;
     private bool operating;
+    private int lastTick = int.MinValue;
+
+    /// <summary>Goes up with every new reading - the monitors and the Plant UI redraw when it changes.</summary>
+    public int Version { get; private set; }
 
     public bool IsOperating => operating;
 
@@ -75,13 +81,21 @@ public class TurbineData : MonoBehaviour
     private void OnEnable()
     {
         activeTurbines.Add(this);
-        InvokeRepeating(nameof(SimulateData), 1f, Mathf.Max(0.1f, UpdateRate));
+        lastTick = int.MinValue;
     }
 
     private void OnDisable()
     {
-        CancelInvoke(nameof(SimulateData));
         activeTurbines.Remove(this);
+    }
+
+    // A new reading every 5 s, at the same moment for all turbines, monitors and the Plant UI (PlantDataClock).
+    private void Update()
+    {
+        int tick = PlantDataClock.Tick;
+        if (tick == lastTick) return;
+        lastTick = tick;
+        SimulateData();
     }
 
     private void Start()
@@ -102,7 +116,7 @@ public class TurbineData : MonoBehaviour
             HUDController.Instance.SetInRangeOfEquipment(EquipmentType.Turbine, gameObject);
         }
 
-        SendData(); // React gets values immediately, not after up to UpdateRate seconds
+        SendData(); // React gets values immediately, not after up to 5 seconds
     }
 
     private void OnTriggerExit(Collider other)
@@ -119,6 +133,7 @@ public class TurbineData : MonoBehaviour
     public void SimulateData()
     {
         if (data == null) return;
+        Version++;
 
         // More load (steam admission) -> higher temperature, pressure, speed, flow and vibration.
         float temp = AtLoad(TemperatureRange);
@@ -153,6 +168,7 @@ public class TurbineData : MonoBehaviour
         if (cachedSpinObject == null) cachedSpinObject = GetComponentInChildren<SpinObjects>();
         if (cachedSpinObject != null) cachedSpinObject.shouldSpin = true;
 
+        SimulateData(); // running values at once (monitors + Plant UI)
         SendData();
     }
 
@@ -175,6 +191,7 @@ public class TurbineData : MonoBehaviour
         if (cachedSpinObject == null) cachedSpinObject = GetComponentInChildren<SpinObjects>();
         if (cachedSpinObject != null) cachedSpinObject.shouldSpin = false;
 
+        SimulateData();
         SendData();
     }
 

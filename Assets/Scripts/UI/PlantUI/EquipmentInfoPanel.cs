@@ -6,7 +6,7 @@ using UnityEngine.UI;
 /// <summary>
 /// Equipment info panel of the Plant UI (top-left): Boiler, Turbine or Electrical Panel. Shown by PlantUI while the
 /// worker is at that equipment. Header with status (Running / Standby / High / Alarm) and collapse button,
-/// parameter rows refreshed every <see cref="refreshSeconds"/>, a slider that drives the equipment and (boiler /
+/// parameter rows with the same readings as the room monitors (new reading every 5 s, PlantDataClock), a slider that drives the equipment and (boiler /
 /// turbine) a Start / Stop Operation button. Everything goes through the same functions React uses.
 ///   Boiler     - slider = Burner Power  -> water level falls, temperature / pressure rise
 ///   Turbine    - slider = Steam Load    -> temperature, pressure, speed, flow, vibration rise
@@ -17,7 +17,10 @@ public class EquipmentInfoPanel : MonoBehaviour
     public enum Kind { Boiler, Turbine, Electrical }
 
     [SerializeField] private Kind kind = Kind.Boiler;
-    [SerializeField, Min(1f)] private float refreshSeconds = 5f;
+    [Tooltip("How often the panel checks for a new reading (s). Readings come every 5 s, same as the monitors.")]
+    [SerializeField, Min(0.05f)] private float pollSeconds = 0.25f;
+    [Tooltip("Clicking the header (title / status) also collapses / opens the panel.")]
+    [SerializeField] private bool headerToggles = true;
 
     [Header("Header")]
     [SerializeField] private TMP_Text title;
@@ -63,6 +66,8 @@ public class EquipmentInfoPanel : MonoBehaviour
     private ElectricalPanelInfo electrical;
     private bool collapsed;
     private float nextRefresh, nextStatus;
+    private int shownVersion = int.MinValue, electricalTick = int.MinValue;
+    private object shownElectrical;
 
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
@@ -70,7 +75,11 @@ public class EquipmentInfoPanel : MonoBehaviour
 
     private void Awake()
     {
-        if (collapseButton != null) collapseButton.onClick.AddListener(ToggleCollapsed);
+        if (collapseButton != null)
+        {
+            collapseButton.onClick.AddListener(ToggleCollapsed);
+            if (headerToggles) MakeHeaderClickable(collapseButton.transform.parent);
+        }
         if (operationButton != null) operationButton.onClick.AddListener(ToggleOperation);
         if (explodeButton != null) explodeButton.onClick.AddListener(() => { if (PlantUI.Instance != null) PlantUI.Instance.ExplodeAll(); });
         if (slider != null)
@@ -105,14 +114,35 @@ public class EquipmentInfoPanel : MonoBehaviour
             }
             if (boiler == null && kind == Kind.Boiler) boiler = BoilerFluidController.instance;
             nextRefresh = 0f;
+            shownVersion = int.MinValue;
+            shownElectrical = null;
+            electricalTick = int.MinValue;
         }
 
         if (!gameObject.activeSelf)
         {
             gameObject.SetActive(true);
             nextRefresh = 0f;
+            shownVersion = int.MinValue;
+            shownElectrical = null;
             SyncSlider();
         }
+    }
+
+    // The whole header row (title, status) toggles too - easier to hit than the small chevron.
+    private void MakeHeaderClickable(Transform header)
+    {
+        if (header == null || header == transform || header.GetComponent<Button>() != null) return;
+        Image hit = header.GetComponent<Image>();
+        if (hit == null)
+        {
+            hit = header.gameObject.AddComponent<Image>();
+            hit.color = new Color(0f, 0f, 0f, 0f); // invisible, only catches the click
+        }
+        Button button = header.gameObject.AddComponent<Button>();
+        button.targetGraphic = hit;
+        button.transition = Selectable.Transition.None;
+        button.onClick.AddListener(ToggleCollapsed);
     }
 
     public void ToggleCollapsed()
@@ -134,8 +164,31 @@ public class EquipmentInfoPanel : MonoBehaviour
 
         if (Time.unscaledTime >= nextRefresh)
         {
-            nextRefresh = Time.unscaledTime + refreshSeconds;
-            RefreshValues();
+            nextRefresh = Time.unscaledTime + pollSeconds;
+            if (HasNewReading()) RefreshValues();
+        }
+    }
+
+    // New reading since the last redraw? (boiler / turbine: their version; electrical: one reading per 5 s tick
+    // for the panel shown, or a new one from the voltage slider).
+    private bool HasNewReading()
+    {
+        switch (kind)
+        {
+            case Kind.Boiler:
+                BoilerMonitorValues.Current();
+                return BoilerMonitorValues.Version != shownVersion;
+            case Kind.Turbine:
+                return turbine != null && turbine.Version != shownVersion;
+            default:
+                int tick = PlantDataClock.Tick;
+                if (tick != electricalTick && electrical != null)
+                {
+                    electricalTick = tick;
+                    electrical.RefreshUI(); // new reading -> HUD.LastElectricalValues
+                }
+                object latest = HUDController.HasInstance ? HUDController.Instance.LastElectricalValues : null;
+                return latest != null && latest != shownElectrical;
         }
     }
 
@@ -193,17 +246,19 @@ public class EquipmentInfoPanel : MonoBehaviour
             case Kind.Boiler:
             {
                 BoilerMonitorValues.Values v = BoilerMonitorValues.Current();
+                shownVersion = BoilerMonitorValues.Version;
                 Set(0, $"{v.temperature:F1} °C");
                 Set(1, $"{v.waterLevel:F1} %");
                 Set(2, $"{v.pressure:F2} bar");
                 Set(3, $"{v.burner:F0} %");
                 Set(4, $"{v.valve:F0} %");
-                Set(5, $"{v.winding:F0} °C");
+                Set(5, $"{v.winding:F1} °C");
                 break;
             }
             case Kind.Turbine:
             {
                 if (turbine == null) break;
+                shownVersion = turbine.Version;
                 TurbineDataPayload p = turbine.ToPayload();
                 if (title != null && !string.IsNullOrEmpty(p.name)) title.text = p.name;
                 Set(0, $"{p.temperature:F1} °C");
@@ -215,9 +270,9 @@ public class EquipmentInfoPanel : MonoBehaviour
             }
             default:
             {
-                if (electrical != null) electrical.RefreshUI(); // new live values -> HUD.LastElectricalValues
                 ElectricalValuesPayload e = HUDController.HasInstance ? HUDController.Instance.LastElectricalValues : null;
                 if (e == null) break;
+                shownElectrical = e;
                 Set(0, $"{e.generatorKV:F0} KV");
                 Set(1, $"{e.gridKV:F0} KV");
                 Set(2, $"{e.loading:F0} %");
@@ -258,8 +313,8 @@ public class EquipmentInfoPanel : MonoBehaviour
                 break;
         }
 
-        // Show the effect soon (then back to the normal 5 s rhythm).
-        nextRefresh = Mathf.Min(nextRefresh, Time.unscaledTime + 0.4f);
+        // The source takes a new reading at once (burner / load / voltage changed) -> shown at the next poll.
+        nextRefresh = 0f;
     }
 
     private void SyncSlider()

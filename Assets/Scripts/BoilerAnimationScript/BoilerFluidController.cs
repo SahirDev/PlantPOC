@@ -678,6 +678,7 @@ public class BoilerFluidController : MonoBehaviour
         burnerPower = Mathf.Clamp01(power01);
         lastBurnerPower = burnerPower;
         UpdateBurnerPowerEffects();
+        BoilerMonitorValues.Invalidate(); // monitors + Plant UI show the new burner power at once
     }
 
     public void SetWaterLevel(float fill01)
@@ -1016,6 +1017,7 @@ public class BoilerFluidController : MonoBehaviour
     public void StartProcess()
     {
         started = true;
+        BoilerMonitorValues.Invalidate();
 
         // =====================================================
         // RESET TARGET OBJECT TO ORIGINAL MATERIAL
@@ -2611,6 +2613,7 @@ public class BoilerFluidController : MonoBehaviour
         // =====================================================
 
         started = false;
+        BoilerMonitorValues.Invalidate();
 
         // =====================================================
         // RESET PIPE STATE
