@@ -91,7 +91,7 @@ public static partial class ThermalPlantTools
             ("Turbine", "tp_turbine", "4"),
             ("Electrical", "tp_electrical", "3"),
             ("Condenser", "condenser", "2"),
-            ("Chimney", "chimney", "1"),
+            ("Chimney", "chimney", "2"),
         };
 
         // ---- pages
@@ -223,14 +223,16 @@ public static partial class ThermalPlantTools
         for (int i = 0; i < condensers.Length; i++)
             condensers[i] = BuildStatusCard(pageContents[3], $"Condenser {i + 1:00}", "condenser", condenserLeft, condenserRight, "tp_load", "Load", false);
 
-        PlantStatusCard chimney = BuildStatusCard(pageContents[4], "Chimney (Stack)", "chimney", chimneyLeft, chimneyRight, "smoke", "Smoke Level", false);
+        var chimneys = new Object[2];
+        for (int i = 0; i < chimneys.Length; i++)
+            chimneys[i] = BuildStatusCard(pageContents[4], $"Chimney {i + 1:00}", "chimney", chimneyLeft, chimneyRight, "smoke", "Smoke Level", false);
         BuildSmokeCases(pageContents[4], out Object[] frames, out Object[] swatches, out TextMeshProUGUI indication);
 
         SetArray(panelSO, "boilers", boilers);
         SetArray(panelSO, "turbines", turbines);
         SetArray(panelSO, "electricalPanels", electricals);
         SetArray(panelSO, "condensers", condensers);
-        panelSO.FindProperty("chimney").objectReferenceValue = chimney;
+        SetArray(panelSO, "chimneys", chimneys);
         SetArray(panelSO, "caseFrames", frames);
         SetArray(panelSO, "caseSwatches", swatches);
         panelSO.FindProperty("smokeIndication").objectReferenceValue = indication;

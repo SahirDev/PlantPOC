@@ -41,6 +41,10 @@ public class PlantStatusPanel : MonoBehaviour
     [SerializeField] private PlantStatusCard[] turbines = new PlantStatusCard[0];
     [SerializeField] private PlantStatusCard[] electricalPanels = new PlantStatusCard[0];
     [SerializeField] private PlantStatusCard[] condensers = new PlantStatusCard[0];
+    [Tooltip("Chimney cards (Chimney 01, Chimney 02). Fewer cards than Chimney Count: copies of the first are added.")]
+    [SerializeField] private PlantStatusCard[] chimneys = new PlantStatusCard[0];
+    [SerializeField, Min(1)] private int chimneyCount = 2;
+    [Tooltip("Older single chimney card (used when Chimneys is empty).")]
     [SerializeField] private PlantStatusCard chimney;
 
     [Header("Chimney smoke cases (0, 0.2, 0.4, 0.6, 0.8, 1.0)")]
@@ -54,7 +58,7 @@ public class PlantStatusPanel : MonoBehaviour
     [SerializeField] private string[] turbineTargets = { "Turbine Room" };
     [SerializeField] private string[] electricalTargets = { "Control Room" };
     [SerializeField] private string[] condenserTargets = { "Condensor Unit 01", "Condensor Unit 02" };
-    [SerializeField] private string chimneyTarget = "Chimney 01";
+    [SerializeField] private string[] chimneyTargets = { "Chimney 01", "Chimney 02" };
 
     [Header("Demo warning: this boiler (0-based, -1 = none) shows a red High Drum Pressure warning")]
     [SerializeField] private int warningBoiler = 1;
@@ -97,7 +101,8 @@ public class PlantStatusPanel : MonoBehaviour
         for (int i = 0; i < turbines.Length; i++) MakeFocusable(turbines[i], Pick(turbineTargets, i));
         for (int i = 0; i < electricalPanels.Length; i++) MakeFocusable(electricalPanels[i], Pick(electricalTargets, i));
         for (int i = 0; i < condensers.Length; i++) MakeFocusable(condensers[i], Pick(condenserTargets, i));
-        MakeFocusable(chimney, chimneyTarget);
+        SetupChimneys();
+        for (int i = 0; i < chimneys.Length; i++) MakeFocusable(chimneys[i], Pick(chimneyTargets, i));
 
         // Smoke cases: click -> set the plant's smoke to that level (0 = smoke stops).
         for (int i = 0; i < caseFrames.Length; i++)
@@ -107,6 +112,32 @@ public class PlantStatusPanel : MonoBehaviour
         }
 
         ShowPage(page);
+    }
+
+    // Both chimneys get a card: copies of the first card are added below it when the prefab has fewer.
+    private void SetupChimneys()
+    {
+        var list = new System.Collections.Generic.List<PlantStatusCard>();
+        foreach (PlantStatusCard c in chimneys) if (c != null) list.Add(c);
+        if (list.Count == 0 && chimney != null) list.Add(chimney);
+        if (list.Count == 0) return;
+
+        PlantStatusCard template = list[0];
+        while (list.Count < chimneyCount)
+        {
+            PlantStatusCard copy = Instantiate(template, template.transform.parent);
+            copy.name = $"Chimney{list.Count + 1:00}";
+            copy.transform.SetSiblingIndex(list[list.Count - 1].transform.GetSiblingIndex() + 1);
+            list.Add(copy);
+        }
+        chimneys = list.ToArray();
+
+        // Tab badge = number of chimneys.
+        if (tabs.Length > (int)Page.Chimney && tabs[(int)Page.Chimney]?.countBackground != null)
+        {
+            TMP_Text count = tabs[(int)Page.Chimney].countBackground.GetComponentInChildren<TMP_Text>(true);
+            if (count != null) count.text = chimneys.Length.ToString(Invariant);
+        }
     }
 
     private static string Pick(string[] names, int i) =>
@@ -331,23 +362,25 @@ public class PlantStatusPanel : MonoBehaviour
 
     private void FillChimney(float smoke)
     {
-        PlantStatusSimulation.ChimneyReading r = PlantStatusSimulation.Chimney(smoke);
         int stage = Mathf.Clamp(Mathf.RoundToInt(smoke * 5f), 0, 5);
 
-        if (chimney != null)
+        for (int i = 0; i < chimneys.Length; i++)
         {
-            chimney.SetTitle("Chimney (Stack)");
+            PlantStatusCard card = chimneys[i];
+            if (card == null) continue;
+            PlantStatusSimulation.ChimneyReading r = PlantStatusSimulation.Chimney(smoke, i);
+            card.SetTitle($"Chimney {i + 1:00}");
             Color c = stage <= 1 ? running : stage == 2 ? high : alarm;
-            chimney.SetStatus(stage == 0 ? "No Smoke" : stage == 1 ? "Normal" : stage == 2 ? "Watch" : "Alarm", c);
-            chimney.SetValue(0, N(smoke, "F2"));
-            chimney.SetValue(1, $"{N(r.opacity, "F0")} %");
-            chimney.SetValue(2, $"{N(r.stackTemp, "F0")} °C");
-            chimney.SetValue(3, $"{N(r.velocity, "F1")} m/s");
-            chimney.SetValue(4, $"{N(r.particulate, "F0")} mg/Nm³");
-            chimney.SetValue(5, $"{N(r.sox, "F0")} mg/Nm³");
-            chimney.SetValue(6, $"{N(r.nox, "F0")} mg/Nm³");
-            chimney.SetValue(7, $"{N(r.co, "F0")} ppm");
-            chimney.SetBar(smoke, N(smoke, "F2"));
+            card.SetStatus(stage == 0 ? "No Smoke" : stage == 1 ? "Normal" : stage == 2 ? "Watch" : "Alarm", c);
+            card.SetValue(0, N(smoke, "F2"));
+            card.SetValue(1, $"{N(r.opacity, "F0")} %");
+            card.SetValue(2, $"{N(r.stackTemp, "F0")} °C");
+            card.SetValue(3, $"{N(r.velocity, "F1")} m/s");
+            card.SetValue(4, $"{N(r.particulate, "F0")} mg/Nm³");
+            card.SetValue(5, $"{N(r.sox, "F0")} mg/Nm³");
+            card.SetValue(6, $"{N(r.nox, "F0")} mg/Nm³");
+            card.SetValue(7, $"{N(r.co, "F0")} ppm");
+            card.SetBar(smoke, N(smoke, "F2"));
         }
 
         for (int i = 0; i < caseFrames.Length; i++)
@@ -501,13 +534,15 @@ public static class PlantStatusSimulation
 
     public static string Indication(int stage) => Indications[Mathf.Clamp(stage, 0, Indications.Length - 1)];
 
-    public static ChimneyReading Chimney(float smoke)
+    /// <param name="unit">Chimney 0, 1...: same smoke level, slightly different stack readings.</param>
+    public static ChimneyReading Chimney(float smoke, int unit = 0)
     {
         smoke = Mathf.Clamp01(smoke);
+        float offset = unit * 3f;
         return new ChimneyReading
         {
             opacity = Blend(Opacity, smoke) + (smoke > 0.01f ? Noise(1f) : 0f),
-            stackTemp = Blend(StackTemp, smoke) + Noise(1f),
+            stackTemp = Blend(StackTemp, smoke) + offset + Noise(1f),
             velocity = smoke > 0.001f ? 16f + smoke * 4f + Noise(0.3f) : 0f,
             particulate = Blend(Particulate, smoke) + Noise(1.5f),
             sox = Blend(Sox, smoke) + Noise(4f),
