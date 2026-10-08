@@ -47,6 +47,23 @@ public class RTSCameraController : MonoBehaviour
     [SerializeField, Min(0.1f)]
     private float minCameraDistance = 2f;
 
+    [Header("Click To Focus (explosion view only)")]
+    [Tooltip("Clicking a part glides the orbit camera to it and frames it (the normal room never does this).")]
+    [SerializeField]
+    private bool focusOnClick = true;
+
+    [Tooltip("Seconds for the glide to the clicked part.")]
+    [SerializeField, Min(0f)]
+    private float focusSeconds = 0.6f;
+
+    [Tooltip("Space around the part when framed (1 = tight).")]
+    [SerializeField, Min(1f)]
+    private float focusPadding = 1.4f;
+
+    [Tooltip("Closest the camera gets to a small focused part (m). Zooming in can go this close after a focus.")]
+    [SerializeField, Min(0.5f)]
+    private float focusMinDistance = 2.5f;
+
     [Header("Raycast")]
     [SerializeField]
     private LayerMask interactableLayers;
@@ -87,6 +104,12 @@ public class RTSCameraController : MonoBehaviour
     // so the camera is kept inside its bounds instead.
     private bool hasRoomBox;
     private Bounds roomBox;
+
+    // Glide to a clicked part.
+    private bool focusing, focusedOnPart;
+    private float focusTime;
+    private Vector3 focusFromPivot, focusToPivot;
+    private float focusFromDistance, focusToDistance;
 
     private void Awake()
     {
@@ -234,6 +257,7 @@ public class RTSCameraController : MonoBehaviour
         HandleOrbit();
         HandlePan();
         HandleZoom();
+        UpdateFocusGlide();
 
         UpdateCameraPosition();
 
@@ -241,8 +265,9 @@ public class RTSCameraController : MonoBehaviour
         if (showPartNameOnHover) GetMouseHoveredObject();
     }
 
-    // A click only selects: it never moves the camera or explodes anything (that is done by the buttons).
-    // Most boiler / turbine meshes are children of a part, so the part is looked up in the parents.
+    // A click selects the part (maintenance sheet) and, in this explosion view, focuses the camera on it.
+    // It never explodes anything (that is done by the buttons). Most boiler / turbine meshes are children of
+    // a part, so the part is looked up in the parents.
     private void HandleHit(RaycastHit hit)
     {
         if (hit.collider == null || HUDController.Instance == null || Mouse.current == null) return;
@@ -253,6 +278,43 @@ public class RTSCameraController : MonoBehaviour
 
         if (part != null) HUDController.Instance.ShowClickContext(pointer, part);
         else HUDController.Instance.ShowClickContext(pointer, selectedObject); // shows its name only
+
+        if (focusOnClick) FocusOn(part != null ? part.gameObject : selectedObject);
+    }
+
+    /// <summary>Glides the orbit camera to the object and frames it (keeps the current viewing angle).</summary>
+    public void FocusOn(GameObject target)
+    {
+        if (target == null || targetCamera == null) return;
+
+        Renderer[] renderers = target.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0) return;
+        Bounds bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+
+        float halfVertical = targetCamera.fieldOfView * 0.5f * Mathf.Deg2Rad;
+        float halfHorizontal = Mathf.Atan(Mathf.Tan(halfVertical) * targetCamera.aspect);
+        float distance = bounds.extents.magnitude * focusPadding / Mathf.Sin(Mathf.Max(0.05f, Mathf.Min(halfVertical, halfHorizontal)));
+
+        focusFromPivot = _pivot;
+        focusFromDistance = _distance;
+        focusToPivot = bounds.center;
+        focusToDistance = Mathf.Clamp(distance, focusMinDistance, maxZoomDistance);
+        focusTime = 0f;
+        focusing = true;
+        focusedOnPart = true;
+    }
+
+    private void UpdateFocusGlide()
+    {
+        if (!focusing) return;
+        if (IsPanning) { focusing = false; return; } // the user takes over
+
+        focusTime += Time.unscaledDeltaTime;
+        float t = focusSeconds > 0f ? Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(focusTime / focusSeconds)) : 1f;
+        _pivot = Vector3.Lerp(focusFromPivot, focusToPivot, t);
+        _distance = Mathf.Lerp(focusFromDistance, focusToDistance, t);
+        if (t >= 1f) focusing = false;
     }
 
     private ModularExplodedView GetExplodable(GameObject obj)
@@ -300,8 +362,13 @@ public class RTSCameraController : MonoBehaviour
     {
         if (IsPointerOverUI()) return; // scrolling a React panel must not zoom
 
-        _distance -= ZoomInput.y * zoomSpeed * 0.01f;
-        _distance = Mathf.Clamp(_distance, minZoomDistance, maxZoomDistance);
+        float zoom = ZoomInput.y;
+        if (Mathf.Abs(zoom) < 0.001f) return;
+
+        focusing = false; // the user takes over
+        _distance -= zoom * zoomSpeed * 0.01f;
+        // After a part focus the camera may stay closer than the normal minimum.
+        _distance = Mathf.Clamp(_distance, focusedOnPart ? Mathf.Min(minZoomDistance, focusMinDistance) : minZoomDistance, maxZoomDistance);
     }
 
     private void UpdateCameraPosition()
