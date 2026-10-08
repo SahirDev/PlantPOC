@@ -28,9 +28,16 @@ public class ControlRoomStatusLamps : MonoBehaviour
         var lamps = go.AddComponent<ControlRoomStatusLamps>();
         lamps.panel = panel;
         lamps.Build();
-        lamps.Mount(near != null ? near : panel.transform);
+        if (UseFixedPlacement) go.transform.SetPositionAndRotation(FixedPosition, Quaternion.Euler(FixedRotation));
+        else lamps.Mount(near != null ? near : panel.transform);
         return lamps;
     }
+
+    // Placed by hand in the Control_Room (world position / rotation). Set UseFixedPlacement false to find a wall
+    // near the 3rd panel automatically instead.
+    public static bool UseFixedPlacement = true;
+    public static Vector3 FixedPosition = new Vector3(-2.9f, 2f, -0.3f);
+    public static Vector3 FixedRotation = new Vector3(0f, -180f, 0f);
 
     // ------------------------------------------------------------------ placement
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Globalization;
 using TMPro;
 using UnityEngine;
@@ -48,6 +49,16 @@ public class PlantStatusPanel : MonoBehaviour
     [SerializeField] private TMP_Text smokeIndication;
     [SerializeField] private Color caseFrameIdle = new Color(1f, 1f, 1f, 0.05f);
 
+    [Header("Click a card: overview camera focuses that building (Highlight box collider of this name)")]
+    [SerializeField] private string[] boilerTargets = { "Boiler Room 01", "Boiler Room 02" };
+    [SerializeField] private string[] turbineTargets = { "Turbine Room" };
+    [SerializeField] private string[] electricalTargets = { "Control Room" };
+    [SerializeField] private string[] condenserTargets = { "Condensor Unit 01", "Condensor Unit 02" };
+    [SerializeField] private string chimneyTarget = "Chimney 01";
+
+    [Header("Demo warning: this boiler (0-based, -1 = none) shows a red High Drum Pressure warning")]
+    [SerializeField] private int warningBoiler = 1;
+
     [Header("Header")]
     [SerializeField] private TMP_Text dateText;
     [SerializeField] private TMP_Text timeText;
@@ -80,7 +91,98 @@ public class PlantStatusPanel : MonoBehaviour
         }
         if (closeButton != null) closeButton.onClick.AddListener(Close);
         if (backdropButton != null) backdropButton.onClick.AddListener(Close);
+
+        // Cards: click -> camera focuses the building.
+        for (int i = 0; i < boilers.Length; i++) MakeFocusable(boilers[i], Pick(boilerTargets, i));
+        for (int i = 0; i < turbines.Length; i++) MakeFocusable(turbines[i], Pick(turbineTargets, i));
+        for (int i = 0; i < electricalPanels.Length; i++) MakeFocusable(electricalPanels[i], Pick(electricalTargets, i));
+        for (int i = 0; i < condensers.Length; i++) MakeFocusable(condensers[i], Pick(condenserTargets, i));
+        MakeFocusable(chimney, chimneyTarget);
+
+        // Smoke cases: click -> set the plant's smoke to that level (0 = smoke stops).
+        for (int i = 0; i < caseFrames.Length; i++)
+        {
+            float level = i * 0.2f;
+            MakeClickable(caseFrames[i], () => SetSmoke(level), true);
+        }
+
         ShowPage(page);
+    }
+
+    private static string Pick(string[] names, int i) =>
+        names == null || names.Length == 0 ? null : names[Mathf.Min(i, names.Length - 1)];
+
+    private void MakeFocusable(PlantStatusCard card, string target)
+    {
+        if (card == null || string.IsNullOrEmpty(target)) return;
+        MakeClickable(card.GetComponent<Graphic>(), () => Focus(target), false);
+    }
+
+    private static void MakeClickable(Graphic graphic, UnityEngine.Events.UnityAction action, bool tint)
+    {
+        if (graphic == null) return;
+        graphic.raycastTarget = true;
+        if (!graphic.TryGetComponent(out Button button))
+        {
+            button = graphic.gameObject.AddComponent<Button>();
+            button.targetGraphic = graphic;
+            if (!tint) button.transition = Selectable.Transition.None;
+        }
+        button.onClick.AddListener(action);
+    }
+
+    // ------------------------------------------------------------------ smoke cases
+
+    private void SetSmoke(float level)
+    {
+        if (CommunicationManager.HasInstance) CommunicationManager.Instance.SetSmokeLevel_Extern(level.ToString("0.0", Invariant));
+        else if (SmokeColorController.Instance != null) SmokeColorController.Instance.SetLevel(level);
+        Refresh();
+    }
+
+    // ------------------------------------------------------------------ focus
+
+    private Coroutine focusRoutine;
+
+    /// <summary>Overview camera: select + focus the "Highlight" box collider with this name (switches to the
+    /// overview first when the worker is active).</summary>
+    public void Focus(string objectName)
+    {
+        BoxCollider box = FindHighlight(objectName);
+        PlantIsometricCameraController cam = PlantIsometricCameraController.HasInstance ? PlantIsometricCameraController.Instance : null;
+        if (box == null || cam == null)
+        {
+            Debug.LogWarning($"[PlantStatusPanel] No Highlight box collider '{objectName}' (or no overview camera) in this scene.");
+            return;
+        }
+        if (focusRoutine != null) StopCoroutine(focusRoutine);
+        focusRoutine = StartCoroutine(FocusWhenReady(cam, box));
+    }
+
+    private IEnumerator FocusWhenReady(PlantIsometricCameraController cam, BoxCollider box)
+    {
+        if (!cam.IsInIsometricMode) cam.EnableIsometricMode();
+        float waited = 0f;
+        while ((cam.IsTransitioning || !cam.IsInIsometricMode) && waited < 5f)
+        {
+            waited += Time.unscaledDeltaTime;
+            yield return null;
+        }
+        cam.SelectBoxCollider(box);
+        focusRoutine = null;
+    }
+
+    private static BoxCollider FindHighlight(string objectName)
+    {
+        if (string.IsNullOrEmpty(objectName)) return null;
+        BoxCollider partial = null;
+        foreach (BoxCollider box in FindObjectsByType<BoxCollider>(FindObjectsSortMode.None))
+        {
+            if (!box.CompareTag("Highlight")) continue;
+            if (string.Equals(box.name, objectName, StringComparison.OrdinalIgnoreCase)) return box;
+            if (partial == null && box.name.IndexOf(objectName, StringComparison.OrdinalIgnoreCase) >= 0) partial = box;
+        }
+        return partial;
     }
 
     public void Toggle()
@@ -155,9 +257,14 @@ public class PlantStatusPanel : MonoBehaviour
     private void FillBoiler(PlantStatusCard card, int i)
     {
         if (card == null) return;
-        PlantStatusSimulation.BoilerReading r = PlantStatusSimulation.Boiler(i, shownSmoke);
+        bool warning = i == warningBoiler;
+        PlantStatusSimulation.BoilerReading r = PlantStatusSimulation.Boiler(i, shownSmoke, warning);
         card.SetTitle($"Boiler {i + 1:00}");
-        SetLoadStatus(card, r.load);
+        if (warning) card.SetStatus("Warning · High Drum Pressure", alarm);
+        else SetLoadStatus(card, r.load);
+        card.SetAlert(warning, alarm);
+        card.SetValueAlert(2, warning); // drum pressure
+        card.SetValueAlert(6, warning); // flue gas temperature
         card.SetValue(0, $"{N(r.furnace, "N0")} °C");
         card.SetValue(1, $"{N(r.waterLevel, "F1")} %");
         card.SetValue(2, $"{N(r.drumPressure, "F1")} bar");
@@ -300,10 +407,11 @@ public static class PlantStatusSimulation
     private static float Load(float[] loads, int i) => loads[Mathf.Clamp(i, 0, loads.Length - 1)];
 
     /// <param name="smoke">Plant smoke level 0..1: more smoke = less oxygen, hotter flue gas.</param>
-    public static BoilerReading Boiler(int i, float smoke)
+    /// <param name="warning">Demo fault: drum pressure above its 170 bar limit, hot flue gas.</param>
+    public static BoilerReading Boiler(int i, float smoke, bool warning = false)
     {
         float l = Load(boilerLoad, i);
-        return new BoilerReading
+        BoilerReading r = new BoilerReading
         {
             load = l,
             furnace = 700f + l * 4.5f + Noise(6f),
@@ -314,6 +422,12 @@ public static class PlantStatusSimulation
             flueGas = 170f + l * 0.84f + smoke * 25f + Noise(1.5f),
             oxygen = Mathf.Max(1f, 4.4f - l * 0.015f - smoke * 1.2f + Noise(0.08f)),
         };
+        if (warning)
+        {
+            r.drumPressure = 172f + Noise(1.2f);
+            r.flueGas += 38f;
+        }
+        return r;
     }
 
     public static TurbineReading Turbine(int i)

@@ -28,10 +28,48 @@ public class PlantStatusCard : MonoBehaviour
     [SerializeField] private TMP_Text barValue;
 
     private bool collapsed;
+    private Color[] defaultColors;
+    private bool alert;
+    private Color alertColor = new Color(1f, 0.32f, 0.3f);
+    private Outline outline;
+    private Color outlineColor;
 
     private void Awake()
     {
         if (collapseButton != null) collapseButton.onClick.AddListener(ToggleCollapsed);
+    }
+
+    /// <summary>Warning look: blinking red status dot, red border.</summary>
+    public void SetAlert(bool on, Color color)
+    {
+        alertColor = color;
+        if (alert == on) return;
+        alert = on;
+        if (outline == null && TryGetComponent(out outline)) outlineColor = outline.effectColor;
+        if (outline != null)
+        {
+            outline.effectColor = on ? new Color(color.r, color.g, color.b, 0.9f) : outlineColor;
+            outline.effectDistance = on ? new Vector2(2f, -2f) : new Vector2(1f, -1f);
+        }
+        if (!on && statusDot != null) statusDot.canvasRenderer.SetAlpha(1f);
+    }
+
+    /// <summary>Value in the alert colour (true) or back to its own colour (false).</summary>
+    public void SetValueAlert(int index, bool on)
+    {
+        if (index < 0 || index >= values.Length || values[index] == null) return;
+        if (defaultColors == null)
+        {
+            defaultColors = new Color[values.Length];
+            for (int i = 0; i < values.Length; i++) defaultColors[i] = values[i] != null ? values[i].color : Color.white;
+        }
+        values[index].color = on ? alertColor : defaultColors[index];
+    }
+
+    private void Update()
+    {
+        if (!alert || statusDot == null) return;
+        statusDot.canvasRenderer.SetAlpha(Mathf.PingPong(Time.unscaledTime * 2.5f, 1f) > 0.5f ? 1f : 0.25f);
     }
 
     public void ToggleCollapsed()
