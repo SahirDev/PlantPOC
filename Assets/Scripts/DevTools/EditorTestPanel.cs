@@ -6,13 +6,14 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// Small panel (top-left) in Play mode while the worker is at a boiler or turbine, or in the explosion view:
-/// Explode All, Collapse All, Start / Stop Operation (+ Show / Hide Info for the boiler).
+/// Explode All, Collapse All, Start / Stop Operation (+ Show / Hide Info and the burner power slider for the boiler).
 /// The buttons call the same CommunicationManager functions React uses, so this tests the real path.
 /// F1 hides / shows the panel.
 /// </summary>
 public class EditorTestPanel : MonoBehaviour
 {
     private bool hidden;
+    private float burnerSlider = -1f; // 0..100, like React's burner slider
     private GUIStyle box, title, label;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -40,7 +41,7 @@ public class EditorTestPanel : MonoBehaviour
         EnsureStyles();
         CommunicationManager bridge = CommunicationManager.Instance;
 
-        GUILayout.BeginArea(new Rect(12f, 12f, 230f, 260f), box);
+        GUILayout.BeginArea(new Rect(12f, 12f, 230f, boiler ? 320f : 260f), box);
         GUILayout.Label("TEST (Editor only)", title);
         GUILayout.Label($"{type}: {hud.CurrentEquipmentName}", label);
         GUILayout.Label($"Exploded: {(hud.IsExplodedView ? "yes" : "no")}   Operating: {(hud.IsOperatingEquipment ? "yes" : "no")}", label);
@@ -71,6 +72,21 @@ public class EditorTestPanel : MonoBehaviour
         if (boiler && GUILayout.Button(hud.IsBoilerInfoOpen ? "Hide Info" : "Show Info"))
         {
             if (hud.IsBoilerInfoOpen) bridge.BoilerHideInfo_Extern(); else bridge.BoilerShowInfo_Extern();
+        }
+
+        if (boiler)
+        {
+            // Same call as React's burner slider: flame, water level and boiling sound follow it.
+            BoilerFluidController fluid = BoilerFluidController.instance;
+            if (burnerSlider < 0f) burnerSlider = fluid != null ? fluid.BurnerPower * 100f : 45f;
+            GUILayout.Space(4f);
+            GUILayout.Label($"Burner power: {burnerSlider:F0} %", label);
+            float value = Mathf.Round(GUILayout.HorizontalSlider(burnerSlider, 0f, 100f));
+            if (!Mathf.Approximately(value, burnerSlider))
+            {
+                burnerSlider = value;
+                bridge.SetBoilerBurnerPower_Extern(value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
         }
 
         GUILayout.Space(4f);
