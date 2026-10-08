@@ -2081,7 +2081,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1454028455
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4481,6 +4481,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3506361142035624383}
+  - component: {fileID: 3506361142035624384}
   m_Layer: 6
   m_Name: Stand
   m_TagString: Untagged
@@ -34544,7 +34545,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -2887750558908110738, guid: 8ba532150fe98fc4c8e8561a64c82d4a, type: 3}
+  - {fileID: 2100000, guid: c645ff3b3245ec842810316a33d831e2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -35374,7 +35375,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9c232a6b2e7aee408f41037acbe6c6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExplodableViewNode
-  explosionOffset: {x: -3, y: 0, z: 0}
+  explosionOffset: {x: 2, y: 0, z: 0}
   shouldChildExplode: 0
   partName: Fire Extinguisher
   description: A Fire Extinguisher is a portable fire-suppression device used to
@@ -42416,7 +42417,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9c232a6b2e7aee408f41037acbe6c6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExplodableViewNode
-  explosionOffset: {x: 0, y: 0, z: 3}
+  explosionOffset: {x: 0, y: 0, z: 1}
   shouldChildExplode: 0
   partName: Boiler Pump System
   description: The Boiler Pump System supplies treated feedwater to the boiler at
@@ -44824,7 +44825,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f7da16b3f59acf746aed7ec128fe55e3, type: 2}
+  - {fileID: 2100000, guid: 781b5786f25624b48a5feb28a2a9d4b8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -71915,6 +71916,22 @@ Transform:
   - {fileID: 1216840786761829730}
   m_Father: {fileID: 8561532095209794497}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3506361142035624384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 131356040184572852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9c232a6b2e7aee408f41037acbe6c6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExplodableViewNode
+  explosionOffset: {x: 0, y: 0, z: -1}
+  shouldChildExplode: 0
+  partName: Stand
+  description: 
 --- !u!4 &3512532166873762140
 Transform:
   m_ObjectHideFlags: 0
@@ -117260,7 +117277,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1575d0c9aeb113a4786a10e7358cf6da, type: 2}
+  - {fileID: 2100000, guid: 781b5786f25624b48a5feb28a2a9d4b8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -132225,7 +132242,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9c232a6b2e7aee408f41037acbe6c6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExplodableViewNode
-  explosionOffset: {x: -1.5, y: 0, z: 0}
+  explosionOffset: {x: 0, y: 0, z: -1}
   shouldChildExplode: 0
   partName: Boiler Left Inspection Cover
   description: The Boiler Left Inspection Cover is a removable access cover located
@@ -220942,7 +220959,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9c232a6b2e7aee408f41037acbe6c6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExplodableViewNode
-  explosionOffset: {x: 2, y: 0, z: 0}
+  explosionOffset: {x: 0, y: 0, z: 1}
   shouldChildExplode: 0
   partName: Boiler Right Inspection Cover
   description: The Boiler Right Inspection Cover is a removable access cover located
@@ -223298,7 +223315,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9c232a6b2e7aee408f41037acbe6c6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExplodableViewNode
-  explosionOffset: {x: 0, y: 1, z: 0}
+  explosionOffset: {x: 0, y: 0, z: 0}
   shouldChildExplode: 0
   partName: Boiler Chamber
   description: The Boiler Chamber is the main heat-transfer area of the boiler where
