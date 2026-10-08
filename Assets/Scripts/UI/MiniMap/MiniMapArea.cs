@@ -22,11 +22,13 @@ public class MiniMapArea : MonoBehaviour
     [Tooltip("The minimap picture of this scene (Texture Type: Sprite).")]
     [SerializeField] private Sprite mapImage;
 
+#pragma warning disable CS0414 // used by the Scene view preview only (editor code), not in builds
     [Header("Lining up (Scene view only)")]
     [SerializeField] private bool showPreview = true;
     [SerializeField, Range(0.1f, 1f)] private float previewOpacity = 0.6f;
     [Tooltip("Preview height above this object, so it is not hidden inside the floor.")]
     [SerializeField] private float previewHeight = 0.05f;
+#pragma warning restore CS0414
 
     private SpriteRenderer preview;
 

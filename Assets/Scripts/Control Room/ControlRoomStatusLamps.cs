@@ -112,7 +112,6 @@ public class ControlRoomStatusLamps : MonoBehaviour
         lamp.range = 2.5f;
         lamp.intensity = 0f;
         lamp.shadows = LightShadows.None;
-        lamp.lightmapBakeType = LightmapBakeType.Realtime;
         return bulb.GetComponent<Renderer>();
     }
 
