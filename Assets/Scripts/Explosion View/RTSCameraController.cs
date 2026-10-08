@@ -35,9 +35,10 @@ public class RTSCameraController : MonoBehaviour
     private float maxZoomDistance = 60f;
 
     [Header("Stay Inside The Room")]
-    [Tooltip("Walls / floor / roof the camera must not pass (exploded parts on Interactable are ignored).")]
+    [Tooltip("Walls / floor / roof the camera must not pass. Nothing by default: the room is hidden in the " +
+             "explosion view, and stopping at invisible walls made the distance jump.")]
     [SerializeField]
-    private LayerMask roomLayers = 1; // Default
+    private LayerMask roomLayers = 0;
 
     [Tooltip("Space kept between the camera and a wall.")]
     [SerializeField, Min(0.05f)]
@@ -46,6 +47,11 @@ public class RTSCameraController : MonoBehaviour
     [Tooltip("The camera never gets closer to the orbit centre than this (even if a wall is closer).")]
     [SerializeField, Min(0.1f)]
     private float minCameraDistance = 2f;
+
+    [Header("Smoothing")]
+    [Tooltip("Seconds the camera trails the mouse (orbit / pan / zoom). 0 = raw, jumpy input.")]
+    [SerializeField, Range(0f, 0.3f)]
+    private float smoothTime = 0.08f;
 
     [Header("Click To Focus (explosion view only)")]
     [Tooltip("Clicking a part glides the orbit camera to it and frames it (the normal room never does this).")]
@@ -104,6 +110,13 @@ public class RTSCameraController : MonoBehaviour
     // so the camera is kept inside its bounds instead.
     private bool hasRoomBox;
     private Bounds roomBox;
+
+    // Shown camera values: ease towards the target values (_yaw, _pitch, _distance, _pivot).
+    private float curYaw, curPitch, curDistance;
+    private Vector3 curPivot;
+    private float yawVelocity, pitchVelocity, distanceVelocity;
+    private Vector3 pivotVelocity;
+    private ModularExplodedView explodedViewRef;
 
     // Glide to a clicked part.
     private bool focusing, focusedOnPart;
@@ -173,7 +186,9 @@ public class RTSCameraController : MonoBehaviour
         _distance = explodedView.InitialDistance;
 
         _pivot = GetObjectCenter(explodedView.gameObject);
+        explodedViewRef = explodedView;
         FindRoomBox();
+        SnapSmoothing();
 
         _initialized = true;
         _skipNextCameraUpdate = true;
@@ -203,12 +218,13 @@ public class RTSCameraController : MonoBehaviour
             }
             else
             {
-                // Debug.Log($"Nothing hit");
+                // Empty space: close the part info and go back to the whole equipment.
                 if (HUDController.Instance != null)
                 {
                     HUDController.Instance.HideClickContext();
                     HUDController.Instance.HideDescription();
                 }
+                if (focusOnClick) FrameAll();
             }
         }
     }
@@ -242,6 +258,7 @@ public class RTSCameraController : MonoBehaviour
         _distance = Mathf.Clamp(10f, minZoomDistance, maxZoomDistance);
         _pivot = targetCamera.transform.position + targetCamera.transform.forward * _distance;
         FindRoomBox();
+        SnapSmoothing();
 
         UpdateCameraPosition();
     }
@@ -285,12 +302,36 @@ public class RTSCameraController : MonoBehaviour
     /// <summary>Glides the orbit camera to the object and frames it (keeps the current viewing angle).</summary>
     public void FocusOn(GameObject target)
     {
-        if (target == null || targetCamera == null) return;
+        if (target == null || !TryGetBounds(target, out Bounds bounds)) return;
+        FocusOnBounds(bounds, focusMinDistance);
+        focusedOnPart = true;
+    }
 
-        Renderer[] renderers = target.GetComponentsInChildren<Renderer>();
-        if (renderers.Length == 0) return;
-        Bounds bounds = renderers[0].bounds;
-        for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+    /// <summary>Back to the whole equipment (all parts, as they are now - exploded or not): orbit around its
+    /// centre, everything in view.</summary>
+    public void FrameAll()
+    {
+        if (explodedViewRef == null || !TryGetBounds(explodedViewRef.gameObject, out Bounds bounds)) return;
+        FocusOnBounds(bounds, minZoomDistance);
+        focusedOnPart = false;
+    }
+
+    private static bool TryGetBounds(GameObject target, out Bounds bounds)
+    {
+        bounds = default;
+        bool any = false;
+        foreach (Renderer r in target.GetComponentsInChildren<Renderer>())
+        {
+            if (!r.enabled || r is ParticleSystemRenderer) continue;
+            if (!any) { bounds = r.bounds; any = true; }
+            else bounds.Encapsulate(r.bounds);
+        }
+        return any;
+    }
+
+    private void FocusOnBounds(Bounds bounds, float minimumDistance)
+    {
+        if (targetCamera == null) return;
 
         float halfVertical = targetCamera.fieldOfView * 0.5f * Mathf.Deg2Rad;
         float halfHorizontal = Mathf.Atan(Mathf.Tan(halfVertical) * targetCamera.aspect);
@@ -299,10 +340,9 @@ public class RTSCameraController : MonoBehaviour
         focusFromPivot = _pivot;
         focusFromDistance = _distance;
         focusToPivot = bounds.center;
-        focusToDistance = Mathf.Clamp(distance, focusMinDistance, maxZoomDistance);
+        focusToDistance = Mathf.Clamp(distance, minimumDistance, Mathf.Max(maxZoomDistance, minimumDistance));
         focusTime = 0f;
         focusing = true;
-        focusedOnPart = true;
     }
 
     private void UpdateFocusGlide()
@@ -373,27 +413,48 @@ public class RTSCameraController : MonoBehaviour
 
     private void UpdateCameraPosition()
     {
-        var rotation = Quaternion.Euler(_pitch, _yaw, 0f);
+        float dt = Time.unscaledDeltaTime;
+        if (smoothTime > 0f && dt > 0f)
+        {
+            curYaw = Mathf.SmoothDampAngle(curYaw, _yaw, ref yawVelocity, smoothTime, Mathf.Infinity, dt);
+            curPitch = Mathf.SmoothDamp(curPitch, _pitch, ref pitchVelocity, smoothTime, Mathf.Infinity, dt);
+            curDistance = Mathf.SmoothDamp(curDistance, _distance, ref distanceVelocity, smoothTime, Mathf.Infinity, dt);
+            curPivot = Vector3.SmoothDamp(curPivot, _pivot, ref pivotVelocity, smoothTime, Mathf.Infinity, dt);
+        }
+        else SnapSmoothing();
+
+        var rotation = Quaternion.Euler(curPitch, curYaw, 0f);
         var direction = rotation * Vector3.back;
 
-        targetCamera.transform.position = _pivot + direction * RoomLimitedDistance(direction, _distance);
+        targetCamera.transform.position = curPivot + direction * RoomLimitedDistance(curPivot, direction, curDistance);
         targetCamera.transform.rotation = rotation;
     }
 
-    // Shortens the orbit distance so the camera stops in front of walls / the room box instead of leaving the room.
-    private float RoomLimitedDistance(Vector3 direction, float distance)
+    private void SnapSmoothing()
     {
+        curYaw = _yaw;
+        curPitch = _pitch;
+        curDistance = _distance;
+        curPivot = _pivot;
+        yawVelocity = pitchVelocity = distanceVelocity = 0f;
+        pivotVelocity = Vector3.zero;
+    }
+
+    // Shortens the orbit distance so the camera stops in front of walls / the room box instead of leaving the room.
+    private float RoomLimitedDistance(Vector3 pivot, Vector3 direction, float distance)
+    {
+        if (roomLayers.value == 0) return distance;
         float limit = distance;
 
-        if (roomLayers.value != 0 && Physics.SphereCast(_pivot, wallMargin, direction, out RaycastHit hit, distance, roomLayers, QueryTriggerInteraction.Ignore))
+        if (Physics.SphereCast(pivot, wallMargin, direction, out RaycastHit hit, distance, roomLayers, QueryTriggerInteraction.Ignore))
             limit = Mathf.Min(limit, hit.distance);
 
-        if (hasRoomBox && roomBox.Contains(_pivot))
+        if (hasRoomBox && roomBox.Contains(pivot))
         {
             for (int axis = 0; axis < 3; axis++)
             {
-                if (direction[axis] > 0.0001f) limit = Mathf.Min(limit, (roomBox.max[axis] - _pivot[axis]) / direction[axis]);
-                else if (direction[axis] < -0.0001f) limit = Mathf.Min(limit, (roomBox.min[axis] - _pivot[axis]) / direction[axis]);
+                if (direction[axis] > 0.0001f) limit = Mathf.Min(limit, (roomBox.max[axis] - pivot[axis]) / direction[axis]);
+                else if (direction[axis] < -0.0001f) limit = Mathf.Min(limit, (roomBox.min[axis] - pivot[axis]) / direction[axis]);
             }
         }
 
@@ -422,7 +483,6 @@ public class RTSCameraController : MonoBehaviour
     public void Focus(Vector3 position)
     {
         _pivot = position;
-        UpdateCameraPosition();
     }
 
     private static void EnableAction(InputActionReference actionReference)

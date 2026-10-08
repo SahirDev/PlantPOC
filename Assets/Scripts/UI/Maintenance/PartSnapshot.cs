@@ -50,6 +50,7 @@ public static class PartSnapshot
         {
             camera = cameraObject.AddComponent<Camera>();
             camera.enabled = false;
+            camera.useOcclusionCulling = false; // baked room occlusion must not hide the part
             camera.cullingMask = 1 << SnapshotLayer;
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = Background;

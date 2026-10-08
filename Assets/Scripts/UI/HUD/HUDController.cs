@@ -793,6 +793,9 @@ public class HUDController : SingletonMono<HUDController>
         Camera explosionCamera = explosionViewCameraInstance.GetComponentInChildren<Camera>();
         if (explosionCamera != null)
         {
+            // The rooms have baked occlusion data: with the room hidden, its (invisible) walls still culled the
+            // exploded parts at some angles -> parts popping in / out. No occlusion culling for this camera.
+            explosionCamera.useOcclusionCulling = false;
             explosionCamera.clearFlags = CameraClearFlags.SolidColor;
             explosionCamera.backgroundColor = explosionBackground;
             AddBackgroundImage(explosionCamera);
