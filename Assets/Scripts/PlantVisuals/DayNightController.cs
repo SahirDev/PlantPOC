@@ -103,7 +103,7 @@ public class DayNightController : MonoBehaviour
     {
         if (cycleKey != Key.None && Keyboard.current != null && Keyboard.current[cycleKey].wasPressedThisFrame
             && !UITextInput.IsTyping)
-            SetTime((TimeOfDay)(((int)Current + 1) % 3));
+            SetTime(Current == TimeOfDay.Night ? TimeOfDay.Day : TimeOfDay.Night); // Day <-> Night (evening only from React)
 
         if (!Mathf.Approximately(lampLevel, lampTarget))
         {

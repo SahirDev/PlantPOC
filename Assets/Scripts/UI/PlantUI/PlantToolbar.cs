@@ -7,7 +7,7 @@ using UnityEngine.UI;
 ///   Worker group (worker mode only): TPP (third person), FPP (first person), Fly camera - current one highlighted.
 ///   Overview / worker switch (Power Plant Area only).
 ///   Hide / show UI (always - brings the panels back).
-///   Day / Evening / Night (Power Plant Area only).
+///   Day / Night toggle and the (i) Plant Status button beside it (Power Plant Area only).
 /// All through the same CommunicationManager functions React uses.
 /// </summary>
 public class PlantToolbar : MonoBehaviour
@@ -32,6 +32,13 @@ public class PlantToolbar : MonoBehaviour
     [SerializeField] private TMP_Text dayNightLabel;
     [SerializeField] private Sprite daySprite, eveningSprite, nightSprite;
 
+    [Header("Plant Status (i) button - beside Day / Night")]
+    [SerializeField] private Button infoButton;
+    [SerializeField] private Image infoBackground;
+    [SerializeField] private Color infoIdle = new Color(0.07f, 0.09f, 0.17f, 0.95f);
+    [SerializeField] private Color infoOpen = new Color(0.17f, 0.32f, 0.85f, 1f);
+    [SerializeField, Min(0f)] private float gapBesideDayNight = 10f;
+
     [SerializeField] private Color highlightColor = new Color(0.17f, 0.27f, 0.6f, 1f);
 
     [Header("Placement")]
@@ -50,6 +57,7 @@ public class PlantToolbar : MonoBehaviour
         if (overviewButton != null) overviewButton.onClick.AddListener(ToggleOverview);
         if (hideButton != null) hideButton.onClick.AddListener(() => { if (PlantUI.Instance != null) PlantUI.Instance.ToggleHidden(); });
         if (dayNightButton != null) dayNightButton.onClick.AddListener(NextTimeOfDay);
+        if (infoButton != null) infoButton.onClick.AddListener(() => { if (PlantUI.Instance != null) PlantUI.Instance.ToggleStatusPanel(); });
     }
 
     /// <summary>Called by PlantUI a few times per second.</summary>
@@ -62,6 +70,7 @@ public class PlantToolbar : MonoBehaviour
         if (explosionView)
         {
             SetActive(dayNightButton != null ? dayNightButton.gameObject : null, false);
+            SetActive(infoButton != null ? infoButton.gameObject : null, false);
             return;
         }
 
@@ -82,6 +91,15 @@ public class PlantToolbar : MonoBehaviour
         bool dayNight = DayNightController.Instance != null;
         SetActive(dayNightButton != null ? dayNightButton.gameObject : null, dayNight && !uiHidden);
         if (dayNight) ShowTimeOfDay(DayNightController.Instance.Current);
+
+        // (i) Plant Status: Power Plant Area only, left of Day / Night.
+        SetActive(infoButton != null ? infoButton.gameObject : null, dayNight && !uiHidden);
+        if (infoButton != null && dayNight)
+        {
+            PlaceBesideDayNight();
+            bool open = PlantUI.Instance != null && PlantUI.Instance.IsStatusPanelOpen;
+            if (infoBackground != null) infoBackground.color = open ? infoOpen : infoIdle;
+        }
     }
 
     // Top-right corner of the toolbar = bottom-right corner of the Day / Night button (+ gap); when that button is
@@ -105,6 +123,25 @@ public class PlantToolbar : MonoBehaviour
         if ((toolbar.position - target).sqrMagnitude > 0.01f) toolbar.position = target;
     }
 
+    // Right edge of the (i) button = left edge of Day / Night - gap, same vertical centre and height.
+    private void PlaceBesideDayNight()
+    {
+        if (dayNightButton == null) return;
+        var info = (RectTransform)infoButton.transform;
+        var dayNight = (RectTransform)dayNightButton.transform;
+        if (info.pivot != new Vector2(1f, 0.5f))
+        {
+            info.anchorMin = info.anchorMax = Vector2.one;
+            info.pivot = new Vector2(1f, 0.5f);
+        }
+        dayNight.GetWorldCorners(corners);
+        Vector3 leftMiddle = (corners[0] + corners[1]) * 0.5f;
+        Vector3 target = leftMiddle - new Vector3(gapBesideDayNight * info.lossyScale.x, 0f, 0f);
+        if ((info.position - target).sqrMagnitude > 0.01f) info.position = target;
+        float height = dayNight.rect.height;
+        if (height > 1f && Mathf.Abs(info.sizeDelta.y - height) > 0.5f) info.sizeDelta = new Vector2(height, height);
+    }
+
     private void SetView(string view)
     {
         if (CommunicationManager.HasInstance) CommunicationManager.Instance.SetWorkerView_Extern(view);
@@ -118,7 +155,9 @@ public class PlantToolbar : MonoBehaviour
     private void NextTimeOfDay()
     {
         if (DayNightController.Instance == null) return;
-        DayNightController.TimeOfDay next = (DayNightController.TimeOfDay)(((int)DayNightController.Instance.Current + 1) % 3);
+        // Day <-> Night only (no Evening from the Unity button).
+        DayNightController.TimeOfDay next = DayNightController.Instance.Current == DayNightController.TimeOfDay.Night
+            ? DayNightController.TimeOfDay.Day : DayNightController.TimeOfDay.Night;
         DayNightController.Instance.SetTime(DayNightController.Name(next));
         ShowTimeOfDay(next);
     }

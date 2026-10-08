@@ -33,6 +33,8 @@ public class PlantUI : MonoBehaviour
     [SerializeField] private PlantNavBar navBar;
     [SerializeField] private PlantToolbar toolbar;
     [SerializeField] private TourPanel tourPanel;
+    [Tooltip("Plant Status overview (Power Plant Area, (i) button beside Day / Night).")]
+    [SerializeField] private PlantStatusPanel statusPanel;
     [SerializeField] private Button explodeAllButton;
     [SerializeField] private Button collapseAllButton;
     [Tooltip("The maintenance sheet is placed here (explosion view).")]
@@ -64,6 +66,22 @@ public class PlantUI : MonoBehaviour
 
     public RectTransform SheetParent => sheetParent;
     public TourPanel Tour => tourPanel;
+    public bool IsStatusPanelOpen => statusPanel != null && statusPanel.IsOpen;
+
+    /// <summary>(i) button: open / close the Plant Status panel (Power Plant Area only).</summary>
+    public void ToggleStatusPanel()
+    {
+        if (statusPanel == null) return;
+        if (!statusPanel.IsOpen && !StatusPanelAllowed()) return;
+        statusPanel.Toggle();
+        nextCheck = 0f;
+    }
+
+    private bool StatusPanelAllowed()
+    {
+        bool exploded = HUDController.HasInstance && HUDController.Instance.IsExplodedView;
+        return !hidden && !exploded && SceneManager.GetActiveScene().name == PlantNavBar.PlantScene;
+    }
     public bool IsHidden => hidden;
 
     // ------------------------------------------------------------------ lifecycle
@@ -264,6 +282,8 @@ public class PlantUI : MonoBehaviour
         // Explode All only at a boiler / turbine; in the explosion view only Collapse All.
         SetActive(explodeAllButton != null ? explodeAllButton.gameObject : null, !hidden && !exploded && hud != null && hud.CanExplodeAll);
         SetActive(collapseAllButton != null ? collapseAllButton.gameObject : null, exploded && !collapsing);
+
+        if (statusPanel != null && statusPanel.IsOpen && !StatusPanelAllowed()) statusPanel.Close();
 
         ControlRoomTour tour = ControlRoomTour.Instance;
         if (tourPanel != null) tourPanel.SetVisible(!hidden && !exploded && workerActive && tour != null && tour.UnityUI);

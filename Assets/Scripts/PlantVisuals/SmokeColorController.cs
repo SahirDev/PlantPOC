@@ -195,6 +195,9 @@ public class SmokeColorController : MonoBehaviour
         }
     }
 
+    /// <summary>Smoke colour at a level 0..1 (Plant Status panel swatches).</summary>
+    public static Color ColorAt(float level) => ColorFor(Mathf.Clamp01(level));
+
     private static Color ColorFor(float value)
     {
         if (value <= StopLevels[0]) return StopColors[0];

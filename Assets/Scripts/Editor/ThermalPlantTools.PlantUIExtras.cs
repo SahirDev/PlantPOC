@@ -162,6 +162,15 @@ public static partial class ThermalPlantTools
             log.AppendLine("+ Guided tour card (top-right, Control Room only)");
         }
 
+        // ---- Plant Status panel + (i) button beside Day / Night
+        if (so.FindProperty("statusPanel").objectReferenceValue == null)
+        {
+            so.FindProperty("statusPanel").objectReferenceValue = BuildPlantStatusPanel(root.transform);
+            log.AppendLine("+ Plant Status panel (Boiler 2, Turbine 4, Electrical 3, Condenser 2, Chimney)");
+        }
+        PlantToolbar toolbar = root.GetComponentInChildren<PlantToolbar>(true);
+        if (toolbar != null && AddInfoButton(root.transform, toolbar)) log.AppendLine("+ (i) Plant Status button beside Day / Night");
+
         so.ApplyModifiedPropertiesWithoutUndo();
 
         // The maintenance sheet stays on top of everything.
