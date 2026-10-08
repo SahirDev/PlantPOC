@@ -1,3 +1,5 @@
+using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -13,11 +15,20 @@ using UnityEngine.UI;
 ///   - Hidden while there is no active worker (overview, explosion view), in scenes without a
 ///     MiniMapArea, and when React says so (SetMiniMapVisible_Extern).
 ///
-/// Built by Tools > Thermal Plant > 5. Create MiniMap Panel – restyle it freely, keep the references.
+/// Lives inside the Plant UI canvas (Tools > Thermal Plant > 18. Update Plant UI) – restyle it freely, keep the
+/// references. The title shows the current area (Thermal Plant Layout, Boiler Room Layout, ...).
 /// </summary>
 public class MiniMapPanel : SingletonMono<MiniMapPanel>
 {
-    protected override bool PersistAcrossScenes => true;
+    // Inside the Plant UI canvas the canvas keeps it alive; on its own canvas (old setup) it keeps itself.
+    protected override bool PersistAcrossScenes => transform.parent == null;
+
+    [Serializable]
+    public class SceneTitle
+    {
+        public string scene;
+        public string title;
+    }
 
     [Header("References")]
     [Tooltip("The panel that is shown / hidden and resized when expanded.")]
@@ -35,6 +46,20 @@ public class MiniMapPanel : SingletonMono<MiniMapPanel>
     [SerializeField] private RectTransform northIcon;
     [Tooltip("The EventSystem for the minimap buttons (kept across scenes; other EventSystems are switched off).")]
     [SerializeField] private EventSystem eventSystem;
+    [Tooltip("Title text (TextMeshPro) - set per scene from Titles.")]
+    [SerializeField] private TMP_Text title;
+    [Tooltip("Title text of the old minimap canvas (legacy Text).")]
+    [SerializeField] private Text legacyTitle;
+
+    [Header("Titles per scene")]
+    [SerializeField] private SceneTitle[] titles =
+    {
+        new SceneTitle { scene = "Main_Scene", title = "Thermal Plant Layout" },
+        new SceneTitle { scene = "BoilerRoom", title = "Boiler Room Layout" },
+        new SceneTitle { scene = "TurbineRoom", title = "Turbine Room Layout" },
+        new SceneTitle { scene = "Control_Room", title = "Control Room Layout" },
+    };
+    [SerializeField] private string defaultTitle = "Mini Map";
 
     [Header("Behaviour")]
     [SerializeField] private Vector2 expandedSize = new Vector2(720f, 520f);
@@ -75,7 +100,9 @@ public class MiniMapPanel : SingletonMono<MiniMapPanel>
             foreach (Graphic graphic in workerIcon.GetComponentsInChildren<Graphic>(true)) graphic.raycastTarget = false;
         }
 
+        if (eventSystem == null) eventSystem = FindAnyObjectByType<EventSystem>(); // Bootstrap's (a prefab can't reference it)
         if (eventSystem != null && eventSystem.transform.parent == null) DontDestroyOnLoad(eventSystem.gameObject);
+        UpdateTitle(SceneManager.GetActiveScene().name);
 
         SceneManager.sceneLoaded += OnSceneLoaded;
         SetPanelActive(false);
@@ -108,7 +135,8 @@ public class MiniMapPanel : SingletonMono<MiniMapPanel>
         if (area == null) area = MiniMapArea.Current;
         Player current = GetWorker();
 
-        bool show = visibleByReact && area != null && area.MapImage != null
+        bool uiHidden = PlantUI.Instance != null && PlantUI.Instance.IsHidden;
+        bool show = visibleByReact && !uiHidden && area != null && area.MapImage != null
                     && current != null && current.gameObject.activeInHierarchy && !current.IsControlSuspended;
 
         SetPanelActive(show);
@@ -172,6 +200,17 @@ public class MiniMapPanel : SingletonMono<MiniMapPanel>
         if (target != null && target.activeSelf != active) target.SetActive(active);
     }
 
+    private void UpdateTitle(string sceneName)
+    {
+        string text = defaultTitle;
+        if (titles != null)
+            foreach (SceneTitle t in titles)
+                if (t != null && t.scene == sceneName && !string.IsNullOrEmpty(t.title)) { text = t.title; break; }
+
+        if (title != null) title.text = text;
+        if (legacyTitle != null) legacyTitle.text = text;
+    }
+
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         // New scene: its own picture and its own worker.
@@ -180,6 +219,7 @@ public class MiniMapPanel : SingletonMono<MiniMapPanel>
         nextWorkerSearch = 0f;
         zoom = 1f;
         SetExpanded(false);
+        if (mode == LoadSceneMode.Single || scene == SceneManager.GetActiveScene()) UpdateTitle(scene.name);
 
         if (eventSystem == null) return;
 

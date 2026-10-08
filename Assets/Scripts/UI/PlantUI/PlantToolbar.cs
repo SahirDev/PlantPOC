@@ -45,8 +45,16 @@ public class PlantToolbar : MonoBehaviour
     }
 
     /// <summary>Called by PlantUI a few times per second.</summary>
-    public void Refresh(bool workerActive, bool uiHidden)
+    public void Refresh(bool workerActive, bool uiHidden, bool explosionView = false)
     {
+        // Explosion view: the whole toolbar and the day / night button are off (only Collapse All is shown).
+        SetActive(gameObject, !explosionView);
+        if (explosionView)
+        {
+            SetActive(dayNightButton != null ? dayNightButton.gameObject : null, false);
+            return;
+        }
+
         SetActive(workerGroup, workerActive && !uiHidden);
         if (workerActive && PlantUI.Instance != null)
         {

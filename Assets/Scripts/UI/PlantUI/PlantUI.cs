@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 /// <summary>
 /// The one in-Unity UI canvas (Bootstrap scene, kept for the whole session - DontDestroyOnLoad). It only turns
@@ -9,7 +10,10 @@ using UnityEngine.SceneManagement;
 ///   - Navigation bar (bottom): Home, Power Plant Area, Boiler Room, Turbine Room, Control Room.
 ///   - Toolbar (right): TPP / FPP / Fly (worker mode only), overview / worker (plant area), hide UI.
 ///   - Day / Night button (plant area only).
+///   - Explode All (at a boiler / turbine) / Collapse All (explosion view) buttons.
+///   - Minimap (bottom-right, MiniMapPanel) and the control room guided tour card (TourPanel).
 ///   - Maintenance sheet: HUDController creates it inside <see cref="SheetParent"/> (same canvas).
+/// Explosion view: everything is off except Collapse All and the maintenance sheet (click a part).
 /// Built by Tools > Thermal Plant > 17. Create Plant UI (Bootstrap); edit the layout / colours freely, keep the
 /// references on the components.
 /// </summary>
@@ -25,6 +29,9 @@ public class PlantUI : MonoBehaviour
     [SerializeField] private EquipmentInfoPanel electricalPanel;
     [SerializeField] private PlantNavBar navBar;
     [SerializeField] private PlantToolbar toolbar;
+    [SerializeField] private TourPanel tourPanel;
+    [SerializeField] private Button explodeAllButton;
+    [SerializeField] private Button collapseAllButton;
     [Tooltip("The maintenance sheet is placed here (explosion view).")]
     [SerializeField] private RectTransform sheetParent;
 
@@ -42,6 +49,7 @@ public class PlantUI : MonoBehaviour
     private readonly List<ElectricalPanelInfo> panelsInScene = new List<ElectricalPanelInfo>();
 
     public RectTransform SheetParent => sheetParent;
+    public TourPanel Tour => tourPanel;
     public bool IsHidden => hidden;
 
     // ------------------------------------------------------------------ lifecycle
@@ -58,6 +66,22 @@ public class PlantUI : MonoBehaviour
         if (transform.parent != null) transform.SetParent(null, true);
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
+
+        if (explodeAllButton != null) explodeAllButton.onClick.AddListener(ExplodeAll);
+        if (collapseAllButton != null) collapseAllButton.onClick.AddListener(CollapseAll);
+    }
+
+    public void ExplodeAll()
+    {
+        if (CommunicationManager.HasInstance) CommunicationManager.Instance.ToggleExplodeAll_Extern();
+        else if (HUDController.HasInstance) HUDController.Instance.ToggleExplodeAll();
+        nextCheck = 0f;
+    }
+
+    public void CollapseAll()
+    {
+        if (HUDController.HasInstance) HUDController.Instance.CollapseAll();
+        nextCheck = 0f;
     }
 
     private void OnDestroy()
@@ -166,8 +190,21 @@ public class PlantUI : MonoBehaviour
         ElectricalPanelInfo electrical = showPanels && workerActive ? NearElectricalPanel(hud) : null;
         Show(electricalPanel, electrical != null, electrical != null ? electrical.gameObject : null);
 
-        if (navBar != null && navBar.gameObject.activeSelf == hidden) navBar.gameObject.SetActive(!hidden);
-        if (toolbar != null) toolbar.Refresh(workerActive, hidden);
+        bool collapsing = hud != null && hud.IsCollapsing;
+        SetActive(navBar != null ? navBar.gameObject : null, !hidden && !exploded && !collapsing);
+        if (toolbar != null) toolbar.Refresh(workerActive, hidden, exploded || collapsing);
+
+        // Explode All only at a boiler / turbine; in the explosion view only Collapse All.
+        SetActive(explodeAllButton != null ? explodeAllButton.gameObject : null, !hidden && !exploded && hud != null && hud.CanExplodeAll);
+        SetActive(collapseAllButton != null ? collapseAllButton.gameObject : null, exploded && !collapsing);
+
+        ControlRoomTour tour = ControlRoomTour.Instance;
+        if (tourPanel != null) tourPanel.SetVisible(!hidden && !exploded && workerActive && tour != null && tour.UnityUI);
+    }
+
+    private static void SetActive(GameObject go, bool active)
+    {
+        if (go != null && go.activeSelf != active) go.SetActive(active);
     }
 
     private static void Show(EquipmentInfoPanel panel, bool show, GameObject source)

@@ -369,25 +369,37 @@ public class ControlRoomTour : MonoBehaviour
         return worker;
     }
 
+    /// <summary>React can switch the Unity tour UI off (it draws the tour itself).</summary>
+    public bool UnityUI => unityUI;
+
+    // The tour card on the Plant UI canvas (screen); without it the floating card in the room is used.
+    private static TourPanel ScreenCard => PlantUI.Instance != null ? PlantUI.Instance.Tour : null;
+
     private void RefreshUI()
     {
         if (visuals == null) return;
-        visuals.SetCardVisible(unityUI);
+        TourPanel screen = ScreenCard;
+        visuals.SetCardVisible(unityUI && screen == null);
 
         if (!active)
         {
             visuals.ShowStart();
+            if (screen != null) screen.ShowStart();
             return;
         }
 
         if (completed)
         {
             visuals.ShowStep(-1, steps.Length, "Tour Complete", CompletedText, true, false, "FINISH", false);
+            if (screen != null) screen.ShowStep(-1, steps.Length, "Tour Complete", CompletedText, false, "FINISH", false);
             return;
         }
 
+        string next = index + 1 >= steps.Length ? "COMPLETE" : "NEXT";
+        bool voltage = index >= VoltageSliderFromStep && panel != null;
         visuals.ShowStep(index, steps.Length, steps[index].title, InstructionOf(steps[index]), stepDone && !IsRead(steps[index]),
-            index > 0, index + 1 >= steps.Length ? "COMPLETE" : "NEXT", index >= VoltageSliderFromStep && panel != null);
+            index > 0, next, voltage);
+        if (screen != null) screen.ShowStep(index, steps.Length, steps[index].title, InstructionOf(steps[index]), index > 0, next, voltage);
     }
 
     private void LateUpdate()
@@ -400,8 +412,11 @@ public class ControlRoomTour : MonoBehaviour
         if (active && !completed)
         {
             float v = Voltage();
-            visuals.UpdateLive(status, stepDone, !IsRead(steps[index]) && stepDone, CanNext(), v,
-                panel != null ? panel.RedThreshold : 75f, panel != null ? panel.WarningThreshold : 80f);
+            float red = panel != null ? panel.RedThreshold : 75f, warning = panel != null ? panel.WarningThreshold : 80f;
+            bool tick = !IsRead(steps[index]) && stepDone;
+            visuals.UpdateLive(status, stepDone, tick, CanNext(), v, red, warning);
+            TourPanel screen = ScreenCard;
+            if (screen != null) screen.UpdateLive(status, stepDone, tick, CanNext(), v, red, warning);
         }
     }
 

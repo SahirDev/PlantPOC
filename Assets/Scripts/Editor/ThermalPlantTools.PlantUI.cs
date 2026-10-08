@@ -11,6 +11,8 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Tools > Thermal Plant, part 7:
+///   18. Update Plant UI (keeps your edits) – adds what is new to the existing Plant UI: minimap inside the canvas,
+///       guided tour card, Explode All / Collapse All buttons, no Home button; old MiniMapCanvas removed.
 ///   17. Create Plant UI (Bootstrap) – the one in-Unity UI canvas (DontDestroyOnLoad):
 ///       Boiler / Turbine / Electrical info panels (top-left), navigation bar (bottom), toolbar (right),
 ///       Day / Night button (top-right) and the slot the maintenance sheet opens in.
@@ -87,11 +89,13 @@ public static partial class ThermalPlantTools
         }
 
         GameObject root = BuildPlantUI();
+        AddPlantUIExtras(root, log);
         Directory.CreateDirectory(Path.GetDirectoryName(PlantUIPrefabPath));
         PrefabUtility.SaveAsPrefabAssetAndConnect(root, PlantUIPrefabPath, InteractionMode.AutomatedAction);
         log.AppendLine("+ PlantUI canvas (prefab " + PlantUIPrefabPath + ")");
         log.AppendLine("  Boiler / Turbine / Electrical panels, NavBar, Toolbar, Day-Night, SheetSlot");
 
+        RemoveOldMiniMapCanvas(scene, log);
         EnsurePlantUIEventSystem(scene, log);
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
@@ -338,13 +342,6 @@ public static partial class ThermalPlantTools
         fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         PlantNavBar navBar = bar.gameObject.AddComponent<PlantNavBar>();
 
-        Button home = PuiIconButton(bar, "Home", "home", 46f, 26f, PuiButton, out _);
-
-        RectTransform separator = NewUI("Separator", bar);
-        separator.gameObject.AddComponent<Image>().color = PuiSeparator;
-        LayoutElement sepLayout = separator.gameObject.AddComponent<LayoutElement>();
-        sepLayout.preferredWidth = 1f;
-        sepLayout.preferredHeight = 30f;
 
         (string label, string icon, string scene)[] entries =
         {
@@ -355,7 +352,6 @@ public static partial class ThermalPlantTools
         };
 
         var so = new SerializedObject(navBar);
-        so.FindProperty("homeButton").objectReferenceValue = home;
         SerializedProperty items = so.FindProperty("items");
         items.arraySize = entries.Length;
         for (int i = 0; i < entries.Length; i++)
@@ -490,6 +486,7 @@ public static partial class ThermalPlantTools
         text.color = color;
         text.alignment = alignment;
         text.raycastTarget = false;
+        if (styFont != null) text.font = styFont;
         return text;
     }
 

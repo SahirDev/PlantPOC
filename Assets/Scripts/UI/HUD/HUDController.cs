@@ -61,6 +61,10 @@ public class HUDController : SingletonMono<HUDController>
     /// <summary>Last electrical values sent (generator kV, grid kV, loading, temperatures) - for the Unity UI.</summary>
     public ElectricalValuesPayload LastElectricalValues { get; private set; }
     public bool IsExplodedView => IsExploded;
+    /// <summary>Parts are still sliding back after Collapse (worker comes back when done).</summary>
+    public bool IsCollapsing => isCollapsing;
+    /// <summary>The worker is at a boiler / turbine that has an explosion view and nothing else is running.</summary>
+    public bool CanExplodeAll => activeAction == ActiveAction.None && !IsExploded && IsAllowed(ActiveAction.ExplodeAll) && GetExplodedView() != null;
     public bool IsOperatingEquipment => isOperating;
     public bool IsBoilerInfoOpen => IsBoilerInfoActive;
 
