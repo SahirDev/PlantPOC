@@ -189,7 +189,8 @@ public class RTSCameraController : MonoBehaviour
 
         _distance = explodedView.InitialDistance;
 
-        _pivot = GetObjectCenter(explodedView.gameObject);
+        // Orbit centre = centre of the parts (not of everything in the prefab, e.g. the turbine's monitor).
+        _pivot = TryGetPartsBounds(explodedView, out Bounds parts) ? parts.center : GetObjectCenter(explodedView.gameObject);
         explodedViewRef = explodedView;
         FindRoomBox();
         SnapSmoothing();
@@ -315,9 +316,24 @@ public class RTSCameraController : MonoBehaviour
     /// centre, everything in view.</summary>
     public void FrameAll()
     {
-        if (explodedViewRef == null || !TryGetBounds(explodedViewRef.gameObject, out Bounds bounds)) return;
+        if (explodedViewRef == null || !TryGetPartsBounds(explodedViewRef, out Bounds bounds)) return;
         FocusOnBounds(bounds, Mathf.Min(minZoomDistance, focusMinDistance), frameAllPadding);
         focusedOnPart = false;
+    }
+
+    // Only the explodable parts (renderers under an ExplodableViewNode): other things inside the equipment
+    // prefab - e.g. the turbine's monitor standing away from it - must not make the frame bigger.
+    private static bool TryGetPartsBounds(ModularExplodedView view, out Bounds bounds)
+    {
+        bounds = default;
+        bool any = false;
+        foreach (ExplodableViewNode node in view.GetComponentsInChildren<ExplodableViewNode>())
+        {
+            if (!TryGetBounds(node.gameObject, out Bounds nodeBounds)) continue;
+            if (!any) { bounds = nodeBounds; any = true; }
+            else bounds.Encapsulate(nodeBounds);
+        }
+        return any || TryGetBounds(view.gameObject, out bounds);
     }
 
     private static bool TryGetBounds(GameObject target, out Bounds bounds)
