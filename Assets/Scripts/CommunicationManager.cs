@@ -281,6 +281,16 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         MiniMapPanel.Instance.SetVisible(ParseBool(visible));
     }
 
+    /// <summary>Height (CSS px, e.g. "48") of the React bar over the top of the Unity view. The Unity UI (panels,
+    /// day/night, tour card...) stays below it. Default 48; "0" = Unity UI may use the whole view.</summary>
+    public void SetTopInset_Extern(string cssPixels)
+    {
+        LogIncoming(nameof(SetTopInset_Extern), cssPixels);
+        if (PlantUI.Instance == null) { Debug.LogWarning("[CommunicationManager] SetTopInset_Extern: no Plant UI."); return; }
+        if (float.TryParse(cssPixels, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float px))
+            PlantUI.Instance.SetTopInset(px);
+    }
+
     #endregion
 
     #region React -> Unity : Scenes

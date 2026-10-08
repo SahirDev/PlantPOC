@@ -105,6 +105,7 @@ export interface UnityFunctions {
   SetWorkerTracking_Extern: string;
   SetVolume_Extern: string;
   SetMiniMapVisible_Extern: string;
+  SetTopInset_Extern: string;
   ChangeScene_Extern: string;
   GetSceneDownloadSize_Extern: string;
   PreloadScene_Extern: string;

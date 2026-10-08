@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -14,6 +15,8 @@ using UnityEngine.UI;
 ///   - Minimap (bottom-right, MiniMapPanel) and the control room guided tour card (TourPanel).
 ///   - Maintenance sheet: HUDController creates it inside <see cref="SheetParent"/> (same canvas).
 /// Explosion view: everything is off except Collapse All and the maintenance sheet (click a part).
+/// React header: the top <see cref="reservedTopCssPixels"/> CSS pixels of the view belong to React - at runtime all
+/// panels are moved into a "SafeArea" that ends below it (SetTopInset_Extern changes it).
 /// Built by Tools > Thermal Plant > 17. Create Plant UI (Bootstrap); edit the layout / colours freely, keep the
 /// references on the components.
 /// </summary>
@@ -35,6 +38,10 @@ public class PlantUI : MonoBehaviour
     [Tooltip("The maintenance sheet is placed here (explosion view).")]
     [SerializeField] private RectTransform sheetParent;
 
+    [Header("React header")]
+    [Tooltip("Height of the React bar over the top of the Unity view, in CSS pixels. Nothing of this UI is drawn there.")]
+    [SerializeField, Min(0f)] private float reservedTopCssPixels = 48f;
+
     [Header("Behaviour")]
     [Tooltip("Electrical panel also shows within this distance (m) of an electrical panel, not only in its trigger.")]
     [SerializeField, Min(0f)] private float electricalPanelDistance = 3.5f;
@@ -47,6 +54,13 @@ public class PlantUI : MonoBehaviour
     private PlantIsometricCameraController overviewCamera;
     private float nextOverviewSearch, nextViewsSearch;
     private readonly List<ElectricalPanelInfo> panelsInScene = new List<ElectricalPanelInfo>();
+    private RectTransform safeArea;
+    private Canvas rootCanvas;
+    private float appliedInset = -1f;
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+    [DllImport("__Internal")] private static extern int PlantUI_CanvasCssHeight();
+#endif
 
     public RectTransform SheetParent => sheetParent;
     public TourPanel Tour => tourPanel;
@@ -66,6 +80,7 @@ public class PlantUI : MonoBehaviour
         if (transform.parent != null) transform.SetParent(null, true);
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
+        BuildSafeArea();
 
         if (explodeAllButton != null) explodeAllButton.onClick.AddListener(ExplodeAll);
         if (collapseAllButton != null) collapseAllButton.onClick.AddListener(CollapseAll);
@@ -105,7 +120,59 @@ public class PlantUI : MonoBehaviour
     {
         if (Time.unscaledTime < nextCheck) return;
         nextCheck = Time.unscaledTime + checkInterval;
+        ApplyTopInset();
         Refresh();
+    }
+
+    // ------------------------------------------------------------------ React header (top inset)
+
+    /// <summary>React: height of its top bar in CSS pixels (default 48). 0 = Unity UI may use the whole view.</summary>
+    public void SetTopInset(float cssPixels)
+    {
+        reservedTopCssPixels = Mathf.Max(0f, cssPixels);
+        appliedInset = -1f;
+        ApplyTopInset();
+    }
+
+    public float TopInsetCssPixels => reservedTopCssPixels;
+
+    // All panels go into a full-screen "SafeArea" child; its top edge is moved below the React bar.
+    private void BuildSafeArea()
+    {
+        rootCanvas = GetComponent<Canvas>();
+        var go = new GameObject("SafeArea", typeof(RectTransform));
+        go.layer = gameObject.layer;
+        safeArea = (RectTransform)go.transform;
+        safeArea.SetParent(transform, false);
+        safeArea.anchorMin = Vector2.zero;
+        safeArea.anchorMax = Vector2.one;
+        safeArea.offsetMin = safeArea.offsetMax = Vector2.zero;
+
+        var children = new List<Transform>();
+        foreach (Transform child in transform) if (child != safeArea) children.Add(child);
+        foreach (Transform child in children) child.SetParent(safeArea, false);
+        ApplyTopInset();
+    }
+
+    private void ApplyTopInset()
+    {
+        if (safeArea == null) return;
+        float scale = rootCanvas != null && rootCanvas.scaleFactor > 0.001f ? rootCanvas.scaleFactor : 1f;
+        float inset = reservedTopCssPixels * DevicePixelsPerCssPixel() / scale; // CSS px -> screen px -> canvas units
+        if (Mathf.Abs(inset - appliedInset) < 0.5f) return;
+        appliedInset = inset;
+        safeArea.offsetMax = new Vector2(0f, -inset);
+    }
+
+    // Unity's screen pixels per CSS pixel (browser zoom / high-DPI screens); 1 in the Editor.
+    private static float DevicePixelsPerCssPixel()
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        int cssHeight = PlantUI_CanvasCssHeight();
+        return cssHeight > 0 ? Screen.height / (float)cssHeight : 1f;
+#else
+        return 1f;
+#endif
     }
 
     // ------------------------------------------------------------------ public

@@ -27,6 +27,7 @@ The WebGL build contains only a tiny **Bootstrap** scene. Main_Scene and every r
 | `SetWorkerTracking_Extern` | `"true"`, `"false"`, `"true/0.2"` | Streams `handleWorkerTransform` every 0.2 s (for a React minimap) |
 | `SetVolume_Extern` | `"0"`..`"1"` | Master volume of all sounds (boiler boiling, turbine hum, alarms) |
 | `SetMiniMapVisible_Extern` | `"true"`/`"false"` | Show/hide the Unity minimap (bottom-right). It also hides by itself in overview and explosion view. |
+| `SetTopInset_Extern` | `"48"` (CSS px) | Height of the React top bar over the Unity view; the Unity UI stays below it. Default 48, `"0"` = full view. |
 
 ### Scenes
 | Function | Value | Notes |
