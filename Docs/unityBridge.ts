@@ -58,6 +58,7 @@ export interface UnityEvents {
   handleSceneTriggerEntered: SceneTrigger;
   handleSceneTriggerExited: SceneTrigger;
   handleCameraModeChanged: string;
+  handleWorkerViewChanged: "tpp" | "fpp" | "fly";
   handleOverviewObjectSelected: OverviewSelection;
   handleOverviewObjectDeselected: void;
   handleEquipmentInRange: EquipmentInfo;
@@ -111,6 +112,9 @@ export interface UnityFunctions {
   ToggleCameraMode_Extern: void;
   ResetOverviewView_Extern: void;
   GetCameraMode_Extern: void;
+  SetWorkerView_Extern: "tpp" | "fpp" | "fly";
+  ToggleWorkerView_Extern: void;
+  GetWorkerView_Extern: void;
   GetEquipmentState_Extern: void;
   ToggleExplode_Extern: void;
   ToggleExplodeAll_Extern: void;

@@ -44,6 +44,9 @@ The **minimap** is Unity UI (bottom-right, about 300 × 230 px at 1920 × 1080) 
 | `SetCameraMode_Extern` | `"overview"` / `"worker"` | Answer: `handleCameraModeChanged` |
 | `ToggleCameraMode_Extern` | – | |
 | `GetCameraMode_Extern` | – | Answer: `handleCameraModeChanged` |
+| `SetWorkerView_Extern` | `"tpp"` / `"fpp"` / `"fly"` | Worker camera: third person / first person / fly camera (same as keys 1 / 2 / 3; needs the worker). Answer: `handleWorkerViewChanged` |
+| `ToggleWorkerView_Extern` | – | TPP → FPP → Fly → TPP. Answer: `handleWorkerViewChanged` |
+| `GetWorkerView_Extern` | – | Answer: `handleWorkerViewChanged` with the current view |
 | `ResetOverviewView_Extern` | – | Overview only |
 
 ### Equipment (turbine / boiler / control room)
@@ -136,6 +139,7 @@ Walking into info point 1, 2 or 3 sends `handleControlRoomInfoEntered` { index, 
 | `handleSceneTriggerEntered` | JSON `SceneTrigger` | Worker stands at a door to another room: show "Go to …" (button calls ChangeScene_Extern). |
 | `handleSceneTriggerExited` | JSON `SceneTrigger` | Worker left the door. |
 | `handleCameraModeChanged` | string | "overview" or "worker". |
+| `handleWorkerViewChanged` | string | "tpp", "fpp" or "fly" - also when the user presses 1 / 2 / 3. |
 | `handleOverviewObjectSelected` | JSON `OverviewSelection` | Building clicked in plant overview. |
 | `handleOverviewObjectDeselected` | – | Overview selection cleared. |
 | `handleEquipmentInRange` | JSON `EquipmentInfo` | Worker reached a turbine / boiler / control room. |

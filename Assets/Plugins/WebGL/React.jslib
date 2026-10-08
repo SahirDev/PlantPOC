@@ -40,6 +40,9 @@ mergeInto(LibraryManager.library, {
   handleSceneTriggerExited: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleSceneTriggerExited", UTF8ToString(data));
   },
+  handleWorkerViewChanged: function (data) {
+    if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleWorkerViewChanged", UTF8ToString(data));
+  },
   handleCameraModeChanged: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleCameraModeChanged", UTF8ToString(data));
   },

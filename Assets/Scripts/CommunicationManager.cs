@@ -72,6 +72,7 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     [DllImport("__Internal")] private static extern void handleSceneTriggerEntered(string data);
     [DllImport("__Internal")] private static extern void handleSceneTriggerExited(string data);
     [DllImport("__Internal")] private static extern void handleCameraModeChanged(string data);
+    [DllImport("__Internal")] private static extern void handleWorkerViewChanged(string data);
     [DllImport("__Internal")] private static extern void handleOverviewObjectSelected(string data);
     [DllImport("__Internal")] private static extern void handleOverviewObjectDeselected();
     [DllImport("__Internal")] private static extern void handleEquipmentInRange(string data);
@@ -170,6 +171,13 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         {
             nextTrackTime = Time.unscaledTime + trackInterval;
             SendWorkerTransform();
+        }
+
+        // Listen to the worker's view (TPP / FPP / Fly) so key presses (1 / 2 / 3) reach React too.
+        if (Time.unscaledTime >= nextViewHookTime)
+        {
+            nextViewHookTime = Time.unscaledTime + 1f;
+            HookWorkerViews();
         }
     }
 
@@ -352,6 +360,97 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         if (Available<PlantIsometricCameraController>(nameof(GetCameraMode_Extern), "The plant overview camera"))
             HandleCameraModeChanged_Extern(PlantIsometricCameraController.Instance.IsInIsometricMode ? CameraModeOverview : CameraModeWorker);
     }
+
+    #endregion
+
+    #region React -> Unity : Worker view (TPP / FPP / Fly)
+
+    public const string WorkerViewTPP = "tpp", WorkerViewFPP = "fpp", WorkerViewFly = "fly";
+
+    private CharacterViewStateMachine hookedViews;
+    private float nextViewHookTime;
+
+    /// <summary>"tpp" (third person) | "fpp" (first person) | "fly" (fly camera). Same as keys 1 / 2 / 3.
+    /// Needs the worker (not in overview / explosion view). Answer: handleWorkerViewChanged.</summary>
+    public void SetWorkerView_Extern(string view)
+    {
+        LogIncoming(nameof(SetWorkerView_Extern), view);
+        CharacterViewStateMachine views = WorkerViews(nameof(SetWorkerView_Extern));
+        if (views == null) return;
+
+        string value = (view ?? "").Trim().ToLowerInvariant();
+        CharacterViewStateMachine.ViewMode mode;
+        if (value == WorkerViewTPP || value == "third" || value == "thirdperson") mode = CharacterViewStateMachine.ViewMode.TPP;
+        else if (value == WorkerViewFPP || value == "first" || value == "firstperson") mode = CharacterViewStateMachine.ViewMode.FPP;
+        else if (value == WorkerViewFly || value == "flycam" || value == "flycamera") mode = CharacterViewStateMachine.ViewMode.FlyCam;
+        else
+        {
+            HandleError_Extern(nameof(SetWorkerView_Extern), $"Unknown view '{view}'. Use \"tpp\", \"fpp\" or \"fly\".");
+            return;
+        }
+
+        if (views.CurrentMode == mode)
+        {
+            HandleWorkerViewChanged_Extern(WorkerViewName(mode)); // already there: still confirm
+            return;
+        }
+
+        views.SwitchToMode(mode); // handleWorkerViewChanged comes from the view change
+        if (views.CurrentMode != mode)
+            HandleError_Extern(nameof(SetWorkerView_Extern), "The view cannot change right now (worker busy, e.g. loading or typing).");
+    }
+
+    /// <summary>TPP -> FPP -> Fly -> TPP. Answer: handleWorkerViewChanged.</summary>
+    public void ToggleWorkerView_Extern()
+    {
+        LogIncoming(nameof(ToggleWorkerView_Extern), null);
+        CharacterViewStateMachine views = WorkerViews(nameof(ToggleWorkerView_Extern));
+        if (views == null) return;
+
+        CharacterViewStateMachine.ViewMode next = views.CurrentMode == CharacterViewStateMachine.ViewMode.TPP ? CharacterViewStateMachine.ViewMode.FPP
+            : views.CurrentMode == CharacterViewStateMachine.ViewMode.FPP ? CharacterViewStateMachine.ViewMode.FlyCam
+            : CharacterViewStateMachine.ViewMode.TPP;
+        views.SwitchToMode(next);
+    }
+
+    /// <summary>Answer: handleWorkerViewChanged with the current view.</summary>
+    public void GetWorkerView_Extern()
+    {
+        LogIncoming(nameof(GetWorkerView_Extern), null);
+        CharacterViewStateMachine views = WorkerViews(nameof(GetWorkerView_Extern));
+        if (views != null) HandleWorkerViewChanged_Extern(WorkerViewName(views.CurrentMode));
+    }
+
+    public static string WorkerViewName(CharacterViewStateMachine.ViewMode mode) =>
+        mode == CharacterViewStateMachine.ViewMode.FPP ? WorkerViewFPP
+        : mode == CharacterViewStateMachine.ViewMode.FlyCam ? WorkerViewFly
+        : mode == CharacterViewStateMachine.ViewMode.FocusCam ? "focus"
+        : WorkerViewTPP;
+
+    private CharacterViewStateMachine WorkerViews(string command)
+    {
+        HookWorkerViews();
+        if (hookedViews != null && hookedViews.isActiveAndEnabled) return hookedViews;
+        HandleError_Extern(command, "The worker is not active (overview / explosion view / no worker in this scene).");
+        return null;
+    }
+
+    // Subscribes once to the worker's view changes (re-subscribes if the worker object changed).
+    private void HookWorkerViews()
+    {
+        if (hookedViews != null && hookedViews.isActiveAndEnabled) return;
+
+        CharacterViewStateMachine views = PersistentPlayer.Instance != null
+            ? PersistentPlayer.Instance.GetComponent<CharacterViewStateMachine>()
+            : FindAnyObjectByType<CharacterViewStateMachine>();
+        if (views == null || views == hookedViews) return;
+
+        if (hookedViews != null) hookedViews.OnViewModeChanged -= OnWorkerViewChanged;
+        hookedViews = views;
+        hookedViews.OnViewModeChanged += OnWorkerViewChanged;
+    }
+
+    private static void OnWorkerViewChanged(CharacterViewStateMachine.ViewMode mode) => HandleWorkerViewChanged_Extern(WorkerViewName(mode));
 
     #endregion
 
@@ -837,6 +936,15 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     #endregion
 
     #region Unity -> React : Camera
+
+    /// <summary>Worker view changed (React, keys 1 / 2 / 3). → React: <c>handleWorkerViewChanged</c> "tpp" | "fpp" | "fly"</summary>
+    public static void HandleWorkerViewChanged_Extern(string data)
+    {
+        Log(nameof(handleWorkerViewChanged), data);
+#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
+        handleWorkerViewChanged(data);
+#endif
+    }
 
     /// <summary>"overview" or "worker". → React: <c>handleCameraModeChanged</c></summary>
     public static void HandleCameraModeChanged_Extern(string data)
