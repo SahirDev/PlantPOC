@@ -62,9 +62,13 @@ public class RTSCameraController : MonoBehaviour
     [SerializeField, Min(0f)]
     private float focusSeconds = 0.6f;
 
-    [Tooltip("Space around the part when framed (1 = tight).")]
+    [Tooltip("Space around a clicked part when framed (1 = edge to edge).")]
     [SerializeField, Min(1f)]
-    private float focusPadding = 1.4f;
+    private float focusPadding = 1.25f;
+
+    [Tooltip("Space around the whole equipment when clicking empty space (1 = edge to edge).")]
+    [SerializeField, Min(1f)]
+    private float frameAllPadding = 1.08f;
 
     [Tooltip("Closest the camera gets to a small focused part (m). Zooming in can go this close after a focus.")]
     [SerializeField, Min(0.5f)]
@@ -303,7 +307,7 @@ public class RTSCameraController : MonoBehaviour
     public void FocusOn(GameObject target)
     {
         if (target == null || !TryGetBounds(target, out Bounds bounds)) return;
-        FocusOnBounds(bounds, focusMinDistance);
+        FocusOnBounds(bounds, focusMinDistance, focusPadding);
         focusedOnPart = true;
     }
 
@@ -312,7 +316,7 @@ public class RTSCameraController : MonoBehaviour
     public void FrameAll()
     {
         if (explodedViewRef == null || !TryGetBounds(explodedViewRef.gameObject, out Bounds bounds)) return;
-        FocusOnBounds(bounds, minZoomDistance);
+        FocusOnBounds(bounds, Mathf.Min(minZoomDistance, focusMinDistance), frameAllPadding);
         focusedOnPart = false;
     }
 
@@ -322,20 +326,35 @@ public class RTSCameraController : MonoBehaviour
         bool any = false;
         foreach (Renderer r in target.GetComponentsInChildren<Renderer>())
         {
-            if (!r.enabled || r is ParticleSystemRenderer) continue;
+            if (!r.enabled || r is ParticleSystemRenderer || r is TrailRenderer || r is LineRenderer) continue;
             if (!any) { bounds = r.bounds; any = true; }
             else bounds.Encapsulate(r.bounds);
         }
         return any;
     }
 
-    private void FocusOnBounds(Bounds bounds, float minimumDistance)
+    // Distance at which the box just fits the screen from the current viewing angle (each corner checked
+    // against the horizontal and vertical field of view), times the padding. Much tighter than a sphere
+    // around the box, which left a long boiler small in the middle.
+    private void FocusOnBounds(Bounds bounds, float minimumDistance, float padding)
     {
         if (targetCamera == null) return;
 
-        float halfVertical = targetCamera.fieldOfView * 0.5f * Mathf.Deg2Rad;
-        float halfHorizontal = Mathf.Atan(Mathf.Tan(halfVertical) * targetCamera.aspect);
-        float distance = bounds.extents.magnitude * focusPadding / Mathf.Sin(Mathf.Max(0.05f, Mathf.Min(halfVertical, halfHorizontal)));
+        float tanV = Mathf.Tan(targetCamera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+        float tanH = tanV * targetCamera.aspect;
+        Quaternion rotation = Quaternion.Euler(_pitch, _yaw, 0f);
+        Vector3 right = rotation * Vector3.right, up = rotation * Vector3.up, forward = rotation * Vector3.forward;
+
+        float distance = 0f;
+        Vector3 e = bounds.extents * padding;
+        for (int i = 0; i < 8; i++)
+        {
+            Vector3 corner = new Vector3((i & 1) == 0 ? -e.x : e.x, (i & 2) == 0 ? -e.y : e.y, (i & 4) == 0 ? -e.z : e.z);
+            float depth = Vector3.Dot(corner, forward); // + = beyond the centre, seen from the camera
+            distance = Mathf.Max(distance,
+                Mathf.Abs(Vector3.Dot(corner, right)) / tanH - depth,
+                Mathf.Abs(Vector3.Dot(corner, up)) / tanV - depth);
+        }
 
         focusFromPivot = _pivot;
         focusFromDistance = _distance;
