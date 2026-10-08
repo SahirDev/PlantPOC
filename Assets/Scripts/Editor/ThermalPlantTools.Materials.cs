@@ -63,7 +63,12 @@ public static partial class ThermalPlantTools
             int renderers = 0, fields = 0;
             foreach (GameObject root in scene.GetRootGameObjects())
             {
-                renderers += RemapLockedMaterials(root.transform, map, sourceFiles, sourceFiles, out int f);
+                // The boiler itself (no prefabs left to learn its model files from): every locked material on it.
+                // Other roots (room, walls): only materials from the boiler's model files.
+                bool isBoiler = root.GetComponentInChildren<BoilerFluidController>(true) != null;
+                HashSet<string> filter = isBoiler ? null : sourceFiles;
+                if (!isBoiler && sourceFiles.Count == 0) continue;
+                renderers += RemapLockedMaterials(root.transform, map, sourceFiles, filter, out int f);
                 fields += f;
             }
             if (renderers + fields > 0)
