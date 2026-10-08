@@ -22,6 +22,9 @@ public class PlantStatusCard : MonoBehaviour
     [Header("Values (left column top to bottom, then right column)")]
     [SerializeField] private TMP_Text[] values = new TMP_Text[0];
 
+    [Header("Picture (optional - found by name 'Picture' when empty)")]
+    [SerializeField] private RectTransform pictureFrame;
+
     [Header("Bar (read only)")]
     [SerializeField] private Image barFill;
     [SerializeField] private RectTransform barKnob;
@@ -77,6 +80,52 @@ public class PlantStatusCard : MonoBehaviour
         collapsed = !collapsed;
         if (body != null) body.SetActive(!collapsed);
         if (collapseIcon != null) collapseIcon.sprite = collapsed ? expandSprite : collapseSprite;
+    }
+
+    /// <summary>Photo of the equipment in the picture tile (fills it, cropped to fit), instead of the icon.</summary>
+    public void SetPicture(Sprite sprite, float width)
+    {
+        if (sprite == null) return;
+        RectTransform frame = pictureFrame;
+        if (frame == null)
+            foreach (RectTransform t in GetComponentsInChildren<RectTransform>(true))
+                if (t.name == "Picture") { frame = t; break; }
+        if (frame == null) return;
+        pictureFrame = frame;
+
+        if (width > 0f && frame.TryGetComponent(out LayoutElement size) && size.preferredHeight > 0f && size.preferredWidth > 0f)
+            size.minWidth = size.preferredWidth = width;
+        if (frame.GetComponent<RectMask2D>() == null) frame.gameObject.AddComponent<RectMask2D>();
+
+        Transform icon = frame.Find("Icon");
+        if (icon != null) icon.gameObject.SetActive(false);
+
+        Transform existing = frame.Find("Photo");
+        Image photo;
+        AspectRatioFitter fitter;
+        if (existing == null)
+        {
+            var go = new GameObject("Photo", typeof(RectTransform), typeof(Image), typeof(AspectRatioFitter));
+            go.layer = frame.gameObject.layer;
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(frame, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            photo = go.GetComponent<Image>();
+            fitter = go.GetComponent<AspectRatioFitter>();
+        }
+        else
+        {
+            photo = existing.GetComponent<Image>();
+            fitter = existing.GetComponent<AspectRatioFitter>();
+        }
+        photo.sprite = sprite;
+        photo.color = Color.white;
+        photo.raycastTarget = false;
+        if (fitter != null)
+        {
+            fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent; // fills the tile, extra is cut off
+            fitter.aspectRatio = sprite.rect.width / Mathf.Max(1f, sprite.rect.height);
+        }
     }
 
     public void SetTitle(string text)

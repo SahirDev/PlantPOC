@@ -60,6 +60,14 @@ public class PlantStatusPanel : MonoBehaviour
     [SerializeField] private string[] condenserTargets = { "Condensor Unit 01", "Condensor Unit 02" };
     [SerializeField] private string[] chimneyTargets = { "Chimney 01", "Chimney 02" };
 
+    [Header("Pictures (empty = Resources/PlantPictures/boiler, turbine, electrical, condenser, chimney)")]
+    [SerializeField] private Sprite boilerPicture;
+    [SerializeField] private Sprite turbinePicture;
+    [SerializeField] private Sprite electricalPicture;
+    [SerializeField] private Sprite condenserPicture;
+    [SerializeField] private Sprite chimneyPicture;
+    [SerializeField, Min(0f)] private float pictureWidth = 190f;
+
     [Header("Demo warning: this boiler (0-based, -1 = none) shows a red High Drum Pressure warning")]
     [SerializeField] private int warningBoiler = 1;
 
@@ -104,6 +112,12 @@ public class PlantStatusPanel : MonoBehaviour
         SetupChimneys();
         for (int i = 0; i < chimneys.Length; i++) MakeFocusable(chimneys[i], Pick(chimneyTargets, i));
 
+        SetPictures(boilers, boilerPicture, "boiler");
+        SetPictures(turbines, turbinePicture, "turbine");
+        SetPictures(electricalPanels, electricalPicture, "electrical");
+        SetPictures(condensers, condenserPicture, "condenser");
+        SetPictures(chimneys, chimneyPicture, "chimney");
+
         // Smoke cases: click -> set the plant's smoke to that level (0 = smoke stops).
         for (int i = 0; i < caseFrames.Length; i++)
         {
@@ -138,6 +152,14 @@ public class PlantStatusPanel : MonoBehaviour
             TMP_Text count = tabs[(int)Page.Chimney].countBackground.GetComponentInChildren<TMP_Text>(true);
             if (count != null) count.text = chimneys.Length.ToString(Invariant);
         }
+    }
+
+    private void SetPictures(PlantStatusCard[] cards, Sprite sprite, string resource)
+    {
+        if (sprite == null) sprite = Resources.Load<Sprite>("PlantPictures/" + resource);
+        if (sprite == null) return;
+        foreach (PlantStatusCard card in cards)
+            if (card != null) card.SetPicture(sprite, pictureWidth);
     }
 
     private static string Pick(string[] names, int i) =>
