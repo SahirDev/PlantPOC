@@ -185,6 +185,13 @@ public static partial class ThermalPlantTools
             log.AppendLine("+ Door prompt 'Go to <room>' (bottom, above the nav bar)");
         }
 
+        // ---- Top header bar (HELIOS logo, title, Logout) - 44 CSS px
+        if (so.FindProperty("header").objectReferenceValue == null)
+        {
+            so.FindProperty("header").objectReferenceValue = BuildHeader(root.transform);
+            log.AppendLine("+ Top header (HELIOS logo, 'Thermal Power Plant DIGITAL TWIN', Logout) - 44 px");
+        }
+
         so.ApplyModifiedPropertiesWithoutUndo();
 
         // The maintenance sheet stays on top of everything.
@@ -292,6 +299,59 @@ public static partial class ThermalPlantTools
         button.objectReferenceValue = explode;
         so.ApplyModifiedPropertiesWithoutUndo();
         return true;
+    }
+
+    // ------------------------------------------------------------------ header
+
+    private static readonly Color HeaderColor = new Color(0.024f, 0.098f, 0.176f, 1f); // #06192D
+
+    private static RectTransform BuildHeader(Transform parent)
+    {
+        RectTransform bar = NewUI("Header", parent);
+        bar.anchorMin = new Vector2(0f, 1f);
+        bar.anchorMax = Vector2.one;
+        bar.pivot = new Vector2(0.5f, 1f);
+        bar.sizeDelta = new Vector2(0f, 44f); // PlantUI sets the exact 44 CSS px while playing
+        Image background = bar.gameObject.AddComponent<Image>();
+        background.color = HeaderColor; // blocks clicks to the plant behind the bar
+        PuiHorizontal(bar, 18, new RectOffset(16, 12, 5, 5));
+        bar.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
+        PlantHeader script = bar.gameObject.AddComponent<PlantHeader>();
+
+        // Logo (keeps its proportions, 30 px high)
+        RectTransform logo = NewUI("Logo", bar);
+        Image logoImage = logo.gameObject.AddComponent<Image>();
+        logoImage.sprite = PuiSprite("helios_logo");
+        logoImage.preserveAspect = true;
+        logoImage.raycastTarget = false;
+        LayoutElement logoSize = logo.gameObject.AddComponent<LayoutElement>();
+        float aspect = logoImage.sprite != null ? logoImage.sprite.rect.width / Mathf.Max(1f, logoImage.sprite.rect.height) : 5f;
+        logoSize.minHeight = logoSize.preferredHeight = 30f;
+        logoSize.minWidth = logoSize.preferredWidth = 30f * aspect;
+
+        TextMeshProUGUI title = PuiText(bar, "Title", "Thermal Power Plant DIGITAL TWIN", 17, true, Color.white, TextAlignmentOptions.Left);
+
+        RectTransform space = NewUI("Space", bar);
+        PuiFlexible(space);
+
+        // Logout (outlined button)
+        RectTransform logout = NewUI("Logout", bar);
+        Image logoutBg = AddImage(logout, new Color(1f, 1f, 1f, 0.04f), PuiSprite("rounded"));
+        Outline outline = logout.gameObject.AddComponent<Outline>();
+        outline.effectColor = new Color(1f, 1f, 1f, 0.28f);
+        outline.effectDistance = new Vector2(1f, -1f);
+        Button button = logout.gameObject.AddComponent<Button>();
+        button.targetGraphic = logoutBg;
+        PuiHorizontal(logout, 8, new RectOffset(14, 16, 6, 6));
+        logout.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
+        PuiIcon(logout, "Icon", "logout", 16f, Color.white);
+        PuiText(logout, "Label", "Logout", 14, false, Color.white, TextAlignmentOptions.Left);
+
+        var so = new SerializedObject(script);
+        so.FindProperty("title").objectReferenceValue = title;
+        so.FindProperty("logoutButton").objectReferenceValue = button;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        return bar;
     }
 
     // ------------------------------------------------------------------ door prompt

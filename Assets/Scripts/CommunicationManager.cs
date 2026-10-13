@@ -71,6 +71,7 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
     [DllImport("__Internal")] private static extern void handleSceneDownloadSize(string data);
     [DllImport("__Internal")] private static extern void handleSceneTriggerEntered(string data);
     [DllImport("__Internal")] private static extern void handleSceneTriggerExited(string data);
+    [DllImport("__Internal")] private static extern void handleLogout(string data);
     [DllImport("__Internal")] private static extern void handleCameraModeChanged(string data);
     [DllImport("__Internal")] private static extern void handleWorkerViewChanged(string data);
     [DllImport("__Internal")] private static extern void handleOverviewObjectSelected(string data);
@@ -940,6 +941,15 @@ public class CommunicationManager : SingletonMono<CommunicationManager>
         Log(nameof(handleSceneTriggerExited), json);
 #if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
         handleSceneTriggerExited(json);
+#endif
+    }
+
+    /// <summary>Logout button in the Unity header was clicked (React signs the user out). → React: <c>handleLogout</c></summary>
+    public static void HandleLogout_Extern()
+    {
+        Log(nameof(handleLogout), "{}");
+#if UNITY_WEBGL && !UNITY_EDITOR && REACT_BUILD
+        handleLogout("{}");
 #endif
     }
 

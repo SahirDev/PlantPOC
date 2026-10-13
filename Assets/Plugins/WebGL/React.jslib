@@ -37,6 +37,9 @@ mergeInto(LibraryManager.library, {
   handleSceneTriggerEntered: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleSceneTriggerEntered", UTF8ToString(data));
   },
+  handleLogout: function (data) {
+    if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleLogout", UTF8ToString(data));
+  },
   handleSceneTriggerExited: function (data) {
     if (typeof window.dispatchReactUnityEvent === "function") window.dispatchReactUnityEvent("handleSceneTriggerExited", UTF8ToString(data));
   },

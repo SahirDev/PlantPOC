@@ -139,6 +139,7 @@ Walking into info point 1, 2 or 3 sends `handleControlRoomInfoEntered` { index, 
 | `handleSceneDownloadSize` | JSON `SceneDownloadSize` | Answer to GetSceneDownloadSize_Extern. |
 | `handleSceneTriggerEntered` | JSON `SceneTrigger` | Worker stands at a door to another room: show "Go to …" (button calls ChangeScene_Extern). |
 | `handleSceneTriggerExited` | JSON `SceneTrigger` | Worker left the door. |
+| `handleLogout` | `"{}"` | Logout button in the Unity header was clicked - sign the user out. |
 | `handleCameraModeChanged` | string | "overview" or "worker". |
 | `handleWorkerViewChanged` | string | "tpp", "fpp" or "fly" - also when the user presses 1 / 2 / 3. |
 | `handleOverviewObjectSelected` | JSON `OverviewSelection` | Building clicked in plant overview. |

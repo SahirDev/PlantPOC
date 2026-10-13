@@ -42,8 +42,13 @@ public class PlantUI : MonoBehaviour
     [Tooltip("The maintenance sheet is placed here (explosion view).")]
     [SerializeField] private RectTransform sheetParent;
 
+    [Header("Top header (HELIOS logo, title, Logout)")]
+    [Tooltip("Unity header bar. When it is on, it fills the top Header Height (CSS px) and everything else starts below it.")]
+    [SerializeField] private RectTransform header;
+    [SerializeField, Min(0f)] private float headerHeightCssPixels = 44f;
+
     [Header("React header")]
-    [Tooltip("Height of the React bar over the top of the Unity view, in CSS pixels. Nothing of this UI is drawn there.")]
+    [Tooltip("Height of the React bar over the top of the Unity view, in CSS pixels (used when there is no Unity header).")]
     [SerializeField, Min(0f)] private float reservedTopCssPixels = 48f;
 
     [Header("Behaviour")]
@@ -169,7 +174,7 @@ public class PlantUI : MonoBehaviour
         safeArea.offsetMin = safeArea.offsetMax = Vector2.zero;
 
         var children = new List<Transform>();
-        foreach (Transform child in transform) if (child != safeArea) children.Add(child);
+        foreach (Transform child in transform) if (child != safeArea && child != header) children.Add(child);
         foreach (Transform child in children) child.SetParent(safeArea, false);
         ApplyTopInset();
     }
@@ -178,10 +183,21 @@ public class PlantUI : MonoBehaviour
     {
         if (safeArea == null) return;
         float scale = rootCanvas != null && rootCanvas.scaleFactor > 0.001f ? rootCanvas.scaleFactor : 1f;
-        float inset = reservedTopCssPixels * DevicePixelsPerCssPixel() / scale; // CSS px -> screen px -> canvas units
+        bool unityHeader = header != null && header.gameObject.activeSelf;
+        float css = unityHeader ? headerHeightCssPixels : reservedTopCssPixels;
+        float inset = css * DevicePixelsPerCssPixel() / scale; // CSS px -> screen px -> canvas units
         if (Mathf.Abs(inset - appliedInset) < 0.5f) return;
         appliedInset = inset;
         safeArea.offsetMax = new Vector2(0f, -inset);
+        if (unityHeader)
+        {
+            header.anchorMin = new Vector2(0f, 1f);
+            header.anchorMax = Vector2.one;
+            header.pivot = new Vector2(0.5f, 1f);
+            header.anchoredPosition = Vector2.zero;
+            header.sizeDelta = new Vector2(0f, inset);
+            header.SetAsLastSibling(); // above the panels (the maintenance sheet stays inside the safe area)
+        }
     }
 
     // Unity's screen pixels per CSS pixel (browser zoom / high-DPI screens); 1 in the Editor.

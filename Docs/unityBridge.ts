@@ -57,6 +57,7 @@ export interface UnityEvents {
   handleSceneDownloadSize: SceneDownloadSize;
   handleSceneTriggerEntered: SceneTrigger;
   handleSceneTriggerExited: SceneTrigger;
+  handleLogout: Record<string, never>;
   handleCameraModeChanged: string;
   handleWorkerViewChanged: "tpp" | "fpp" | "fly";
   handleOverviewObjectSelected: OverviewSelection;
